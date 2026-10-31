@@ -1,0 +1,791 @@
+static/guest/css/events.css
+/* =====================================
+   HERO SECTION
+===================================== */
+
+.event-hero {
+    width: 100%;
+    height: 100vh;
+    background-image: url("../images/pages/event/1.webp");
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.event-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+}
+
+.event-overlay h1 {
+    color: #fff;
+    font-size: 90px;
+    font-weight: 400;
+    margin-bottom: 20px;
+    font-family: "Gilda Display", serif;
+}
+
+.event-overlay p {
+    color: #fff;
+    font-size: 22px;
+    max-width: 800px;
+    margin-bottom: 35px;
+}
+
+.hero-btn {
+    display: inline-block;
+    padding: 15px 35px;
+    background: #c89b63;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: .3s;
+}
+
+.hero-btn:hover {
+    background: #b8874e;
+    color: #fff;
+    transform: translateY(-3px);
+}
+
+/* =====================================
+   EVENT HALL PAGE
+===================================== */
+
+.hall-container {
+    width: 85%;
+    max-width: 1400px;
+    margin: 40px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* =====================================
+   PAGE INTRO (About / Contact)
+===================================== */
+
+.page-intro-box {
+    padding: 45px 35px !important;
+}
+
+.page-intro-content {
+    text-align: center;
+    width: 100%;
+}
+
+.page-intro-label {
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1C1D1F;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.page-intro-content h1 {
+    font-family: 'Gilda Display', serif;
+    font-size: 48px;
+    font-weight: 400;
+    color: #1C1D1F;
+    margin-bottom: 16px;
+    line-height: 1.1;
+}
+
+.page-intro-content p {
+    font-size: 18px;
+    color: #555;
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .page-intro-content h1 {
+        font-size: 34px;
+    }
+
+    .page-intro-content p {
+        font-size: 16px;
+    }
+}
+
+/* =====================================
+   FILTER SECTION
+===================================== */
+
+.filter-box {
+    width: 100%;
+    background: #fff;
+    padding: 25px;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.filter-box form {
+    display: flex;
+    align-items: flex-end;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 180px;
+}
+
+.filter-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.filter-group select,
+.filter-group input {
+    height: 50px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0 15px;
+    font-size: 15px;
+    background: #fff;
+    transition: 0.3s;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+    outline: none;
+    border-color: #c89b63;
+    box-shadow: 0 0 0 3px rgba(200, 155, 99, .15);
+}
+
+.button-area {
+    flex: 0;
+}
+
+.filter-btn {
+    min-width: 150px;
+    height: 50px;
+    border: none;
+    border-radius: 10px;
+    background: #c89b63;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.filter-btn:hover {
+    background: #b8874e;
+}
+
+.reset-btn {
+    min-width: 120px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #ef4444;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.reset-btn:hover {
+    background: #dc2626;
+}
+
+/* =====================================
+   HALL CARD
+===================================== */
+
+.hall-card {
+    width: 100%;
+    display: flex;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    box-shadow: none;
+    transition: .3s;
+}
+
+.hall-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+/* =====================================
+   IMAGE SECTION
+===================================== */
+
+.image-container {
+    width: 38%;
+    position: relative;
+    overflow: hidden;
+}
+
+/* .image-container img{
+    width:100%;
+    height:280px;
+    object-fit:cover;
+    transition:0.5s;
+} */
+
+.hall-card:hover img {
+    transform: scale(1.08);
+}
+
+.description-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    opacity: 0;
+    transition: 0.4s;
+}
+
+/* .hall-card:hover .description-overlay{
+    opacity:1;
+} */
+
+/* =====================================
+   CONTENT SECTION
+===================================== */
+
+.hall-content {
+    width: 62%;
+    padding: 35px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.hall-content h2 {
+    font-size: 48px;
+    font-weight: 400;
+    color: #1f2937;
+    margin-bottom: 20px;
+    line-height: 1.1;
+}
+
+.hall-content p {
+    font-size: 18px;
+    color: #555;
+    margin-bottom: 12px;
+}
+
+.price {
+    color: #0d9488;
+    font-size: 22px;
+    font-weight: 700;
+    margin-top: 10px;
+}
+
+.status {
+    color: green;
+    font-weight: bold;
+}
+
+/* =====================================
+   BUTTONS
+===================================== */
+
+.button-group {
+    margin-top: 20px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 13px 28px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.book-btn {
+    background: #c89b63;
+    color: white;
+}
+
+.book-btn:hover {
+    background: #b8874e;
+    color: white;
+}
+
+/* =====================================
+   BOOKING SIDEBAR
+===================================== */
+
+.booking-sidebar {
+    position: fixed;
+    top: 100px;
+    right: -420px;
+    width: 380px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 15px 0 0 15px;
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15);
+    transition: 0.45s ease;
+    z-index: 999;
+}
+
+/* Event-specific wider sidebar */
+.event-booking-sidebar {
+    top: 0;
+    right: -600px;
+    /* Hide further offscreen */
+    width: 550px;
+    max-height: none;
+    height: 100vh;
+    padding: 15px 36px;
+    /* Reduced vertical padding */
+}
+
+.booking-sidebar.active {
+    right: 0;
+}
+
+.close-btn {
+    float: right;
+    cursor: pointer;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.booking-sidebar h3 {
+    margin-bottom: 20px;
+}
+
+.booking-sidebar label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.booking-sidebar input,
+.booking-sidebar select,
+.booking-sidebar textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    background: #c89b63;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.submit-btn:hover {
+    background: #b8874e;
+}
+
+/* =====================================
+   PAGE OVERLAY
+===================================== */
+
+.page-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.4s;
+    z-index: 998;
+}
+
+.page-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* =====================================
+   SCROLL ANIMATION
+===================================== */
+
+.hidden-card {
+    opacity: 0;
+    transform: translateY(80px);
+    transition: all .8s ease;
+}
+
+.show-card {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* =====================================
+   RIPPLE EFFECT
+===================================== */
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    background: rgba(255, 255, 255, 0.5);
+    animation: ripple-animation .6s linear;
+}
+
+@keyframes ripple-animation {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* =====================================
+   MOBILE RESPONSIVE
+===================================== */
+
+@media(max-width:991px) {
+
+    .hall-card {
+        flex-direction: column;
+    }
+
+    .image-container,
+    .hall-content {
+        width: 100%;
+    }
+
+    .description-overlay {
+        position: static !important;
+        opacity: 1 !important;
+        background: #FAF9F6 !important;
+        /* Matching alabaster white */
+        color: #4A4D4A !important;
+        padding: 20px !important;
+        text-align: left !important;
+        border-bottom: 1px solid rgba(191, 161, 143, 0.25) !important;
+        font-size: 15px !important;
+        line-height: 1.6 !important;
+    }
+
+    .hall-content h2 {
+        font-size: 34px;
+    }
+
+    .booking-sidebar {
+        width: 100%;
+        border-radius: 0;
+    }
+}
+
+@media(max-width:768px) {
+
+    .hall-container {
+        width: 95%;
+    }
+
+    .filter-box form {
+        flex-direction: column;
+    }
+
+    .filter-group {
+        width: 100%;
+    }
+
+    .filter-btn,
+    .reset-btn {
+        width: 100%;
+    }
+
+    .hall-content h2 {
+        font-size: 28px;
+    }
+}
+
+/* =====================================
+   PREMIUM THEME OVERRIDES FOR EVENT/ROOM PAGES
+   ===================================== */
+.hall-container {
+    width: 90% !important;
+    max-width: 1400px !important;
+    margin: 50px auto !important;
+}
+
+.hall-card {
+    border-radius: 16px !important;
+    box-shadow: 0 10px 30px rgba(27, 29, 31, 0.04) !important;
+    border: 1px solid rgba(197, 168, 128, 0.15) !important;
+    background: #FFFFFF !important;
+}
+
+.hall-card:hover {
+    transform: translateY(-8px) !important;
+    box-shadow: 0 20px 40px rgba(197, 168, 128, 0.12) !important;
+    border-color: rgba(197, 168, 128, 0.35) !important;
+}
+
+.filter-box {
+    background: #FFFFFF !important;
+    border: 1px solid rgba(197, 168, 128, 0.15) !important;
+    border-radius: 16px !important;
+    padding: 30px !important;
+    box-shadow: 0 10px 30px rgba(27, 29, 31, 0.04) !important;
+}
+
+.filter-group label {
+    font-family: 'Jost', sans-serif !important;
+    font-weight: 600 !important;
+    color: #1C1D1F !important;
+    letter-spacing: 0.05em !important;
+}
+
+.filter-group select,
+.filter-group input {
+    height: 48px !important;
+    border: 1px solid rgba(197, 168, 128, 0.2) !important;
+    border-radius: 6px !important;
+    background: #FAF9F6 !important;
+    color: #1C1D1F !important;
+    font-family: 'Jost', sans-serif !important;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+    border-color: #C5A880 !important;
+    box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.12) !important;
+}
+
+.price {
+    font-family: 'Gilda Display', serif !important;
+    color: #A08260 !important;
+    font-size: 24px !important;
+    font-weight: 600 !important;
+}
+
+.hall-content h2 {
+    font-family: 'Gilda Display', serif !important;
+    color: #1C1D1F !important;
+    font-size: 38px !important;
+}
+
+/* Booking sidebar */
+.booking-sidebar {
+    background: #FAF9F6 !important;
+    border-left: 1px solid rgba(197, 168, 128, 0.25) !important;
+    box-shadow: -10px 0 40px rgba(27, 29, 31, 0.08) !important;
+    border-radius: 20px 0 0 20px !important;
+}
+
+.booking-sidebar h3 {
+    font-family: 'Gilda Display', serif !important;
+    color: #1C1D1F !important;
+    font-size: 26px !important;
+    border-bottom: 2px solid #C5A880 !important;
+    padding-bottom: 10px !important;
+}
+
+.booking-sidebar label {
+    font-family: 'Jost', sans-serif !important;
+    font-weight: 500 !important;
+    color: #1C1D1F !important;
+    font-size: 13px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+
+.booking-sidebar input,
+.booking-sidebar select,
+.booking-sidebar textarea {
+    border: 1px solid rgba(197, 168, 128, 0.2) !important;
+    border-radius: 6px !important;
+    background: #FFFFFF !important;
+    padding: 12px !important;
+}
+
+.booking-sidebar input:focus,
+.booking-sidebar select:focus,
+.booking-sidebar textarea:focus {
+    border-color: #C5A880 !important;
+    outline: none !important;
+}
+
+
+
+/* ==========================================
+        GRID LAYOUT & ROUNDED CARDS (PREMIUM TYPOGRAPHY)
+       ========================================== */
+.rooms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 35px;
+    margin-bottom: 60px;
+}
+
+.room-card {
+    background: #fff;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid #eaeaea;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.room-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 15px 40px rgba(200, 155, 93, 0.15);
+    border-color: rgba(200, 155, 93, 0.25);
+}
+
+.room-img-wrap {
+    width: 100%;
+    height: 260px;
+    position: relative;
+    overflow: hidden;
+}
+
+.room-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+
+.room-card:hover .room-img-wrap img {
+    transform: scale(1.06);
+}
+
+/* Elegant Text Container Layout */
+.room-details {
+    padding: 28px 24px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+/* Clean Hotel Room Titles */
+.room-details h2 {
+    font-family: 'Gilda Display', serif;
+    font-size: 26px;
+    color: #1e293b;
+    margin-bottom: 14px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* Refined structural meta pills */
+.room-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.meta-badge {
+    font-family: 'Jost', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #475569;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 4px 12px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.meta-badge strong {
+    color: #94a3b8;
+    font-weight: 500;
+    margin-right: 4px;
+}
+
+/* Premium Price Tag Display */
+.room-price-wrap {
+    margin-bottom: 22px;
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+}
+
+.room-price-currency {
+    font-family: 'Gilda Display', serif;
+    font-size: 18px;
+    color: #c89b63;
+    font-weight: 600;
+}
+
+.room-price {
+    font-family: 'Gilda Display', serif;
+    font-size: 30px;
+    color: #c89b63;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.room-price-night {
+    font-size: 13px;
+    color: #64748b;
+    font-family: 'Jost', sans-serif;
+    font-weight: 400;
+    margin-left: 4px;
+    letter-spacing: 0.3px;
+}
+
+.room-action-area {
+    margin-top: auto;
+}
+
+.book-btn {
+    border-radius: 8px !important;
+    padding: 11px 20px !important;
+    font-weight: 600;
+    font-size: 13px;
+    font-family: 'Jost', sans-serif;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+.room-card.hidden-card {
+    display: none !important;
+}

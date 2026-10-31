@@ -1,0 +1,77 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+<section id="main-content" class="fadeIn">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            
+            <div class="col-md-6">
+                <div class="card p-4 mt-4">
+                    <h2>Edit Shift</h2>
+                    <hr>
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <label>Shift Name</label>
+                            <input type="text" name="name" class="form-control" value="{{ shift.name }}" required>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label>Assign to User (Optional)</label>
+                            <select name="user_id" class="form-control">
+                                <option value="">-- None (Department or Global Shift) --</option>
+                                {% for u in users %}
+                                    <option value="{{ u.id }}" {% if shift.user and shift.user.id == u.id %}selected{% endif %}>{{ u.username }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted d-block mt-1">Assigns this shift specifically to an individual staff member.</small>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label>Assign to Department (Optional)</label>
+                            <select name="department" class="form-control">
+                                <option value="">-- None (User or Global Shift) --</option>
+                                {% for dept_code, dept_name in departments %}
+                                    <option value="{{ dept_code }}" {% if shift.department == dept_code %}selected{% endif %}>{{ dept_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted d-block mt-1">Assigns this shift to an entire department.</small>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="is_global" class="form-check-input" id="isGlobalCheck" {% if shift.is_global %}checked{% endif %}>
+                            <label class="form-check-label" for="isGlobalCheck">Is Global Default Fallback?</label>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label>Shift Start Time</label>
+                            <input type="time" name="start_time" class="form-control" value="{{ shift.start_time|time:'H:i' }}" required>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label>Shift End Time</label>
+                            <input type="time" name="end_time" class="form-control" value="{{ shift.end_time|time:'H:i' }}" required>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label>Grace Time (minutes)</label>
+                            <input type="number" name="grace_time_minutes" class="form-control" value="{{ shift.grace_time_minutes }}" min="0" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary mt-3">Update Shift</button>
+                        <a href="{% url 'admin_shift_settings' %}" class="btn btn-secondary mt-3 ms-2">Cancel</a>
+                    </form>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</section>
+{% endblock %}

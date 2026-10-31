@@ -1,0 +1,226 @@
+templates/admin/loyalty_customer_list.html
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <div class="card border-0 shadow-lg">
+
+        <div class="card-header bg-primary text-white d-flex flex-wrap justify-content-between align-items-center">
+            <h4 class="mb-0">
+                Loyalty Customers
+            </h4>
+
+            <a href="{% url 'loyalty_transaction_list' %}"
+               class="btn btn-light btn-sm">
+                View Transactions
+            </a>
+        </div>
+
+        <div class="card-body">
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-5">
+                    <input type="text"
+                           id="loyaltyCustomerSearch"
+                           class="form-control"
+                           placeholder="Search by name, username, email, or phone">
+                </div>
+
+                <div class="col-md-3">
+                    <select id="membershipFilter" class="form-select">
+                        <option value="">All Memberships</option>
+                        <option value="bronze">Bronze</option>
+                        <option value="silver">Silver</option>
+                        <option value="gold">Gold</option>
+                        <option value="platinum">Platinum</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <select id="pointsFilter" class="form-select">
+                        <option value="">All Points</option>
+                        <option value="positive">Has Points</option>
+                        <option value="zero">Zero Points</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="button"
+                            id="resetLoyaltyFilters"
+                            class="btn btn-secondary w-100">
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle" id="loyaltyCustomerTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Sl.No</th>
+                            <th>Customer</th>
+                            <th>Contact</th>
+                            <th>Membership</th>
+                            <th>Available Points</th>
+                            <th>Lifetime Earned</th>
+                            <th>Next Tier</th>
+                            <th width="230">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr data-search="{{ customer.user.first_name }} {{ customer.user.last_name }} {{ customer.user.username }} {{ customer.user.email }} {{ customer.phone }}"
+                            data-membership="{{ customer.membership_status|lower }}"
+                            data-points="{{ customer.loyalty_points }}">
+                            <td>{{ forloop.counter }}</td>
+
+                            <td>
+                                <strong>
+                                    {{ customer.user.get_full_name|default:customer.user.username }}
+                                </strong>
+                                <br>
+                                <small class="text-muted">
+                                    @{{ customer.user.username }}
+                                </small>
+                            </td>
+
+                            <td>
+                                <span>{{ customer.user.email|default:"No email" }}</span>
+                                <br>
+                                <small class="text-muted">{{ customer.phone|default:"No phone" }}</small>
+                            </td>
+
+                            <td>
+                                {% if customer.membership_status == 'Platinum' %}
+                                    <span class="badge bg-dark">Platinum</span>
+                                {% elif customer.membership_status == 'Gold' %}
+                                    <span class="badge bg-warning text-dark">Gold</span>
+                                {% elif customer.membership_status == 'Silver' %}
+                                    <span class="badge bg-secondary">Silver</span>
+                                {% else %}
+                                    <span class="badge bg-info">Bronze</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <strong>{{ customer.loyalty_points }}</strong>
+                            </td>
+
+                            <td>{{ customer.lifetime_points_earned }}</td>
+
+                            <td>
+                                {% if customer.next_membership_tier %}
+                                    {{ customer.next_membership_tier }}
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ customer.points_needed_for_next_tier }} pts needed
+                                    </small>
+                                {% else %}
+                                    <span class="badge bg-success">Top Tier</span>
+                                {% endif %}
+                            </td>
+
+                             <td>
+                                 <div class="d-flex gap-2">
+                                     {% if request.user.is_superuser or permissions.loyalty_customer_list.edit %}
+                                     <a href="{% url 'edit_loyalty_points' customer.id %}"
+                                        class="btn btn-warning btn-sm btn-action-icon"
+                                        title="Manage Points">
+                                         <i class="fa fa-cogs"></i>
+                                     </a>
+                                     {% endif %}
+
+                                     <a href="{% url 'customer_loyalty_transactions' customer.id %}"
+                                        class="btn btn-primary btn-sm btn-action-icon"
+                                        title="Transactions">
+                                         <i class="fa fa-list"></i>
+                                     </a>
+                                 </div>
+                             </td>
+                        </tr>
+                        {% empty %}
+                        <tr class="loyalty-empty-row">
+                            <td colspan="8" class="text-center">
+                                No loyalty customers found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="loyaltyNoResults" class="alert alert-info text-center d-none">
+                No customers match the selected filters.
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('loyaltyCustomerSearch');
+    const membershipFilter = document.getElementById('membershipFilter');
+    const pointsFilter = document.getElementById('pointsFilter');
+    const resetButton = document.getElementById('resetLoyaltyFilters');
+    const rows = Array.from(document.querySelectorAll('#loyaltyCustomerTable tbody tr[data-search]'));
+    const noResults = document.getElementById('loyaltyNoResults');
+
+    function applyFilters() {
+        const query = searchInput.value.trim().toLowerCase();
+        const membership = membershipFilter.value;
+        const pointsMode = pointsFilter.value;
+        let visibleRows = 0;
+
+        rows.forEach(function (row) {
+            const searchable = row.dataset.search.toLowerCase();
+            const rowMembership = row.dataset.membership;
+            const points = parseInt(row.dataset.points || '0', 10);
+
+            const matchesSearch = !query || searchable.includes(query);
+            const matchesMembership = !membership || rowMembership === membership;
+            const matchesPoints = !pointsMode ||
+                (pointsMode === 'positive' && points > 0) ||
+                (pointsMode === 'zero' && points === 0);
+
+            const visible = matchesSearch && matchesMembership && matchesPoints;
+            row.style.display = visible ? '' : 'none';
+            if (visible) {
+                visibleRows += 1;
+            }
+        });
+
+        if (noResults) {
+            noResults.classList.toggle('d-none', visibleRows > 0 || rows.length === 0);
+        }
+    }
+
+    [searchInput, membershipFilter, pointsFilter].forEach(function (control) {
+        control.addEventListener('input', applyFilters);
+        control.addEventListener('change', applyFilters);
+    });
+
+    resetButton.addEventListener('click', function () {
+        searchInput.value = '';
+        membershipFilter.value = '';
+        pointsFilter.value = '';
+        applyFilters();
+    });
+});
+</script>
+
+{% endblock %}

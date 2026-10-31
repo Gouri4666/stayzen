@@ -1,0 +1,179 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* --- Live Validation Styles --- */
+    .is-invalid-input {
+        border-color: #ef4444 !important;
+        color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+    
+    .is-invalid-label {
+        color: #ef4444 !important;
+        transition: color 0.2s;
+    }
+
+    .validation-message {
+        display: none;
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+        font-weight: 500;
+    }
+    
+    .is-invalid-input ~ .validation-message {
+        display: block;
+    }
+</style>
+
+<div class="container-fluid" style="margin-top:45px;">
+    <div class="card border-0 shadow-lg">
+
+        <div class="card-header bg-gradient bg-primary text-white">
+            <h4 class="mb-0">🏨 Add New Room</h4>
+        </div>
+
+        <div class="card-body p-4">
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="row g-3">
+                    
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Room Number</label>
+                        {{ form.room_number }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Room Type</label>
+                        {{ form.room_type }}
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Description</label>
+                        {{ form.description }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Max Adults</label>
+                        {{ form.max_adults }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Max Children</label>
+                        {{ form.max_children }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Price</label>
+                        {{ form.price }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Room Image 1 *</label>
+                        {{ form.image }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Room Image 2</label>
+                        {{ form.image2 }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Room Image 3</label>
+                        {{ form.image3 }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Status</label>
+                        {{ form.status }}
+                    </div>
+
+                </div>
+
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-lg btn-success px-4">
+                        Save Room
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    
+    // --- Live Validation Rules ---
+    const validationRules = {
+        // 'id_phone': {
+        //     regex: /^[0-9]{10}$/, // Strictly 10 digits (0-9)
+        //     errorMessage: 'Phone number must be exactly 10 digits.'
+        // },
+        'id_room_number': {
+            regex: /^[a-zA-Z0-9\s-]+$/, // Letters, numbers, spaces, and hyphens allowed
+            errorMessage: 'Enter a valid room number (e.g. 101, A-102).',
+            checkDuplicate: true
+        },
+        'id_price': {
+            regex: /^\d+(\.\d{1,2})?$/, // Numbers with optional 2 decimal places
+            errorMessage: 'Enter a valid price.'
+        },
+        'id_max_adults': {
+            regex: /^[0-9]{1,2}$/, // 1 to 2 digits only
+            errorMessage: 'Enter a valid number (max 2 digits).'
+        },
+        'id_max_children': {
+            regex: /^[0-9]{1,2}$/, // 1 to 2 digits only
+            errorMessage: 'Enter a valid number (max 2 digits).'
+        }
+    };
+
+    Object.keys(validationRules).forEach(inputId => {
+        const inputField = document.getElementById(inputId);
+        
+        if (inputField) {
+            // Find the closest Bootstrap column div to locate the label
+            const parentDiv = inputField.closest('[class^="col-"]');
+            const label = parentDiv ? parentDiv.querySelector('.form-label') : null;
+
+            // Create the error message element below the input
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'validation-message';
+            errorMsg.innerText = validationRules[inputId].errorMessage;
+            inputField.parentNode.insertBefore(errorMsg, inputField.nextSibling);
+
+            // Listen for user typing
+            inputField.addEventListener('input', function() {
+                const value = this.value.trim();
+
+                // Reset on empty
+                if (value === '') {
+                    this.classList.remove('is-invalid-input');
+                    if (label) label.classList.remove('is-invalid-label');
+                } 
+                // Mark Invalid
+                else if (!validationRules[inputId].regex.test(value)) {
+                    this.classList.add('is-invalid-input');
+                    if (label) label.classList.add('is-invalid-label');
+                } 
+                // Mark Valid
+                else {
+                    this.classList.remove('is-invalid-input');
+                    if (label) label.classList.remove('is-invalid-label');
+                }
+            });
+        }
+    });
+});
+</script>
+<script src="{% static 'guest/js/unique_validation.js' %}"></script>
+
+{% endblock %}

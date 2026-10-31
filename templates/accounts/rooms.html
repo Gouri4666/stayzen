@@ -1,0 +1,93 @@
+{% extends 'accounts/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Browse Rooms - StayZen{% endblock %}
+
+{% block extra_css %}
+.page-header { margin-bottom: 28px; }
+.page-header h2 { font-size: 26px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+.page-header p { font-size: 14px; color: var(--text-muted); }
+
+.rooms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+}
+
+.room-card-dash {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: var(--card-shadow);
+}
+.room-card-dash:hover {
+    transform: translateY(-4px);
+    border-color: var(--text-highlight);
+}
+.room-card-dash img { width: 100%; height: 200px; object-fit: cover; }
+.room-card-body { padding: 20px; }
+.room-card-body h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+.room-card-body .room-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+.room-card-body .room-price { font-size: 18px; font-weight: 700; color: var(--text-highlight); margin: 12px 0; }
+.room-card-actions { display: flex; gap: 10px; margin-top: 14px; }
+
+.btn-dash {
+    display: inline-block; padding: 10px 20px;
+    border-radius: 8px; font-size: 14px; font-weight: 600;
+    text-decoration: none; transition: all 0.2s ease; cursor: pointer; border: none;
+}
+.btn-gold { background: var(--text-highlight); color: #fff; }
+.btn-gold:hover { background: #a57f5a; color: #fff; }
+
+.status-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.status-available { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+.status-not-available { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+.no-data { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 16px; }
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Browse Rooms</h2>
+    <p>Find and book the perfect room for your stay.</p>
+</div>
+
+<div class="rooms-grid">
+    {% for room in rooms %}
+    <div class="room-card-dash">
+        {% if room.image %}
+            <img src="{{ room.image.url }}" alt="{{ room.room_number }}">
+        {% else %}
+            <div style="width:100%;height:200px;background:var(--card-hover-bg);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:14px;">No Image</div>
+        {% endif %}
+
+        <div class="room-card-body">
+            <h3>Room {{ room.room_number }}</h3>
+            <p class="room-meta">
+                <strong>Type:</strong> {{ room.room_type }} &nbsp; 
+                <span class="status-badge {% if room.status == 'Available' %}status-available{% else %}status-not-available{% endif %}">
+                    {{ room.status }}
+                </span>
+            </p>
+            <p class="room-meta"><strong>Adults:</strong> {{ room.max_adults }} &nbsp; <strong>Children:</strong> {{ room.max_children }}</p>
+            <p class="room-price">₹{{ room.price }} / night</p>
+            <div class="room-card-actions">
+                {% if room.status == 'Not Available' or room.status == 'Maintenance' %}
+                    <button class="btn-dash" disabled style="background-color: #cbd5e1 !important; color: #64748b !important; border: none !important; cursor: not-allowed !important; pointer-events: none; width: 100%; text-align: center;">{{ room.status }}</button>
+                {% else %}
+                    <a href="{% url 'room_booking_dashboard' %}?room_id={{ room.id }}" class="btn-dash btn-gold" style="width: 100%; text-align: center;">Book Now</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="no-data">No rooms available at the moment.</div>
+    {% endfor %}
+</div>
+{% endblock %}
+

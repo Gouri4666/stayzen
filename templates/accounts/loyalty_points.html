@@ -1,0 +1,84 @@
+{% extends 'accounts/dashboard_base.html' %}
+
+{% block title %}Loyalty & Reward Points - StayZen{% endblock %}
+
+{% block content %}
+<div class="welcome-banner mb-4">
+    <h2 style="font-family:'Gilda Display',serif; font-size:26px; color:var(--text-primary);">Loyalty & Reward Points</h2>
+    <p style="color:var(--text-muted); font-size:14px; margin-top:4px;">Earn points on every booking. Redeem them for discounts on future stays.</p>
+</div>
+
+{% if customer %}
+<!-- Points Summary Card -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:28px;">
+    <div style="background:linear-gradient(135deg,var(--text-highlight),#8c6239); border-radius:16px; padding:24px; color:#fff; text-align:center; box-shadow:0 8px 24px rgba(193,155,118,0.25);">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; opacity:0.8; margin-bottom:8px;">Available Points</div>
+        <div style="font-size:48px; font-weight:800; line-height:1;">{{ customer.loyalty_points }}</div>
+        <div style="font-size:13px; opacity:0.85; margin-top:4px;">≈ ₹{{ customer.loyalty_points }} discount</div>
+    </div>
+    <div style="background:#fff; border:1px solid var(--border-color); border-radius:16px; padding:24px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:8px;">Lifetime Earned</div>
+        <div style="font-size:40px; font-weight:800; color:var(--text-highlight); line-height:1;">{{ customer.lifetime_points_earned }}</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">total points earned</div>
+    </div>
+    <div style="background:#fff; border:1px solid var(--border-color); border-radius:16px; padding:24px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:8px;">Membership Tier</div>
+        <div style="font-size:30px; font-weight:800; color:var(--text-primary); line-height:1.2;">{{ customer.membership_status }}</div>
+        {% if customer.next_membership_tier %}
+        <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">{{ customer.points_needed_for_next_tier }} pts to {{ customer.next_membership_tier }}</div>
+        {% else %}
+        <div style="font-size:12px; color:#22c55e; margin-top:6px;">🏆 Top tier!</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- How to earn -->
+<div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:24px; margin-bottom:28px;">
+    <h5 style="font-family:'Jost',sans-serif; font-weight:600; color:var(--text-primary); margin-bottom:16px; font-size:15px;">How to Earn Points</h5>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; align-items:center; gap:12px; font-size:14px; color:#475569;">
+            <span style="font-size:20px;">🏨</span> <span>Earn <strong>1 point</strong> for every ₹100 spent on confirmed room bookings</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; font-size:14px; color:#475569;">
+            <span style="font-size:20px;">🎉</span> <span>Earn <strong>1 point</strong> for every ₹100 spent on confirmed event bookings</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; font-size:14px; color:#475569;">
+            <span style="font-size:20px;">💰</span> <span>Redeem <strong>1 point = ₹1 discount</strong> at checkout (max 50% of booking amount)</span>
+        </div>
+    </div>
+</div>
+
+<!-- Transaction History -->
+<h5 style="font-family:'Jost',sans-serif; font-weight:600; color:var(--text-primary); margin-bottom:14px; font-size:15px;">Transaction History</h5>
+{% if transactions %}
+<div style="display:flex; flex-direction:column; gap:10px;">
+    {% for t in transactions %}
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-radius:12px; background:#fff; border:1px solid var(--border-color); box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+        <div>
+            <div style="font-size:14px; font-weight:500; color:var(--text-primary);">
+                {% if t.transaction_type == 'Earned' %}🟢{% else %}🔴{% endif %}
+                {{ t.description|default:t.transaction_type }}
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">{{ t.created_at|date:"d M Y" }}</div>
+        </div>
+        <div style="font-size:18px; font-weight:700; {% if t.transaction_type == 'Earned' %}color:#22c55e;{% else %}color:#e53e3e;{% endif %}">
+            {% if t.transaction_type == 'Earned' %}+{% else %}-{% endif %}{{ t.points }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div style="padding:40px; text-align:center; border-radius:16px; background:#fff; border:1px solid var(--border-color);">
+    <div style="font-size:40px; margin-bottom:12px;">🎯</div>
+    <p style="color:var(--text-muted); font-size:14px;">No transactions yet. Book a room or event to start earning points!</p>
+    <a href="{% url 'rooms' %}" style="display:inline-block; margin-top:12px; padding:10px 24px; background:var(--text-highlight); color:#fff; border-radius:8px; text-decoration:none; font-size:13px; font-weight:600;">Browse Rooms</a>
+</div>
+{% endif %}
+
+{% else %}
+<div style="padding:40px; text-align:center; border-radius:16px; background:#fff; border:1px solid var(--border-color);">
+    <p style="color:var(--text-muted);">No loyalty data available.</p>
+</div>
+{% endif %}
+{% endblock %}
+

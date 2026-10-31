@@ -1,0 +1,81 @@
+.video__area__image{
+    position: relative;
+    height: 685px;
+    width: 100%;
+    @include mq($sm){
+        height: 350px;
+    }
+    &::before{
+        @extend %position-common;
+        background: rgba(#1b1b1b, $alpha: 0.3);
+        border-radius: 10px;
+    }
+    img{
+        max-width: 100%;
+    }
+}
+.video--spinner__wrapper{
+    position: absolute;
+    max-width: max-content;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    .rts__circle--icon{
+        i{
+            font-size: 50px;
+            line-height: 1 !important;
+            @include mq($sm){
+                font-size: 30px;
+            }
+        }
+    }
+}
+
+// home three video style
+.video__area__image{
+    &.is__home__three{
+        &::before{
+            border-radius: 0;
+        }
+    }
+}
+
+// room details
+.video__area__image{
+    &.is__room__details{
+        height: 500px !important;
+        @include mq($xs){
+            height: 400px !important;
+        }
+    }
+}
+
+// home one video
+.video{
+    &.has__shape{
+        .section__shape{
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translate(0, -50%);
+            @include mq($md){
+                display: none;
+            }
+        }
+    }
+}
+
+// main video
+.video{
+    &.video__full{
+        .rts__circle{
+            background: rgba(#AB8A62, $alpha: 0.75);
+            border-width: 0.5px;
+        }
+        .video__area__image{
+            &::before{
+                border-radius: 0;
+            }
+        }
+    }
+}

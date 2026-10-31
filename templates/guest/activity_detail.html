@@ -1,0 +1,458 @@
+{% extends 'guest/base.html' %}
+{% load static %}
+
+{% block title %}
+Activity Details - StayZen
+{% endblock %}
+
+{% block content %}
+
+<style>
+    /* MAIN WRAPPER CONTAINER SET AS POSITION RELATIVE */
+    .activity-details-wrapper {
+        position: relative;
+        padding-top: 130px !important;
+        padding-bottom: 80px !important;
+        background-color: #121315; /* Fallback elegant dark mode base */
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    /* THE BLURRED AMBIENT IMAGE BACKGROUND LAYER */
+    .ambient-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('{% if activity.activity_image %}{{ activity.activity_image.url }}{% else %}{% static "guest/images/default.jpg" %}{% endif %}');
+        background-size: cover;
+        background-position: center center;
+        filter: blur(40px) scale(1.1); /* Strong luxury blur effect */
+        opacity: 0.35; /* Keeps it subtle so text remains readable */
+        z-index: -2;
+    }
+
+    /* LIGHT COATING MIST TO TONE DOWN THE COLORS */
+    .ambient-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(180deg, rgba(253, 251, 247, 0.8) 0%, rgba(247, 243, 235, 0.85) 100%);
+        z-index: -1;
+    }
+
+    /* PREMIUM TICKET CONTAINER LAYOUT */
+    .ticket-container {
+        display: flex;
+        flex-direction: row;
+        background: #ffffff !important;
+        border: 1px solid #eaddcd !important;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(40, 32, 25, 0.12) !important; /* Enhanced depth shadow */
+        position: relative;
+        overflow: hidden;
+        min-height: 520px;
+    }
+
+    @media (max-width: 991px) {
+        .ticket-container {
+            flex-direction: column;
+        }
+    }
+
+    /* LEFT SIDE: DATE & TIME ANCHOR */
+    .ticket-date-side {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+        min-width: 140px;
+        border-right: 2px dashed #eaddcd;
+        position: relative;
+        background: #fffdfa;
+    }
+
+    .ticket-date-side .month {
+        font-family: 'Jost', sans-serif;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 2px;
+        font-size: 14px;
+        color: #a57f5a;
+        margin-bottom: 2px;
+    }
+
+    .ticket-date-side .day {
+        font-family: 'Gilda Display', serif;
+        font-size: 46px;
+        line-height: 1;
+        font-weight: 600;
+        color: #1c1d1f;
+        margin-bottom: 12px;
+    }
+
+    .ticket-date-side .time {
+        font-family: 'Jost', sans-serif;
+        background-color: #1c1d1f;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+
+    /* TICKET INNER SEMI-CIRCLE CUTOUTS */
+    .ticket-date-side::before, .ticket-date-side::after {
+        content: '';
+        position: absolute;
+        right: -11px;
+        width: 20px;
+        height: 20px;
+        background-color: #f6f1e7; /* Color-matched cutout filler */
+        border: 1px solid #eaddcd;
+        border-radius: 50%;
+        z-index: 2;
+    }
+    .ticket-date-side::before { top: -11px; }
+    .ticket-date-side::after { bottom: -11px; }
+
+    /* CENTER: RICH CONTENT REGION */
+    .ticket-body-side {
+        flex: 1;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .brand-category-badge {
+        color: #a57f5a !important;
+        font-family: 'Jost', sans-serif;
+        font-weight: 600;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-size: 12px;
+        margin-bottom: 10px;
+        display: inline-block;
+    }
+
+    .activity-detail-title {
+        font-family: 'Gilda Display', serif;
+        color: #1c1d1f;
+        font-weight: 500;
+        font-size: 32px;
+        letter-spacing: 0.5px;
+    }
+
+    .activity-detail-desc {
+        font-family: 'Jost', sans-serif;
+        color: #64748b;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .info-label {
+        font-family: 'Jost', sans-serif;
+        color: #475569;
+        font-weight: 500;
+        font-size: 15px;
+    }
+
+    .info-value-price {
+        font-family: 'Jost', sans-serif;
+        color: #a57f5a !important;
+        font-weight: 700;
+        font-size: 1.4rem;
+    }
+
+    .info-value-status {
+        font-family: 'Jost', sans-serif;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-size: 13px;
+    }
+
+    .activity-section-heading {
+        font-family: 'Gilda Display', serif;
+        color: #1c1d1f;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        font-size: 18px;
+    }
+
+    /* RIGHT SIDE: IMAGE PANEL */
+    .ticket-img-side {
+        width: 35%;
+        min-width: 300px;
+        position: relative;
+    }
+
+    @media (max-width: 991px) {
+        .ticket-img-side {
+            width: 100%;
+            height: 300px;
+        }
+    }
+
+    .ticket-img-side img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* LIST GROUP & BUTTONS OVERRIDES */
+    .custom-session-item {
+        background-color: #ffffff !important;
+        border: 1px solid #e8e2da !important;
+        transition: all 0.2s ease-in-out;
+        font-family: 'Jost', sans-serif;
+    }
+
+    .custom-session-item:hover {
+        border-color: #c5a880 !important;
+        background-color: #fffdf9 !important;
+    }
+
+    .brand-btn-primary {
+        background-color: #a57f5a !important;
+        border: 1px solid #a57f5a !important;
+        color: #ffffff !important;
+        font-family: 'Jost', sans-serif;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 12px;
+        padding: 12px 24px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .brand-btn-primary:hover:not([disabled]) {
+        background-color: #8c6b4a !important;
+        border-color: #8c6b4a !important;
+    }
+
+    .brand-btn-primary[disabled] {
+        background-color: #cbd5e1 !important;
+        border-color: #cbd5e1 !important;
+        color: #94a3b8 !important;
+        cursor: not-allowed;
+    }
+
+    .brand-btn-secondary {
+        background-color: transparent !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #64748b !important;
+        font-family: 'Jost', sans-serif;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 12px;
+        padding: 11px 24px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        text-decoration: none !important;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .brand-btn-secondary:hover {
+        border-color: #1c1d1f !important;
+        color: #1c1d1f !important;
+        background-color: #f5f0e6 !important;
+    }
+</style>
+
+<div class="rts__section activity-details-wrapper">
+    
+    <!-- BACKGROUND ART SYSTEM -->
+    <div class="ambient-backdrop"></div>
+    <div class="ambient-overlay"></div>
+
+    <div class="container">
+        
+        <!-- INTEGRATED HOVER TICKET COMPONENT -->
+        <div class="ticket-container">
+            
+            <!-- LEFT TICKET BLOCK: DATE ANCHOR
+            <div class="ticket-date-side">
+                <span class="month">Jun</span>
+                <span class="day">27</span>
+                <span class="time">7:00 PM</span>
+            </div> -->
+
+            <!-- CENTER TICKET BLOCK: DETAILS & ACTIONS -->
+            <div class="ticket-body-side">
+                <div>
+                    <div>
+                        <span class="brand-category-badge">
+                            {{ activity.activity_type }}
+                        </span>
+                    </div>
+
+                    <h2 class="activity-detail-title mb-3">{{ activity.activity_name }}</h2>
+
+                    <div class="activity-detail-desc mb-4">
+                        {{ activity.description|linebreaks }}
+                    </div>
+
+                    <div class="row align-items-center g-3 mb-4">
+                        <div class="col-sm-6 d-flex align-items-center justify-content-between border-end pe-4 mob-border-none">
+                            <span class="info-label">Price:</span>
+                            <span class="info-value-price">₹{{ activity.price }}</span>
+                        </div>
+                        <div class="col-sm-6 d-flex align-items-center justify-content-between ps-4 mob-padding-none">
+                            <span class="info-label">Status:</span>
+                            {% if activity.status == 'Available' %}
+                                <span class="text-success info-value-status">● {{ activity.status }}</span>
+                            {% else %}
+                                <span class="text-danger info-value-status">● {{ activity.status }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr style="border-top: 1px solid #eaddcd; margin: 1.5rem 0;">
+
+                    <!-- SESSIONS & BOOKING REGION -->
+                    {% if request.user.is_authenticated and has_reservation %}
+                    <form method="POST" action="{% url 'book_activity_session' activity.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="session_id" id="session_id">
+
+                        <h5 class="activity-section-heading mb-3">Available Sessions</h5>
+
+                        {% if sessions %}
+                        <ul class="list-group mb-4">
+                            {% for session in sessions %}
+                            <li class="list-group-item custom-session-item rounded mb-2">
+                                <label class="w-100 d-flex justify-content-between align-items-center mb-0" style="cursor:pointer; padding: 4px 0;">
+                                    <div class="d-flex align-items-center">
+                                        <input type="radio"
+                                               name="session_radio"
+                                               value="{{ session.id }}"
+                                               onclick="enableBookBtn({{ session.id }})"
+                                               class="me-3" 
+                                               style="accent-color: #a57f5a; transform: scale(1.15);">
+                                        <span class="text-dark font-weight-medium">
+                                            {{ session.start_time }} - {{ session.end_time }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        {% if session.status == "Available" %}
+                                            <span class="badge bg-success opacity-90 px-2 py-1">Available</span>
+                                        {% elif session.status == "Full" %}
+                                            <span class="badge bg-warning text-dark px-2 py-1">Full</span>
+                                        {% else %}
+                                            <span class="badge bg-danger px-2 py-1">Cancelled</span>
+                                        {% endif %}
+                                    </div>
+                                </label>
+                            </li>
+                            {% endfor %}
+                        </ul>
+
+                        <button type="submit" id="bookBtn" class="brand-btn-primary w-100 mb-3" disabled>
+                            Book Selected Session
+                        </button>
+                        {% else %}
+                        <div class="alert alert-info py-3 border-0" style="background-color: #f5f0e6; color: #7c5e3f; font-family: 'Jost', sans-serif;">
+                            No sessions available for this activity.
+                        </div>
+                        {% endif %}
+                    </form>
+                    {% else %}
+                        <h5 class="activity-section-heading mb-3">Available Sessions</h5>
+                        {% if sessions %}
+                        <ul class="list-group mb-4">
+                            {% for session in sessions %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center custom-session-item rounded mb-2" style="padding: 12px 16px;">
+                                <div>
+                                    <span class="text-dark font-weight-medium">
+                                        {{ session.start_time }} - {{ session.end_time }}
+                                    </span>
+                                </div>
+                                <div>
+                                    {% if session.status == "Available" %}
+                                        <span class="badge bg-success opacity-90 px-2 py-1">Available</span>
+                                    {% elif session.status == "Full" %}
+                                        <span class="badge bg-warning text-dark px-2 py-1">Full</span>
+                                    {% else %}
+                                        <span class="badge bg-danger px-2 py-1">Cancelled</span>
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <div class="alert alert-info py-3 border-0 mb-4" style="background-color: #f5f0e6; color: #7c5e3f; font-family: 'Jost', sans-serif;">
+                            No sessions available for this activity.
+                        </div>
+                        {% endif %}
+
+                        {% if not request.user.is_authenticated %}
+                        <div class="p-4 mb-4 text-center border-0" style="background-color: rgba(197, 168, 128, 0.06); border: 1.5px dashed rgba(197, 168, 128, 0.25) !important; border-radius: 8px;">
+                            <h5 class="mb-2" style="font-family: 'Gilda Display', serif; color: #a57f5a; font-weight: 600;">Booking Restricted for Guests</h5>
+                            <p class="small text-muted mb-3" style="font-family: 'Jost', sans-serif; line-height: 1.5;">
+                                Activity bookings are exclusive to registered customers with a confirmed room booking. Please register or log in to book this activity.
+                            </p>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <a href="{% url 'login' %}" class="brand-btn-primary text-center py-2 px-3" style="font-size: 11px; text-decoration: none;">
+                                    Sign In / Register
+                                </a>
+                                <a href="{% url 'rooms' %}" class="brand-btn-secondary py-2 px-3" style="font-size: 11px; text-decoration: none;">
+                                    Book a Room
+                                </a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="p-4 mb-4 text-center border-0" style="background-color: rgba(245, 158, 11, 0.05); border: 1.5px dashed rgba(245, 158, 11, 0.25) !important; border-radius: 8px;">
+                            <h5 class="mb-2" style="font-family: 'Gilda Display', serif; color: #d97706; font-weight: 600;">Reservation Required</h5>
+                            <p class="small text-muted mb-3" style="font-family: 'Jost', sans-serif; line-height: 1.5;">
+                                You need an active room booking to book activities. Please reserve a room first to enjoy these facilities.
+                            </p>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <a href="{% url 'rooms' %}" class="brand-btn-primary text-center py-2 px-3" style="font-size: 11px; text-decoration: none;">
+                                    Book a Room
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <div class="pt-3">
+                    <a href="{% url 'activity' %}" class="brand-btn-secondary w-100">
+                        Back to Activities
+                    </a>
+                </div>
+            </div>
+
+            <!-- RIGHT TICKET BLOCK: MEDIA DISPLAY -->
+            <div class="ticket-img-side">
+                {% if activity.activity_image %}
+                    <img src="{{ activity.activity_image.url }}" alt="{{ activity.activity_name }}">
+                {% else %}
+                    <img src="{% static 'guest/images/default.jpg' %}" alt="Activity Image">
+                {% endif %}
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+function enableBookBtn(sessionId) {
+    document.getElementById("bookBtn").disabled = false;
+    document.getElementById("session_id").value = sessionId;
+}
+</script>
+
+{% endblock %}
+

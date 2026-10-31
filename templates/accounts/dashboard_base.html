@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StayZen Dashboard{% endblock %}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================================================
+   1. CORE VARIABLES & THEME DEFINITIONS
+   ========================================================================== */
+        :root,
+        [data-theme="light"] {
+            --bg-primary: #523B94;
+            /* Rich Deep Purple Background */
+            --bg-secondary: #ffffff;
+            /* Main panel container surface */
+            --bg-sidebar: #523B94;
+            /* Rich Deep Purple Sidebar Base */
+            --border-color: rgba(82, 59, 148, 0.06);
+            --text-primary: #1C1D1F;
+            --text-muted: #7E7F88;
+            --text-highlight: #FFB03A;
+            --card-bg: #ffffff;
+            --card-hover-bg: #FAF9FE;
+            --card-shadow: 0 10px 35px rgba(82, 59, 148, 0.04);
+            --topbar-bg: rgba(255, 255, 255, 0.8);
+            --sidebar-link-hover: rgba(255, 255, 255, 0.08);
+            --sidebar-link-active: rgba(255, 255, 255, 0.15);
+            --dropdown-bg: #ffffff;
+            --danger-color: #E11D48;
+
+            /* Layout Constants */
+            --sidebar-width: 280px;
+            --topbar-height: 75px;
+            --card-radius: 24px;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1A1235;
+            --bg-secondary: #14161F;
+            --bg-sidebar: #1A1235;
+            --border-color: rgba(255, 255, 255, 0.06);
+            --text-primary: #F3F4F6;
+            --text-muted: #9CA3AF;
+            --text-highlight: #FFB03A;
+            --card-bg: #1E202B;
+            --card-hover-bg: #252836;
+            --card-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+            --topbar-bg: rgba(20, 22, 31, 0.8);
+            --sidebar-link-hover: rgba(255, 255, 255, 0.04);
+            --sidebar-link-active: rgba(82, 59, 148, 0.3);
+            --dropdown-bg: #1E202B;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        /* ==========================================================================
+   2. OVERLAPPING MAIN CONTAINER FRAME 
+   ========================================================================== */
+        .main {
+            flex: 1;
+            position: relative;
+            z-index: 2;
+            margin-left: calc(var(--sidebar-width) - 32px);
+            margin-top: 24px;
+            margin-right: 24px;
+            margin-bottom: 24px;
+            min-height: calc(100vh - 48px);
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-secondary);
+            border-radius: 32px;
+            box-shadow: -15px 0 40px rgba(0, 0, 0, 0.04), var(--card-shadow);
+            overflow: hidden;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+        }
+
+        body.sidebar-collapsed .main {
+            margin-left: 60px;
+        }
+
+        /* ==========================================================================
+   3. FLUSH SIDEBAR CANVAS
+   ========================================================================== */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: var(--bg-sidebar);
+            border-radius: 0;
+            padding: 40px 32px 40px 24px;
+            display: flex;
+            flex-direction: column;
+            z-index: 1;
+            overflow-y: auto;
+            scrollbar-width: none;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .sidebar-header {
+            height: var(--topbar-height);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            margin-bottom: 24px;
+        }
+
+        .sidebar .logo {
+            font-size: 26px;
+            font-weight: 700;
+            color: #ffffff !important;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar .logo-text {
+            opacity: 1;
+            transition: opacity 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            min-height: 48px;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.6);
+            border-radius: 14px;
+            font-weight: 500;
+            font-size: 15px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+        }
+
+        .sidebar a:hover {
+            background-color: var(--sidebar-link-hover);
+            color: #ffffff !important;
+        }
+
+        .sidebar a.active {
+            background-color: var(--sidebar-link-active);
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            font-size: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-text {
+            margin-left: 12px;
+            opacity: 1;
+            transition: opacity 0.25s ease;
+        }
+
+        .logout-container {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 16px;
+        }
+
+        .logout-container a {
+            color: #FFA4A4 !important;
+        }
+
+        .logout-container a:hover {
+            background-color: rgba(244, 63, 94, 0.15);
+        }
+
+        body.sidebar-collapsed .sidebar {
+            width: 80px;
+            padding: 30px 10px;
+        }
+
+        body.sidebar-collapsed .sidebar .logo-text,
+        body.sidebar-collapsed .sidebar .nav-text {
+            opacity: 0;
+            width: 0;
+            visibility: hidden;
+            overflow: hidden;
+            margin-left: 0;
+        }
+
+        body.sidebar-collapsed .sidebar a {
+            justify-content: center;
+            padding: 12px 0;
+        }
+
+        /* ==========================================================================
+   4. LAYOUT COMPONENTS (Topbar, Table structure, Cards)
+   ========================================================================== */
+        .topbar {
+            height: var(--topbar-height);
+            background-color: var(--topbar-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .topbar-left,
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .menu-toggle {
+            background-color: var(--card-hover-bg);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            color: var(--text-primary);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+        }
+
+        .menu-toggle:hover {
+            background-color: var(--card-hover-bg);
+            border-color: var(--bg-sidebar);
+        }
+
+        .menu-toggle .toggle-icon {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.sidebar-collapsed .menu-toggle .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .mobile-logo {
+            display: none;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--bg-sidebar);
+        }
+
+        .vertical-divider {
+            width: 1px;
+            height: 24px;
+            background-color: rgba(0, 0, 0, 0.08);
+        }
+
+        [data-theme="dark"] .vertical-divider {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .date-display {
+            font-size: 15px;
+            color: #6B7280;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        [data-theme="dark"] .date-display {
+            color: var(--text-muted);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, transform 0.3s ease;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+            transform: rotate(15deg);
+        }
+
+        [data-theme="dark"] .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="light"] .theme-toggle .sun-icon {
+            display: none;
+        }
+
+        [data-theme="light"] .theme-toggle .moon-icon {
+            display: block;
+        }
+
+        [data-theme="dark"] .theme-toggle .sun-icon {
+            display: block;
+        }
+
+        [data-theme="dark"] .theme-toggle .moon-icon {
+            display: none;
+        }
+
+        /* Notification module */
+        .notification-bell-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            color: #4B5563;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            background: #ffffff;
+            border: 1px solid #E5E7EB;
+        }
+
+        .notification-bell-btn:hover {
+            background-color: #F9FAFB;
+            border-color: #D1D5DB;
+        }
+
+        [data-theme="dark"] .notification-bell-btn {
+            background: #1E202B;
+            border-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .notification-bell-btn:hover {
+            background-color: #252836;
+        }
+
+        .notification-badge-dot {
+            display: none;
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #EF4444;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 9px;
+            font-weight: 700;
+            width: 15px;
+            height: 15px;
+            line-height: 15px;
+            text-align: center;
+            border: 2px solid var(--bg-secondary);
+        }
+
+        /* User account trigger */
+        .profile-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .profile-trigger {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 6px 16px 6px 6px;
+            border-radius: 16px;
+            background-color: #F8F9FA;
+            border: 1px solid #E5E7EB;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .profile-trigger:hover {
+            background-color: #F1F3F5;
+            border-color: #D1D5DB;
+        }
+
+        [data-theme="dark"] .profile-trigger {
+            background-color: #1E202B;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] .profile-trigger:hover {
+            background-color: #252836;
+        }
+
+        .avatar-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #523B94, #8C76D2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 14px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .avatar-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .profile-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2937;
+        }
+
+        [data-theme="dark"] .profile-name {
+            color: var(--text-primary);
+        }
+
+        .profile-arrow {
+            font-size: 9px;
+            color: #9CA3AF;
+            transition: transform 0.2s ease;
+        }
+
+        .profile-container.active .profile-arrow {
+            transform: rotate(180deg);
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            width: 230px;
+            background-color: var(--dropdown-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            padding: 8px 0;
+            z-index: 1002;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px) scale(0.95);
+            transform-origin: top right;
+            transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.2s ease;
+        }
+
+        .profile-container.active .profile-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .dropdown-header {
+            padding: 14px 18px;
+        }
+
+        .dropdown-user-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .dropdown-user-role {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 6px 0;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 18px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--card-hover-bg);
+        }
+
+        .logout-link {
+            color: var(--danger-color);
+        }
+
+        .content {
+            padding: 40px;
+            max-width: 1280px;
+            width: 100%;
+            margin: 0 auto;
+            flex: 1;
+        }
+
+        /* ==========================================================================
+   5. STANDARD DYNAMIC CARDS BASE 
+   ========================================================================== */
+        .premium-card,
+        .card,
+        .page-card,
+        .stat-card,
+        .booking-card,
+        .profile-card,
+        .ui-card {
+            position: relative;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius) !important;
+            padding: 28px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow) !important;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .premium-card:hover,
+        .ui-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(82, 59, 148, 0.08) !important;
+        }
+
+        .dashboard-title-row {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+        }
+
+        button,
+        .btn,
+        input,
+        select,
+        textarea {
+            border-radius: 10px !important;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        table th,
+        table td {
+            padding: 12px 14px !important;
+        }
+
+        /* ==========================================================================
+   6. FORCE RE-COLOR SHADOW RE-BINDINGS IN DARK MODE
+   ========================================================================== */
+        [data-theme="dark"] .premium-card,
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .page-card,
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .booking-card,
+        [data-theme="dark"] .profile-card,
+        [data-theme="dark"] .ui-card,
+        [data-theme="dark"] .bg-white,
+        [data-theme="dark"] [class*="card-"] {
+            background-color: var(--card-bg) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .card h1,
+        [data-theme="dark"] .card h2,
+        [data-theme="dark"] .card h3,
+        [data-theme="dark"] .card h4,
+        [data-theme="dark"] .card p,
+        [data-theme="dark"] .card div,
+        [data-theme="dark"] .card span:not(.badge) {
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .text-muted,
+        [data-theme="dark"] .card .text-secondary,
+        [data-theme="dark"] .card p.muted-text {
+            color: var(--text-muted) !important;
+        }
+
+        /* Responsive Overrides */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                top: 0;
+                left: 0;
+                height: 100vh;
+                border-radius: 0;
+                width: 260px !important;
+                padding: 32px 20px;
+            }
+
+            body.sidebar-active .sidebar {
+                transform: translateX(0);
+            }
+
+            .main {
+                margin: 0 !important;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+
+            .mobile-logo {
+                display: inline-block;
+            }
+
+            .topbar {
+                padding: 0 20px;
+            }
+
+            .content {
+                padding: 24px;
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background-color: rgba(0, 0, 0, 0.4);
+                backdrop-filter: blur(4px);
+                z-index: 999;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            body.sidebar-active .sidebar-overlay {
+                display: block;
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 576px) {
+
+            .date-display,
+            .topbar-right .vertical-divider:first-of-type,
+            .profile-name {
+                display: none;
+            }
+
+            .content {
+                padding: 16px;
+            }
+        }
+
+        /* Submenu Lists Modules */
+        .menu-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .menu-group-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .menu-group-toggle::after {
+            content: "▼";
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            transition: transform 0.25s ease;
+            margin-left: auto;
+        }
+
+        .menu-group.open .menu-group-toggle::after {
+            transform: rotate(-180deg);
+            color: #ffffff;
+        }
+
+        .submenu-list {
+            max-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding-left: 20px;
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            margin-left: 24px;
+            transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1), margin 0.25s ease;
+        }
+
+        .menu-group.open .submenu-list {
+            max-height: 500px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+
+        .submenu-list a {
+            min-height: 36px !important;
+            font-size: 13px !important;
+            padding: 8px 12px !important;
+            color: rgba(255, 255, 255, 0.55) !important;
+            background: none !important;
+        }
+
+        .submenu-list a:hover {
+            color: #ffffff !important;
+        }
+
+        .submenu-list a.active {
+            color: var(--text-highlight) !important;
+            font-weight: 500 !important;
+            background: none !important;
+        }
+
+        body.sidebar-collapsed .submenu-list,
+        body.sidebar-collapsed .menu-group-toggle::after {
+            display: none !important;
+        }
+
+    </style>
+    <style>{% block extra_css %}{% endblock %}</style>
+</head>
+
+<body>
+    
+    
+    {% if messages %}
+    <div class="global-toast-container">
+        {% for message in messages %}
+        <div class="toast-item {% if message.tags %}{{ message.tags }}{% endif %}">
+            <div class="toast-icon">
+                {% if message.tags == 'success' %}✓{% elif message.tags == 'error' or message.tags == 'danger' %}⚠️{% elif message.tags == 'warning' %}⚡{% else %}ℹ{% endif %}
+            </div>
+            <div class="toast-content">
+                {{ message }}
+            </div>
+            <button class="toast-close" aria-label="Close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <style>
+        .global-toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 380px;
+            width: calc(100% - 48px);
+        }
+
+        .toast-item {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid #3b82f6;
+            animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            pointer-events: auto;
+        }
+
+        .toast-item.success {
+            border-left-color: #22c55e;
+        }
+
+        .toast-item.error,
+        .toast-item.danger {
+            border-left-color: #ef4444;
+        }
+
+        .toast-item.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .toast-icon {
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        .toast-item.success .toast-icon {
+            color: #22c55e;
+        }
+
+        .toast-item.error .toast-icon,
+        .toast-item.danger .toast-icon {
+            color: #ef4444;
+        }
+
+        .toast-item.warning .toast-icon {
+            color: #f59e0b;
+        }
+
+        .toast-content {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(60px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes toastFadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toasts = document.querySelectorAll('.toast-item');
+            toasts.forEach(toast => {
+                const closeBtn = toast.querySelector('.toast-close');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function () { dismissToast(toast); });
+                }
+                setTimeout(() => { dismissToast(toast); }, 5000);
+            });
+
+            function dismissToast(toast) {
+                toast.style.animation = 'toastFadeOut 0.3s forwards';
+                setTimeout(() => {
+                    toast.remove();
+                    const container = document.querySelector('.global-toast-container');
+                    if (container && container.children.length === 0) { container.remove(); }
+                }, 300);
+            }
+        });
+    </script>
+    {% endif %}
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="{% url 'dashboard' %}" class="logo">
+                <img src="{% static 'guest/images/logo/gold.svg' %}" alt="StayZen" 
+                     style="height: 48px; width: auto; object-fit: contain; filter: brightness(0) invert(1);">
+                <span class="logo-text"
+                    style="color: #ffffff; font-weight: 700; font-size: 22px; letter-spacing: -0.5px;">StayZen</span>
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{% url 'home' %}">
+                <span class="nav-icon">🌐</span>
+                <span class="nav-text">Back to Home</span>
+            </a>
+            <a href="{% url 'dashboard' %}"
+                class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-text">Dashboard</span>
+            </a>
+            {% for menu in menus %}
+            <div class="menu-group">
+                <a href="javascript:;" class="menu-group-toggle">
+                    <span class="nav-icon">{% if menu.icon %}{{ menu.icon }}{% else %}📁{% endif %}</span>
+                    <span class="nav-text">{{ menu.name }}</span>
+                </a>
+                <div class="submenu-list">
+                    {% for sub in menu.submenus.all %}
+                    <a href="{{ sub.resolved_url }}"
+                        class="{% if request.resolver_match.url_name == sub.url_name %}active{% endif %}">
+                        <span class="nav-text">{{ sub.name }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+            <a href="{% url 'my_bookings' %}"
+                class="{% if request.resolver_match.url_name == 'my_bookings' %}active{% endif %}">
+                <span class="nav-icon">📅</span>
+                <span class="nav-text">My Bookings</span>
+            </a>
+            <a href="{% url 'feedback' %}"
+                class="{% if request.resolver_match.url_name == 'feedback' %}active{% endif %}">
+                <span class="nav-icon">⭐</span>
+                <span class="nav-text">Feedback</span>
+            </a>
+            <a href="{% url 'my_profile' %}"
+                class="{% if request.resolver_match.url_name == 'my_profile' or request.resolver_match.url_name == 'edit_profile' %}active{% endif %}">
+                <span class="nav-icon">👤</span>
+                <span class="nav-text">My Profile</span>
+            </a>
+            <a href="{% url 'loyalty_points' %}"
+                class="{% if request.resolver_match.url_name == 'loyalty_points' %}active{% endif %}">
+                <span class="nav-icon">🎁</span>
+                <span class="nav-text">Loyalty Points</span>
+            </a>
+            <a href="{% url 'membership_status' %}"
+                class="{% if request.resolver_match.url_name == 'membership_status' %}active{% endif %}">
+                <span class="nav-icon">💎</span>
+                <span class="nav-text">Membership</span>
+            </a>
+            <a href="{% url 'payment_history' %}"
+                class="{% if request.resolver_match.url_name == 'payment_history' %}active{% endif %}">
+                <span class="nav-icon">🧾</span>
+                <span class="nav-text">Payment History</span>
+            </a>
+            <a href="{% url 'account_settings' %}"
+                class="{% if request.resolver_match.url_name == 'account_settings' %}active{% endif %}">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <div class="main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle" id="menuToggle" aria-label="Toggle Sidebar">
+                    <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+                <span class="mobile-logo">StayZen</span>
+            </div>
+
+            <div class="topbar-right">
+                <div class="date-display">
+                    <span style="font-size: 16px;">📂</span>
+                    <span>{% now "d M Y" %}</span>
+                </div>
+
+                <div class="vertical-divider"></div>
+
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+                    <span class="sun-icon">☀️</span>
+                    <span class="moon-icon">🌙</span>
+                </button>
+
+                <div class="vertical-divider"></div>
+
+                <a href="{% url 'notifications' %}" class="notification-bell-btn" id="notif-bell-btn"
+                    aria-label="Notifications">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                    <span class="notification-badge-dot" id="notif-badge"></span>
+                </a>
+
+                <div class="profile-container" id="profileContainer">
+                    <div class="profile-trigger" id="profileTrigger">
+                        <div class="avatar-circle profile-avatar">
+                            {% if request.user.customer.image %}
+                            <img src="{{ request.user.customer.image.url }}" alt="Profile">
+                            {% elif request.user.first_name %}
+                            {{ request.user.first_name|slice:":1"|upper }}
+                            {% else %}
+                            G
+                            {% endif %}
+                        </div>
+                        <span class="profile-name">{{ request.user.first_name|default:"Guest" }}</span>
+                        <span class="profile-arrow">▼</span>
+                    </div>
+
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="dropdown-header">
+                            <div class="dropdown-user-name">{{ request.user.first_name|default:"Guest User" }}</div>
+                            <div class="dropdown-user-role">StayZen Valued Member</div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="{% url 'change_password' %}" class="dropdown-item">
+                            <span class="dropdown-icon">🔑</span>
+                            Change Password
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="{% url 'logout_view' %}" class="dropdown-item logout-link">
+                            <span class="dropdown-icon">🚪</span>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script>
+        // Theme Switcher Engine
+        const themeToggle = document.getElementById('themeToggle');
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            setTheme(currentTheme === 'light' ? 'dark' : 'light');
+        });
+        setTheme(localStorage.getItem('theme') || 'light');
+
+        // Sidebar Toggle Logic
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            if (window.innerWidth > 768) {
+                document.body.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebar-collapsed', document.body.classList.contains('sidebar-collapsed') ? 'true' : 'false');
+            } else {
+                document.body.classList.toggle('sidebar-active');
+            }
+        }
+        menuToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', () => { document.body.classList.remove('sidebar-active'); });
+
+        if (window.innerWidth > 768 && localStorage.getItem('sidebar-collapsed') === 'true') {
+            document.body.classList.add('sidebar-collapsed');
+        }
+
+        // Profile Dropdown Actions
+        const profileTrigger = document.getElementById('profileTrigger');
+        const profileContainer = document.getElementById('profileContainer');
+        profileTrigger.addEventListener('click', (e) => { e.stopPropagation(); profileContainer.classList.toggle('active'); });
+        document.addEventListener('click', (e) => { if (!profileContainer.contains(e.target)) profileContainer.classList.remove('active'); });
+
+        // Accordion Expansion Sub-menus
+        document.addEventListener("DOMContentLoaded", function () {
+            const groupToggles = document.querySelectorAll(".menu-group-toggle");
+            groupToggles.forEach(toggle => {
+                const parentGroup = toggle.closest(".menu-group");
+                if (parentGroup.querySelector(".submenu-list a.active")) {
+                    parentGroup.classList.add("open");
+                }
+
+                toggle.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    if (parentGroup.classList.contains("open")) {
+                        parentGroup.classList.remove("open");
+                    } else {
+                        document.querySelectorAll(".menu-group.open").forEach(openGroup => {
+                            openGroup.classList.remove("open");
+                        });
+                        parentGroup.classList.add("open");
+                    }
+                });
+            });
+        });
+    </script>
+     <script src="{% static 'guest/js/form_validation.js' %}?v={% now 'U' %}"></script>
+</body>
+    
+</body>
+
+</html>

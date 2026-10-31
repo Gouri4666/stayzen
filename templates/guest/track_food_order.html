@@ -1,0 +1,376 @@
+{% extends 'guest/base.html' %}
+{% load static %}
+
+{% block title %}Track Order - StayZen{% endblock %}
+
+{% block content %}
+<style>
+    .tracking-page {
+        padding: 80px 20px;
+        background: #f8fafc;
+        min-height: calc(100vh - 200px);
+        font-family: 'Inter', sans-serif;
+    }
+    .tracking-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    .tracking-header {
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+        color: #fff;
+        padding: 30px;
+        text-align: center;
+    }
+    .tracking-header h2 {
+        margin: 0 0 10px 0;
+        font-size: 24px;
+        font-weight: 700;
+        color: #ffffff;
+    }
+    .tracking-header p {
+        margin: 0;
+        color: #94a3b8;
+        font-size: 14px;
+    }
+    .tracking-body {
+        padding: 30px;
+    }
+    .order-info {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+    }
+    .info-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .info-label {
+        font-size: 12px;
+        color: #64748b;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    .info-value {
+        font-size: 15px;
+        color: #1e293b;
+        font-weight: 700;
+    }
+    .status-card {
+        background: #f1f5f9;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 30px;
+        border: 1px solid #e2e8f0;
+    }
+    .status-text {
+        font-size: 22px;
+        font-weight: 800;
+        color: #3b82f6;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .status-text.completed { color: #10b981; }
+    .status-text.cancelled { color: #ef4444; }
+
+    /* ── Horizontal Step Tracker ─────────────────────────────── */
+    .status-tracker {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        margin: 30px 0;
+        padding: 0 10px;
+        overflow-x: auto;
+    }
+    .status-tracker::before {
+        content: '';
+        position: absolute;
+        top: 17px;
+        left: 30px;
+        right: 30px;
+        height: 4px;
+        background: #cbd5e1;
+        z-index: 1;
+    }
+    .step {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 70px;
+        flex: 1;
+    }
+    .step-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: #cbd5e1;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        margin-bottom: 8px;
+        transition: all 0.3s;
+    }
+    .step.active .step-icon {
+        background: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+    }
+    .step.done .step-icon {
+        background: #10b981;
+    }
+    .step-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #64748b;
+        text-align: center;
+        line-height: 1.3;
+    }
+    .step.active .step-label { color: #3b82f6; }
+    .step.done .step-label { color: #10b981; }
+
+    .items-list {
+        margin-top: 30px;
+    }
+    .items-list h3 {
+        font-size: 18px;
+        color: #1e293b;
+        margin-bottom: 15px;
+        font-weight: 700;
+    }
+    .item-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px dashed #e2e8f0;
+    }
+    .item-name {
+        font-size: 14px;
+        color: #334155;
+        font-weight: 500;
+    }
+    .item-qty {
+        color: #64748b;
+        font-size: 13px;
+        margin-right: 10px;
+    }
+    .item-price {
+        font-size: 14px;
+        color: #1e293b;
+        font-weight: 600;
+    }
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px 0;
+        margin-top: 10px;
+        border-top: 2px solid #e2e8f0;
+    }
+    .total-label {
+        font-size: 16px;
+        font-weight: 800;
+        color: #1e293b;
+    }
+    .total-amount {
+        font-size: 18px;
+        font-weight: 800;
+        color: #10b981;
+    }
+    .refresh-btn {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        text-align: center;
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        color: #475569;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        margin-top: 20px;
+    }
+    .refresh-btn:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+    }
+
+    @media (max-width: 600px) {
+        .status-tracker { padding: 0; gap: 2px; }
+        .step { min-width: 55px; }
+        .step-label { font-size: 10px; }
+        .step-icon { width: 28px; height: 28px; font-size: 12px; }
+    }
+</style>
+
+<div class="tracking-page">
+    <div class="tracking-container">
+        <div class="tracking-header">
+            <h2>Order Tracking</h2>
+            <p>ID: {{ order.long_order_id }}</p>
+        </div>
+        <div class="tracking-body">
+            
+            <div class="order-info">
+                <div class="info-group">
+                    <span class="info-label">Guest Name</span>
+                    <span class="info-value">{{ guest_name }}</span>
+                </div>
+                <div class="info-group">
+                    <span class="info-label">Order Type</span>
+                    <span class="info-value">{{ order.get_order_type_display }}</span>
+                </div>
+                {% if order.order_type == 'Delivery' and order.delivery_address %}
+                <div class="info-group">
+                    <span class="info-label">Delivery Address</span>
+                    <span class="info-value">{{ order.delivery_address }}</span>
+                </div>
+                {% endif %}
+                <div class="info-group" style="text-align: right;">
+                    <span class="info-label">Amount</span>
+                    <span class="info-value">₹{{ order.total_amount }}</span>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <div class="info-label" style="margin-bottom: 8px;">Current Status</div>
+                <div class="status-text 
+                    {% if order.status == 'Completed' or order.status == 'Delivered' %}completed{% elif order.status == 'Cancelled' %}cancelled{% endif %}">
+                    {{ order.get_status_display }}
+                </div>
+            </div>
+
+            {% if order.status != 'Cancelled' %}
+
+            {% if order.order_type == 'Delivery' %}
+            <!-- ── Delivery-specific horizontal tracker (7 steps) ── -->
+            <div class="status-tracker">
+                <!-- Received -->
+                <div class="step done">
+                    <div class="step-icon"><i class="fa fa-file-text-o"></i></div>
+                    <div class="step-label">Received</div>
+                </div>
+                <!-- Confirmed -->
+                <div class="step {% if order.status in 'Confirmed,Preparing,ReadyForPickup,Assigned,OutForDelivery,Delivered,Completed' %}done{% endif %}">
+                    <div class="step-icon"><i class="fa fa-check"></i></div>
+                    <div class="step-label">Confirmed</div>
+                </div>
+                <!-- Preparing -->
+                <div class="step {% if order.status in 'Preparing,ReadyForPickup,Assigned,OutForDelivery,Delivered,Completed' %}done{% elif order.status == 'Confirmed' %}active{% endif %}">
+                    <div class="step-icon"><i class="fa fa-fire"></i></div>
+                    <div class="step-label">Preparing</div>
+                </div>
+                <!-- Ready -->
+                <div class="step {% if order.status in 'ReadyForPickup,Assigned,OutForDelivery,Delivered,Completed' %}done{% elif order.status == 'Preparing' %}active{% endif %}">
+                    <div class="step-icon"><i class="fa fa-check-circle"></i></div>
+                    <div class="step-label">Ready</div>
+                </div>
+                <!-- Assigned -->
+                <div class="step {% if order.status in 'Assigned,OutForDelivery,Delivered,Completed' %}done{% elif order.status == 'ReadyForPickup' %}active{% endif %}">
+                    <div class="step-icon"><i class="fa fa-user"></i></div>
+                    <div class="step-label">Assigned</div>
+                </div>
+                <!-- Out for Delivery -->
+                <div class="step {% if order.status in 'OutForDelivery,Delivered,Completed' %}done{% elif order.status == 'Assigned' %}active{% endif %}">
+                    <div class="step-icon"><i class="fa fa-motorcycle"></i></div>
+                    <div class="step-label">On the Way</div>
+                </div>
+                <!-- Delivered -->
+                <div class="step {% if order.status in 'Delivered,Completed' %}done{% elif order.status == 'OutForDelivery' %}active{% endif %}">
+                    <div class="step-icon"><i class="fa fa-home"></i></div>
+                    <div class="step-label">Delivered</div>
+                </div>
+            </div>
+            {% else %}
+            <!-- ── Standard order horizontal tracker (4 steps) ── -->
+            <div class="status-tracker">
+                <div class="step done">
+                    <div class="step-icon"><i class="fa fa-file-text-o"></i></div>
+                    <div class="step-label">Received</div>
+                </div>
+                <div class="step {% if order.status in 'Confirmed,Preparing,Completed' %}done{% elif order.status == 'Pending' %}active{% endif %}">
+                    <div class="step-icon"><i class="fa fa-check"></i></div>
+                    <div class="step-label">Confirmed</div>
+                </div>
+                <div class="step {% if order.status in 'Completed' %}done{% elif order.status in 'Confirmed,Preparing' %}active{% endif %}">
+                    <div class="step-icon"><i class="fa fa-fire"></i></div>
+                    <div class="step-label">Preparing</div>
+                </div>
+                <div class="step {% if order.status == 'Completed' %}done{% endif %}">
+                    <div class="step-icon"><i class="fa fa-flag-checkered"></i></div>
+                    <div class="step-label">Completed</div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if order.order_type == 'Delivery' and order.delivery_staff %}
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <i class="fa fa-user-circle" style="font-size: 22px; color: #22c55e;"></i>
+                <div>
+                    <div style="font-size: 11px; color: #16a34a; font-weight: 600; text-transform: uppercase;">Delivery Staff</div>
+                    <div style="font-size: 14px; font-weight: 700; color: #15803d;">{{ order.delivery_staff.get_full_name|default:order.delivery_staff.username }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div style="background: #fee2e2; border: 1px solid #fca5a5; border-radius: 12px; padding: 20px; margin-bottom: 30px; font-family: 'Inter', sans-serif;">
+                <h3 style="color: #ef4444; margin-top: 0; margin-bottom: 15px; font-weight: 700; font-family: 'Inter', sans-serif;">Booking Cancelled</h3>
+                <div class="info-group" style="margin-bottom: 10px;">
+                    <span class="info-label">Cancelled By</span>
+                    <span class="info-value">{{ order.cancelled_by|default:"System" }}</span>
+                </div>
+                <div class="info-group" style="margin-bottom: 10px;">
+                    <span class="info-label">Reason</span>
+                    <span class="info-value">{{ order.cancellation_reason|default:"No reason provided" }}</span>
+                </div>
+                <div class="info-group" style="margin-bottom: 10px;">
+                    <span class="info-label">Cancelled On</span>
+                    <span class="info-value">{{ order.cancelled_at|date:"d F Y h:i A" }}</span>
+                </div>
+                <div class="info-group">
+                    <span class="info-label">Refund Status</span>
+                    <span class="info-value" style="color: #d97706;">{{ order.refund_status }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="items-list">
+                <h3>Order Items</h3>
+                {% for item in items %}
+                <div class="item-row">
+                    <div class="item-name">
+                        <span class="item-qty">{{ item.quantity }}x</span>
+                        {{ item.food.item_name }}
+                    </div>
+                    <div class="item-price">₹{{ item.get_total }}</div>
+                </div>
+                {% endfor %}
+
+                <div class="total-row">
+                    <div class="total-label">Total Amount</div>
+                    <div class="total-amount">₹{{ order.total_amount }}</div>
+                </div>
+            </div>
+
+            <a href="javascript:location.reload();" class="refresh-btn">
+                <i class="fa fa-refresh"></i> Refresh Status
+            </a>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+

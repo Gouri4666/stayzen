@@ -1,0 +1,167 @@
+/*-----------------
+    Typography
+-------------------*/
+
+body{
+    font-size: var(--p);
+    line-height: 28px;
+    font-weight: 400;
+    font-family: var(--jost);
+    color: var(--rts-para);
+    overflow-x: hidden;
+    margin: 0 auto;
+    background-color: var(--body-bg);
+}
+// .row{
+//     margin-right: 0;
+//     margin-left: 0;
+// }
+html, body{
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    max-width: 100%;
+}
+a, a:hover, a:focus{
+    text-decoration: none;
+}
+.font-xs{
+    font-size: var(--p-xs);
+}
+.font-sm{
+    font-size: 18px;
+}
+.rts__white{
+    color: var(--rts-white);
+}
+.text-gray{
+    color: var(--rts-gray);
+}
+h1, .h1{
+    font-size: var(--h1);
+    line-height: 90px;
+    @include mq($md){
+        font-size: 70px;
+        line-height: 80px;
+    }
+}
+
+h2, .h2{
+    font-size: var(--h2);
+    line-height: 70px;
+
+    @include mq($lg){
+        font-size: 50px;
+        line-height: 60px;
+    }
+    @include mq($md){
+        font-size: 48px;
+        line-height: 58px;
+    }
+    @include mq($sm){
+        font-size: 40px;
+        line-height: 50px;
+    }
+    @include mq($xs){
+        font-size: 35px;
+        line-height: 45px;
+    }  
+}
+
+h3, .h3{
+    font-size: var(--h3);
+    line-height: 58px;
+    @include mq($xl){
+        font-size: 40px;
+        line-height: 50px;
+    }
+    @include mq($md){
+        font-size: 40px;
+        line-height: 50px;
+    }
+    @include mq($sm){
+        font-size: 30px;
+        line-height: 40px;
+    }
+    @include mq($xs){
+        font-size: 25px;
+        line-height: 35px;
+    }
+}
+h4, .h4{
+    font-size: var(--h4);
+    line-height: 50px;
+    @include mq($md){
+        font-size: 30px;
+        line-height: 40px;
+    }
+}
+
+h5, .h5{
+    font-size: var(--h5);
+    line-height: 42px;
+    @include mq($lg){
+        font-size: 30px;
+        line-height: 40px;
+    }
+    @include mq($md){
+        font-size: 20px;
+        line-height: 30px;
+    }
+}
+
+h6, .h6{
+    font-size: var(--h6);
+    line-height: 30px;
+    @include mq($xl){
+        font-size: 20px;
+    }
+    @include mq($xs){
+        font-size: 20px;
+        line-height: 30px;
+    }
+}
+
+h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6{
+    color: var(--rts-heading);
+    font-weight: 400;
+    font-family: var(--glida);
+}
+
+p{
+    font-size: var(--p);
+    &:last-child{
+        margin-bottom: 0;
+    }
+}
+.font-20{
+    font-size: 20px;
+    @include mq($xs){
+        font-size: 18px;
+    }
+}
+.text-dark{
+    color: var(--rts-heading) !important;
+}
+.text-body{
+    color: var(--rts-para) !important;
+}
+.list-style-dot{
+    li{
+        list-style: none;
+        padding-left: 30px;
+        margin-bottom: 15px;
+        font-weight: 500;
+        position: relative;
+        &::before{
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translate(0, -50%);
+            height: 6px;
+            width: 6px;
+            border-radius: 50%;
+            background-color: var(--rts-button-1);
+            content: '';
+        }
+    }
+}

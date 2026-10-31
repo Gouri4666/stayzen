@@ -1,0 +1,230 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid pt-4 px-4 pb-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0 text-dark">Website Content Settings</h3>
+            </div>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="fa fa-check-circle me-2"></i> {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="background:none; border:none; font-size:20px;">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST" action="{% url 'site_settings' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    <strong>Please correct the following errors:</strong>
+                    <ul>
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- 1. INDEX PAGE SETTINGS -->
+                <div class="card shadow-sm border-0 mb-4" style="background-color: var(--sb-bg); border-radius: 12px;">
+                    <div class="card-header" style="background-color: var(--sb-sub-bg); border-bottom: 1px solid var(--sb-border); border-radius: 12px 12px 0 0; padding: 15px 20px;">
+                        <h5 class="mb-0" style="color: var(--sb-text);"><i class="fa fa-home text-primary"></i> 1. Index Page Settings</h5>
+                    </div>
+                    <div class="card-body" style="padding: 25px;">
+                        <h5 style="color: var(--sb-text); border-bottom: 2px solid var(--sb-border); padding-bottom: 10px; margin-bottom: 20px;">A. Banner Slides</h5>
+                        <div class="row mb-5">
+                            <div class="col-md-4 border-right">
+                                <h6 style="font-weight: 700; color: var(--bs-primary); margin-bottom: 15px;">Slide 1</h6>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Subtitle</label>{{ form.index_slide1_subtitle }}</div>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Title</label>{{ form.index_slide1_title }}</div>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Description Text</label>{{ form.index_slide1_text }}</div>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Background Image</label>{{ form.index_slide1_image }}</div>
+                            </div>
+                            <div class="col-md-4 border-right">
+                                <h6 style="font-weight: 700; color: var(--bs-primary); margin-bottom: 15px;">Slide 2</h6>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Subtitle</label>{{ form.index_slide2_subtitle }}</div>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Title</label>{{ form.index_slide2_title }}</div>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Description Text</label>{{ form.index_slide2_text }}</div>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Background Image</label>{{ form.index_slide2_image }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 style="font-weight: 700; color: var(--bs-primary); margin-bottom: 15px;">Slide 3</h6>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Subtitle</label>{{ form.index_slide3_subtitle }}</div>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Title</label>{{ form.index_slide3_title }}</div>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Description Text</label>{{ form.index_slide3_text }}</div>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Background Image</label>{{ form.index_slide3_image }}</div>
+                            </div>
+                        </div>
+                        <h5 style="color: var(--sb-text); border-bottom: 2px solid var(--sb-border); padding-bottom: 10px; margin-bottom: 20px;">B. Facilities Section</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-6"><div class="form-group"><label class="form-label text-muted small fw-bold">Facilities Subtitle</label>{{ form.facilities_subtitle }}</div></div>
+                            <div class="col-md-6"><div class="form-group"><label class="form-label text-muted small fw-bold">Facilities Main Title</label>{{ form.facilities_title }}</div></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 border-right">
+                                <h6 style="font-weight: 600; color: #555;">Facility 1</h6>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Title</label>{{ form.facility1_title }}</div>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Description</label>{{ form.facility1_text }}</div>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Icon/Image</label>{{ form.facility1_icon }}</div>
+                            </div>
+                            <div class="col-md-3 border-right">
+                                <h6 style="font-weight: 600; color: #555;">Facility 2</h6>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Title</label>{{ form.facility2_title }}</div>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Description</label>{{ form.facility2_text }}</div>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Icon/Image</label>{{ form.facility2_icon }}</div>
+                            </div>
+                            <div class="col-md-3 border-right">
+                                <h6 style="font-weight: 600; color: #555;">Facility 3</h6>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Title</label>{{ form.facility3_title }}</div>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Description</label>{{ form.facility3_text }}</div>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Icon/Image</label>{{ form.facility3_icon }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 style="font-weight: 600; color: #555;">Facility 4</h6>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Title</label>{{ form.facility4_title }}</div>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Description</label>{{ form.facility4_text }}</div>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Icon/Image</label>{{ form.facility4_icon }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. ABOUT PAGE SETTINGS -->
+                <div class="card shadow-sm border-0 mb-4" style="background-color: var(--sb-bg); border-radius: 12px;">
+                    <div class="card-header" style="background-color: var(--sb-sub-bg); border-bottom: 1px solid var(--sb-border); border-radius: 12px 12px 0 0; padding: 15px 20px;">
+                        <h5 class="mb-0" style="color: var(--sb-text);"><i class="fa fa-info-circle text-success"></i> 2. About Page Content</h5>
+                    </div>
+                    <div class="card-body" style="padding: 25px;">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">About Section Heading</label>{{ form.about_heading }}</div>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">About Main Text</label>{{ form.about_text }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">About Section Image</label>{{ form.about_image }}</div>
+                            </div>
+                        </div>
+                        
+                        <h6 style="font-weight: 700; color: var(--sb-text); border-bottom: 1px solid var(--sb-border); padding-bottom: 10px; margin-bottom: 20px;">Service Pillars</h6>
+                        <div class="row mb-4">
+                            <div class="col-md-3 border-right">
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Pillar 1 Title</label>{{ form.about_pillar1_title }}</div>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Pillar 1 Text</label>{{ form.about_pillar1_text }}</div>
+                            </div>
+                            <div class="col-md-3 border-right">
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Pillar 2 Title</label>{{ form.about_pillar2_title }}</div>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Pillar 2 Text</label>{{ form.about_pillar2_text }}</div>
+                            </div>
+                            <div class="col-md-3 border-right">
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Pillar 3 Title</label>{{ form.about_pillar3_title }}</div>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Pillar 3 Text</label>{{ form.about_pillar3_text }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Pillar 4 Title</label>{{ form.about_pillar4_title }}</div>
+                                <div class="form-group mb-2"><label class="form-label text-muted small">Pillar 4 Text</label>{{ form.about_pillar4_text }}</div>
+                            </div>
+                        </div>
+
+                        <h6 style="font-weight: 700; color: var(--sb-text); border-bottom: 1px solid var(--sb-border); padding-bottom: 10px; margin-bottom: 20px;">Gallery Section</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Gallery Subtitle</label>{{ form.about_gallery_subtitle }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Gallery Title</label>{{ form.about_gallery_title }}</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 border-right">
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Gallery Image 1</label>{{ form.about_gallery_img1 }}</div>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Caption 1</label>{{ form.about_gallery_caption1 }}</div>
+                            </div>
+                            <div class="col-md-4 border-right">
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Gallery Image 2</label>{{ form.about_gallery_img2 }}</div>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Caption 2</label>{{ form.about_gallery_caption2 }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Gallery Image 3</label>{{ form.about_gallery_img3 }}</div>
+                                <div class="form-group mb-3"><label class="form-label text-muted small fw-bold">Caption 3</label>{{ form.about_gallery_caption3 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. CONTACT & FOOTER SETTINGS -->
+                <div class="card shadow-sm border-0 mb-4" style="background-color: var(--sb-bg); border-radius: 12px;">
+                <div class="card-header" style="background-color: var(--sb-sub-bg); border-bottom: 1px solid var(--sb-border); border-radius: 12px 12px 0 0; padding: 15px 20px;">
+                    <h5 class="mb-0" style="color: var(--sb-text);"><i class="fa fa-phone text-info"></i> 3. Contact & Social Details</h5>
+                </div>
+                <div class="card-body" style="padding: 25px;">
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label style="color: var(--sb-icon); font-size: 12px; font-weight: 600;">Contact Email</label>
+                                {{ form.contact_email }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label style="color: var(--sb-icon); font-size: 12px; font-weight: 600;">Contact Phone</label>
+                                {{ form.contact_phone }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label style="color: var(--sb-icon); font-size: 12px; font-weight: 600;">Physical Address</label>
+                                {{ form.contact_address }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 style="color: var(--sb-text); font-weight: 700; margin-bottom: 15px;">Social Media Links</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label style="color: var(--sb-icon); font-size: 12px; font-weight: 600;">Facebook URL</label>
+                                {{ form.social_facebook }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label style="color: var(--sb-icon); font-size: 12px; font-weight: 600;">LinkedIn URL</label>
+                                {{ form.social_linkedin }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label style="color: var(--sb-icon); font-size: 12px; font-weight: 600;">Twitter URL</label>
+                                {{ form.social_twitter }}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+<div class="text-right mt-4">
+    <button type="submit" class="btn btn-primary px-5 py-2 shadow" style="font-weight: 600; border-radius: 8px;">
+        <i class="fa fa-save me-2"></i> Save All Settings
+    </button>
+</div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

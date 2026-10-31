@@ -1,0 +1,478 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+<div class="container-fluid py-4 bg-light">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold mb-0 text-dark text-capitalize">
+                {% if section_name == 'reservations' %}<i class="fas fa-bed text-primary me-2"></i>Rooms & Reservations
+                {% elif section_name == 'dining' %}<i class="fas fa-utensils text-warning me-2"></i>F&B Dining Orders
+                {% elif section_name == 'events' %}<i class="fas fa-building text-success me-2"></i>Banquets & Events
+                {% elif section_name == 'tables' %}<i class="fas fa-chair text-danger me-2"></i>Table Reservations
+                {% elif section_name == 'payments' %}<i class="fas fa-file-invoice-dollar text-info me-2"></i>Payments & Settlements
+                {% elif section_name == 'attendance' %}<i class="fas fa-clock text-secondary me-2"></i>Staff Attendance
+                {% elif section_name == 'financials' %}<i class="fas fa-chart-line text-dark me-2"></i>Financial Summary
+                {% else %}{{ section_name }}
+                {% endif %}
+                Detailed Performance Report
+            </h2>
+            <p class="text-muted mb-0">Dynamic trend logs, calculated strategic parameters, and historical breakdown tables.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'generate_advanced_pdf_report' %}?section={{ section_name }}&time_filter={{ time_filter }}&top_count={{ top_count }}&sort_order={{ sort_order }}" class="btn btn-danger d-flex align-items-center gap-2 fw-semibold shadow-sm">
+                <i class="fas fa-file-pdf"></i> Export Section PDF
+            </a>
+            <a href="{% url 'generate_csv_report' section_name %}?time_filter={{ time_filter }}&top_count={{ top_count }}&sort_order={{ sort_order }}" class="btn btn-success d-flex align-items-center gap-2 fw-semibold shadow-sm">
+                <i class="fas fa-file-excel"></i> Export CSV
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm p-4 bg-white mb-4">
+        <form method="GET" class="row g-3 align-items-end" id="reportFilterForm">
+            <input type="hidden" name="top_count" value="{{ top_count }}">
+            <input type="hidden" name="sort_order" value="{{ sort_order }}">
+
+            <!-- <div class="col-md-4">
+                <label for="time_filter" class="form-label fw-semibold text-secondary small mb-1">Timeframe Boundary</label>
+                <select id="time_filter" name="time_filter" class="form-select fw-semibold" onchange="this.form.submit()">
+                    <option value="all_time" {% if time_filter == 'all_time' %}selected{% endif %}>All Time</option>
+                    <option value="this_year" {% if time_filter == 'this_year' %}selected{% endif %}>This Year</option>
+                    <option value="last_year" {% if time_filter == 'last_year' %}selected{% endif %}>Last Year</option>
+                    <option value="this_month" {% if time_filter == 'this_month' %}selected{% endif %}>This Month</option>
+                    <option value="this_week" {% if time_filter == 'this_week' %}selected{% endif %}>This Week</option>
+                    <option value="24h" {% if time_filter == '24h' %}selected{% endif %}>Within 24 Hours</option>
+                    <option value="1h" {% if time_filter == '1h' %}selected{% endif %}>Within 1 Hour</option>
+                </select>
+            </div> -->
+
+            <div class="col-md-3">
+                <label for="group_by" class="form-label fw-semibold text-secondary small mb-1">Chart Grouping</label>
+                <select id="group_by" name="group_by" class="form-select fw-semibold" onchange="this.form.submit()">
+                    <option value="year" {% if group_by == 'year' %}selected{% endif %}>📅 Year-wise (by Month)</option>
+                    <option value="month" {% if group_by == 'month' %}selected{% endif %}>🗓️ Month-wise (by Day)</option>
+                    <option value="week" {% if group_by == 'week' %}selected{% endif %}>📆 Weekly (by Day)</option>
+                </select>
+            </div>
+
+            <div class="col-md-5 d-flex gap-2 justify-content-end">
+                <button type="submit" class="btn btn-primary fw-semibold d-flex align-items-center gap-2">
+                    <i class="fas fa-sync"></i> Re-Calculate Analytics
+                </button>
+                <a href="?" class="btn btn-outline-secondary fw-semibold d-flex align-items-center gap-2">
+                    <i class="fas fa-undo"></i> Reset Matrix
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 bg-white h-100 border-start border-4 border-primary">
+                <small class="text-muted text-uppercase fw-bold">Department Data Records</small>
+                <h2 class="fw-bold text-dark mb-0 mt-1">{{ total_count|default:"0" }}</h2>
+            </div>
+        </div>
+
+        {% if section_name != 'attendance' and section_name != 'payments' %}
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 bg-white h-100 border-start border-4 border-success">
+                <small class="text-muted text-uppercase fw-bold">Aggregate Turnover Gross</small>
+                <h2 class="fw-bold text-success mb-0 mt-1">₹{{ total_rev|default:"0.00"|floatformat:2 }}</h2>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if section_name == 'reservations' or section_name == 'events' or section_name == 'tables' %}
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 bg-white h-100 border-start border-4 border-info">
+                <small class="text-muted text-uppercase fw-bold">Confirmed / Active Logs</small>
+                <h2 class="fw-bold text-info mb-0 mt-1">{{ confirmed_count|default:"0" }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 bg-white h-100 border-start border-4 border-danger">
+                <small class="text-muted text-uppercase fw-bold">Cancelled Dropouts</small>
+                <h2 class="fw-bold text-danger mb-0 mt-1">{{ cancelled_count|default:"0" }}</h2>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if section_name == 'dining' %}
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 bg-white h-100 border-start border-4 border-warning">
+                <small class="text-muted text-uppercase fw-bold">Completed Delivery / Service Orders</small>
+                <h2 class="fw-bold text-warning mb-0 mt-1">{{ completed_count|default:"0" }}</h2>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if section_name == 'financials' %}
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 bg-white h-100 border-start border-4 border-warning">
+                <small class="text-muted text-uppercase fw-bold">Net Operating Surplus (Profit)</small>
+                <h2 class="fw-bold text-warning mb-0 mt-1">₹{{ total_profit|default:"0.00"|floatformat:2 }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 bg-white h-100 border-start border-4 border-dark">
+                <small class="text-muted text-uppercase fw-bold">Primary Asset Driver</small>
+                <h4 class="fw-bold text-dark mb-0 mt-1">{{ most_profitable_name }}</h4>
+                <small class="text-success fw-bold">₹{{ most_profitable_value|floatformat:2 }} net</small>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if section_name == 'attendance' %}
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 bg-white h-100 border-start border-4 border-success">
+                <small class="text-muted text-uppercase fw-bold">Present Check-Ins</small>
+                <h2 class="fw-bold text-success mb-0 mt-1">{{ present_count|default:"0" }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 bg-white h-100 border-start border-4 border-warning">
+                <small class="text-muted text-uppercase fw-bold">Late Flags Raised</small>
+                <h2 class="fw-bold text-warning mb-0 mt-1">{{ late_count|default:"0" }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 bg-white h-100 border-start border-4 border-danger">
+                <small class="text-muted text-uppercase fw-bold">Absent Log Count</small>
+                <h2 class="fw-bold text-danger mb-0 mt-1">{{ absent_count|default:"0" }}</h2>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row mb-4 g-3">
+        <div class="col-md-7">
+            <div class="card border-0 shadow-sm p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-chart-line me-2 text-primary"></i>Chronological Trend Analysis
+                        <small class="text-muted fw-normal fs-6 ms-2">
+                            {% if group_by == 'year' %}(Grouped by Month){% elif group_by == 'month' or group_by == 'week' %}(Grouped by Day){% endif %}
+                        </small>
+                    </h5>
+                </div>
+                <div id="lineChartContainer" style="height: 320px; width: 100%;">
+                    <canvas id="revenueTrendLineChart"></canvas>
+                </div>
+                <div id="lineChartNoData" class="d-none text-center py-5">
+                    <i class="fas fa-chart-line fa-3x mb-3 text-muted opacity-25"></i>
+                    <p class="text-muted fw-semibold mb-0">No trend data available for the selected period.</p>
+                    <small class="text-muted">Try selecting a broader timeframe like <strong>This Year</strong> or <strong>All Time</strong>.</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-chart-pie me-2 text-info"></i>
+                        {{ top_title|default:"Segment Proportional Metric Breakdown" }}
+                    </h5>
+                </div>
+
+                {% if section_name == 'reservations' or section_name == 'dining' or section_name == 'events' or section_name == 'tables' %}
+                <form method="GET" class="row g-2 mb-3 bg-light p-2 rounded align-items-end mx-0">
+                    <input type="hidden" name="time_filter" value="{{ time_filter }}">
+                    <input type="hidden" name="group_by" value="{{ group_by }}">
+
+                    <div class="col-4 px-1">
+                        <label class="form-label text-secondary fw-semibold mb-1" style="font-size: 0.75rem;">Items Count</label>
+                        <input type="number" name="top_count" class="form-control form-control-sm border-0 shadow-sm" value="{{ top_count }}" min="1" max="50" placeholder="e.g. 5">
+                    </div>
+                    <div class="col-5 px-1">
+                        <label class="form-label text-secondary fw-semibold mb-1" style="font-size: 0.75rem;">Sorting Mode</label>
+                        <select name="sort_order" class="form-select form-select-sm border-0 shadow-sm">
+                            <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Highest / Most</option>
+                            <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Lowest / Least</option>
+                        </select>
+                    </div>
+                    <div class="col-3 px-1">
+                        <button type="submit" class="btn btn-sm btn-outline-primary w-100 shadow-sm">Apply</button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="mb-4"></div> {% endif %}
+
+                <div id="breakdownChartContainer" style="height: 260px; width: 100%;">
+                    <canvas id="detailedSectionChart"></canvas>
+                </div>
+                <div id="breakdownChartNoData" class="d-none text-center py-5">
+                    <i class="fas fa-chart-pie fa-3x mb-3 text-muted opacity-25"></i>
+                    <p class="text-muted fw-semibold mb-0">No breakdown data for this period.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm bg-white">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small text-uppercase">
+                        <tr>
+                            {% if section_name == 'reservations' %}
+                                <th>Booking ID</th><th>Guest Name</th><th>Assigned Room Number</th><th>Check In Date</th><th>Check Out Date</th><th>Gross Balance</th><th>Status</th>
+                            {% elif section_name == 'dining' %}
+                                <th>Order ID</th><th>Customer Name</th><th>Service Subtype</th><th>Total Revenue</th><th>Status</th><th>Timestamp Date</th>
+                            {% elif section_name == 'events' %}
+                                <th>Event reference</th><th>Event Branding Name</th><th>Hall Assignment</th><th>Start Date</th><th>End Date</th><th>Gross Final Amount</th><th>Status</th>
+                            {% elif section_name == 'tables' %}
+                                <th>Reservation Key</th><th>Guest Profiling Name</th><th>Table Allocation</th><th>Target Date</th><th>Time Slot</th><th>Advance Deposit Paid</th><th>Status</th>
+                            {% elif section_name == 'payments' %}
+                                <th>Execution Date</th><th>Transaction Reference</th><th>Revenue Stream Source</th><th>Customer Ledger Name</th><th>Net Amount Settled</th><th>Payment Gateway Method</th><th>Status</th>
+                            {% elif section_name == 'attendance' %}
+                                <th>Execution Date</th><th>Staff Employee Reference</th><th>Check In Punch</th><th>Check Out Punch</th><th>Operational Shift Status</th>
+                            {% elif section_name == 'financials' %}
+                                <th>Operational Department Stream Name</th><th>Gross Consolidated Turnover</th><th>Est. Cost Overhead</th><th>Computed Operating Net Profit</th><th>Operational Performance Margin</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody class="text-dark">
+                        {% for record in records %}
+                            <tr>
+                                {% if section_name == 'reservations' %}
+                                    <td class="fw-semibold text-primary">#RES-{{ record.id }}</td>
+                                    <td>{{ record.guest_name|default:"Walk-in Customer" }}</td>
+                                    <td><span class="badge bg-secondary">Room {{ record.room.room_number }}</span></td>
+                                    <td>{{ record.check_in|date:"M d, Y" }}</td>
+                                    <td>{{ record.check_out|date:"M d, Y" }}</td>
+                                    <td class="fw-bold text-success">₹{{ record.final_amount }}</td>
+                                    <td><span class="badge {% if record.status == 'Completed' %}bg-success{% elif record.status == 'Cancelled' %}bg-danger{% else %}bg-primary{% endif %}">{{ record.status }}</span></td>
+                                {% elif section_name == 'dining' %}
+                                    <td class="fw-semibold text-warning">#ORD-{{ record.id }}</td>
+                                    <td>{{ record.customer_name|default:"Counter Walk-In" }}</td>
+                                    <td>{{ record.order_type }}</td>
+                                    <td class="fw-bold text-success">₹{{ record.total_amount }}</td>
+                                    <td><span class="badge {% if record.status == 'Completed' %}bg-success{% elif record.status == 'Cancelled' %}bg-danger{% else %}bg-warning{% endif %}">{{ record.status }}</span></td>
+                                    <td>{{ record.order_date|date:"M d, Y H:i" }}</td>
+                                {% elif section_name == 'events' %}
+                                    <td class="fw-semibold text-success">#EVT-{{ record.id }}</td>
+                                    <td>{{ record.event_name }}</td>
+                                    <td>{{ record.hall.hall_name }}</td>
+                                    <td>{{ record.start_date|date:"M d, Y" }}</td>
+                                    <td>{{ record.end_date|date:"M d, Y" }}</td>
+                                    <td class="fw-bold text-success">₹{{ record.final_amount }}</td>
+                                    <td><span class="badge {% if record.status == 'Completed' %}bg-success{% elif record.status == 'Cancelled' %}bg-danger{% else %}bg-info{% endif %}">{{ record.status }}</span></td>
+                                {% elif section_name == 'tables' %}
+                                    <td class="fw-semibold text-danger">#TBL-{{ record.id }}</td>
+                                    <td>{{ record.customer_name|default:"Dining Guest" }}</td>
+                                    <td>Table {{ record.table.table_number }} ({{ record.table.location }})</td>
+                                    <td>{{ record.reservation_date|date:"M d, Y" }}</td>
+                                    <td>{{ record.reservation_time|time:"H:i" }}</td>
+                                    <td class="fw-bold text-success">₹{{ record.advance_amount }}</td>
+                                    <td><span class="badge {% if record.status == 'Confirmed' %}bg-success{% elif record.status == 'Cancelled' %}bg-danger{% else %}bg-primary{% endif %}">{{ record.status }}</span></td>
+                                {% elif section_name == 'payments' %}
+                                    <td>{{ record.1|date:"M d, Y" }}</td>
+                                    <td class="fw-semibold text-dark">{{ record.0 }}</td>
+                                    <td><span class="badge bg-light text-dark border">{{ record.2 }}</span></td>
+                                    <td>{{ record.3 }}</td>
+                                    <td class="fw-bold text-success">₹{{ record.4|floatformat:2 }}</td>
+                                    <td>{{ record.5 }}</td>
+                                    <td><span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>{{ record.6 }}</span></td>
+                                {% elif section_name == 'attendance' %}
+                                    <td>{{ record.date|date:"M d, Y" }}</td>
+                                    <td class="fw-semibold">{{ record.staff.first_name }} {{ record.staff.last_name }} ({{ record.staff.username }})</td>
+                                    <td>{{ record.check_in_time|time:"H:i"|default:"--:--" }}</td>
+                                    <td>{{ record.check_out_time|time:"H:i"|default:"--:--" }}</td>
+                                    <td><span class="badge {% if record.status == 'Present' %}bg-success{% elif record.status == 'Late' %}bg-warning{% else %}bg-danger{% endif %}">{{ record.status }}</span></td>
+                                {% elif section_name == 'financials' %}
+                                    <td class="fw-semibold">{{ record.department }}</td>
+                                    <td class="text-dark fw-bold">₹{{ record.revenue|floatformat:2 }}</td>
+                                    <td class="text-danger">₹{{ record.cost|floatformat:2 }}</td>
+                                    <td class="text-success fw-bold">₹{{ record.profit|floatformat:2 }}</td>
+                                    <td><span class="badge" style="background-color: {{ record.color }};">{{ record.margin }}%</span></td>
+                                {% endif %}
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center py-5 text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                                    <p class="mb-0 fw-semibold">Zero records matching execution target criteria caught inside data frames for this configuration.</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if section_name != 'financials' and records.has_other_pages %}
+            <div class="px-4 py-3 border-top bg-light d-flex justify-content-between align-items-center">
+                <span class="text-muted small">Showing Data Segments Page <b>{{ records.number }}</b> of <b>{{ records.paginator.num_pages }}</b> pages index.</span>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if records.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{ records.previous_page_number }}&time_filter={{ time_filter }}&group_by={{ group_by }}&top_count={{ top_count }}&sort_order={{ sort_order }}">Previous</a></li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Boundary Limit Reached</span></li>
+                        {% endif %}
+                        
+                        {% if records.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ records.next_page_number }}&time_filter={{ time_filter }}&group_by={{ group_by }}&top_count={{ top_count }}&sort_order={{ sort_order }}">Next</a></li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">End Boundary Limit Reached</span></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const section = "{{ section_name }}";
+
+    // Color palette per section
+    let lineColors = 'rgba(59, 130, 246, 1)';
+    let fillColors = 'rgba(59, 130, 246, 0.08)';
+    if (section === 'dining')     { lineColors = 'rgba(245, 158, 11, 1)';  fillColors = 'rgba(245, 158, 11, 0.08)'; }
+    else if (section === 'events')    { lineColors = 'rgba(16, 185, 129, 1)'; fillColors = 'rgba(16, 185, 129, 0.08)'; }
+    else if (section === 'tables')    { lineColors = 'rgba(239, 68, 68, 1)';  fillColors = 'rgba(239, 68, 68, 0.08)'; }
+    else if (section === 'attendance'){ lineColors = 'rgba(139, 92, 246, 1)'; fillColors = 'rgba(139, 92, 246, 0.08)'; }
+
+    // --- CHART A: TREND LINE CHART ---
+    const trendLabels = {{ chart_labels_json|default:"[]"|safe }};
+    const trendData   = {{ chart_data_json|default:"[]"|safe }};
+
+    const lineContainer  = document.getElementById('lineChartContainer');
+    const lineNoData     = document.getElementById('lineChartNoData');
+
+    if (trendLabels.length > 0 && trendData.some(v => v > 0)) {
+        const lineCtx = document.getElementById('revenueTrendLineChart').getContext('2d');
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: trendLabels,
+                datasets: [{
+                    label: section === 'attendance' ? 'Present Staff Count' : 'Revenue (₹)',
+                    data: trendData,
+                    borderColor: lineColors,
+                    backgroundColor: fillColors,
+                    borderWidth: 2.5,
+                    pointBackgroundColor: lineColors,
+                    pointBorderColor: '#ffffff',
+                    pointRadius: 4,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                return section === 'attendance'
+                                    ? ctx.parsed.y + ' staff present'
+                                    : '₹' + ctx.parsed.y.toLocaleString(undefined, {minimumFractionDigits: 2});
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(val) {
+                                return section === 'attendance' ? val : '₹' + val.toLocaleString();
+                            }
+                        },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    } else {
+        // Hide chart, show no-data placeholder
+        lineContainer.classList.add('d-none');
+        lineNoData.classList.remove('d-none');
+    }
+
+    // --- CHART B: BREAKDOWN CHART ---
+    const breakdownContainer = document.getElementById('breakdownChartContainer');
+    const breakdownNoData    = document.getElementById('breakdownChartNoData');
+    let hasBreakdownData = false;
+    let chartConfig = {
+        type: 'bar',
+        data: { labels: [], datasets: [] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    };
+
+    if (['dining', 'events', 'reservations', 'tables'].includes(section)) {
+        const topLabels = {{ top_labels_json|default:"[]"|safe }};
+        const topData   = {{ top_data_json|default:"[]"|safe }};
+        if (topLabels.length > 0 && topData.some(v => v > 0)) {
+            hasBreakdownData = true;
+            chartConfig.data = {
+                labels: topLabels,
+                datasets: [{
+                    data: topData,
+                    backgroundColor: lineColors.replace('1)', '0.7)'),
+                    borderColor: lineColors,
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                }]
+            };
+            chartConfig.options.scales = {
+                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { precision: 0 } },
+                x: { grid: { display: false } }
+            };
+        }
+    }
+    else if (section === 'financials') {
+        const revs   = [{{ records.0.revenue|default:0 }}, {{ records.1.revenue|default:0 }}, {{ records.2.revenue|default:0 }}, {{ records.3.revenue|default:0 }}];
+        const profits = [{{ records.0.profit|default:0 }}, {{ records.1.profit|default:0 }}, {{ records.2.profit|default:0 }}, {{ records.3.profit|default:0 }}];
+        if (revs.some(v => v > 0)) {
+            hasBreakdownData = true;
+            chartConfig.data = {
+                labels: ['Rooms', 'Events', 'F&B Dining', 'Tables'],
+                datasets: [
+                    { label: 'Revenue (₹)', data: revs,    backgroundColor: 'rgba(59, 130, 246, 0.75)', borderRadius: 4 },
+                    { label: 'Profit (₹)',  data: profits, backgroundColor: 'rgba(16, 185, 129, 0.85)', borderRadius: 4 }
+                ]
+            };
+            chartConfig.options.plugins.legend = { display: true, position: 'bottom' };
+            chartConfig.options.scales = {
+                y: { beginAtZero: true, ticks: { callback: v => '₹' + v.toLocaleString() } },
+                x: { grid: { display: false } }
+            };
+        }
+    }
+    else if (section === 'attendance') {
+        const pres = {{ present_count|default:0 }};
+        const late = {{ late_count|default:0 }};
+        const abs  = {{ absent_count|default:0 }};
+        if (pres + late + abs > 0) {
+            hasBreakdownData = true;
+            chartConfig.type = 'doughnut';
+            chartConfig.data = {
+                labels: ['Present / On Time', 'Late Arrivals', 'Absent'],
+                datasets: [{
+                    data: [pres, late, abs],
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                    borderWidth: 2
+                }]
+            };
+            chartConfig.options.plugins.legend = { display: true, position: 'right' };
+        }
+    }
+
+    if (hasBreakdownData) {
+        const breakdownCtx = document.getElementById('detailedSectionChart').getContext('2d');
+        new Chart(breakdownCtx, chartConfig);
+    } else {
+        breakdownContainer.classList.add('d-none');
+        breakdownNoData.classList.remove('d-none');
+    }
+});
+</script>
+{% endblock %}

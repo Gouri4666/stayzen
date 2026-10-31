@@ -1,0 +1,126 @@
+
+@mixin clearfix() {
+    &::after {
+        content: "";
+        clear: both;
+        display: table;
+    }
+}
+
+
+@mixin placeholder {
+    &::-webkit-input-placeholder {
+        @content;
+    }
+
+    &:-moz-placeholder {
+        @content;
+    }
+
+    &::-moz-placeholder {
+        @content;
+    }
+
+    &:-ms-input-placeholder {
+        @content;
+    }
+}
+@mixin position-100{
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    content: '';
+    left: 0;
+    top: 0;
+}
+@mixin position{
+    position: absolute;
+    content: '';
+}
+@mixin flex-center{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+@mixin align-center{
+    display: flex;
+    align-items: center;
+}
+@mixin rt-between{
+    display: flex;
+    justify-content: space-between;
+}
+
+@mixin shape{
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+}
+@mixin background{
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+@mixin ul{
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+// @extend Features of scss
+%background{
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+%ul-style{
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+%position-style{
+    position: absolute;
+    content: '';
+}
+%position-common{
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    content: '';
+    left: 0;
+    top: 0;
+}
+%flex-common{
+    display: flex;
+    align-items: center;
+}
+%heading-style{
+    color: var(--base-color);
+    font-weight: 700;
+}
+%common-hover{
+    background: var(--rt-primary-1);
+    color: var(--white);
+}
+%t5{
+    transform: translate(0, 50%);
+}
+
+
+// ======== Responsive Media Query ==========
+
+$xxl: "screen and (min-width: 1400px) and (max-width: 1600px)";
+$xl: "screen and (max-width: 1400px)";
+$lg: "screen and (max-width: 1200px)";
+$md: "screen and (max-width: 992px)";
+$sm: "screen and (max-width: 768px)";
+$xs: "screen and (max-width: 576px)";
+$xss: "screen and (max-width: 400px)";
+
+@mixin mq($query) {
+    @media #{$query} {
+        @content;
+    }
+}

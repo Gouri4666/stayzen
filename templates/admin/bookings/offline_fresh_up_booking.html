@@ -1,0 +1,673 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .offline-booking-card {
+        border-radius: 16px;
+        background: var(--bg-card, #ffffff);
+        border: none;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="dark"] .offline-booking-card {
+        background: #1e293b;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .gradient-header {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #ffffff;
+        padding: 24px 30px;
+    }
+
+    .form-section-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        font-size: 16px;
+        color: #d97706;
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 8px;
+        margin-bottom: 20px;
+    }
+
+    [data-theme="dark"] .form-section-title {
+        color: #fbbf24;
+        border-bottom-color: #334155;
+    }
+
+    .billing-summary-box {
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px dashed #cbd5e1;
+        padding: 20px;
+    }
+
+    [data-theme="dark"] .billing-summary-box {
+        background: #0f172a;
+        border-color: #334155;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="offline-booking-card">
+        <div class="gradient-header d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="mb-1 font-weight-bold" style="font-family: 'Outfit', sans-serif;">Fresh-Up Room Booking</h3>
+                <p class="mb-0 text-white-50" style="font-size: 13px;">Create an hourly booking for walk-in customers
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'offline_booking' %}" class="btn btn-light btn-sm text-dark font-weight-bold mr-2"
+                    style="border-radius: 8px; padding: 8px 16px;">
+                    <i class="fa fa-bed mr-1"></i> Switch to Standard Booking
+                </a>
+                <a href="{% url 'receptionist_room_bookings' %}"
+                    class="btn btn-light btn-sm text-primary font-weight-semibold"
+                    style="border-radius: 8px; padding: 8px 16px;">
+                    <i class="fa fa-arrow-left mr-1"></i> Back to List
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <form id="freshUpForm" method="POST" action="{% url 'offline_fresh_up_booking' %}">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-lg-7">
+                        <input type="hidden" name="customer_id" id="customerId">
+                        <input type="hidden" name="customer_type" id="customerType" value="guest">
+
+                        <div class="mb-4">
+                            <h5 class="form-section-title"><i class="fa fa-user-circle mr-2"></i>Customer Information
+                            </h5>
+
+                            <div class="d-flex gap-3 mb-4">
+                                <button type="button" id="btnGuestType" class="btn btn-primary btn-toggle-custom"
+                                    onclick="setCustomerType('guest')">
+                                    Guest Customer (Walk-in)
+                                </button>
+                                <button type="button" id="btnRegisteredType"
+                                    class="btn btn-outline-secondary btn-toggle-custom"
+                                    onclick="setCustomerType('registered')">
+                                    Registered Customer
+                                </button>
+                            </div>
+
+                            <div id="registeredCustomerSection" style="display: none;">
+                                <div class="row align-items-end mb-3">
+                                    <div class="col-md-8">
+                                        <label class="form-label font-weight-bold">Search Registered Phone
+                                            Number</label>
+                                        <div class="input-group">
+                                            <span class="input-group-addon"><i class="fa fa-phone"></i></span>
+                                            <input type="text" id="searchPhone" class="form-control"
+                                                placeholder="Enter customer phone number..." style="height: 42px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-info w-100" onclick="searchCustomer()"
+                                            style="height: 42px; font-weight: 600; background: #06b6d4; border: none; color: #fff;">
+                                            <i class="fa fa-search mr-2"></i> Search Customer
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="customerDetailsCard" class="card p-3 mb-3"
+                                    style="display: none; border: 1px solid #22c55e; background: rgba(34, 197, 94, 0.05); border-radius: 10px;">
+                                    <h6 class="text-success font-weight-bold mb-3"><i
+                                            class="fa fa-check-circle mr-1"></i> Customer Profile Verified</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted small d-block">Full Name</span>
+                                            <strong id="custName" class="text-dark">-</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted small d-block">Email Address</span>
+                                            <strong id="custEmail" class="text-dark">-</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="customerSearchError" class="alert alert-danger"
+                                    style="display: none; border-radius: 8px;">
+                                    Customer not found. Make sure the phone number is fully registered.
+                                </div>
+                            </div>
+
+                            <div id="guestCustomerSection">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Guest Name <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" name="customer_name" id="guestName" class="form-control"
+                                            placeholder="John Doe" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Guest Phone <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" name="customer_phone" id="guestPhone" class="form-control"
+                                            placeholder="+1234567890" required>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label font-weight-semibold">Guest Email</label>
+                                        <input type="email" name="customer_email" id="guestEmail" class="form-control"
+                                            placeholder="guest@example.com">
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label font-weight-semibold">Guest Address</label>
+                                        <textarea name="customer_address" id="guestAddress" class="form-control"
+                                            rows="2" placeholder="Street, City, Country"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5 class="form-section-title"><i class="fa fa-clock-o mr-2"></i>Hourly Booking Details</h5>
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label font-weight-bold">Select Available Room <span
+                                            class="text-danger">*</span></label>
+                                    <select name="room_id" class="form-control" style="height: auto; padding: 10px;"
+                                        required>
+                                        <option value="">-- Choose a Room --</option>
+                                        {% for r in available_rooms %}
+                                        <option value="{{ r.id }}">Room {{ r.room_number }} ({{ r.room_type }})</option>
+                                        {% endfor %}
+                                    </select>
+                                    {% if not available_rooms %}
+                                    <small class="text-danger">No rooms are currently available.</small>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label font-weight-semibold">Hours Required <span
+                                            class="text-danger">*</span></label>
+                                    <input type="number" name="hours_required" id="hoursRequired" class="form-control"
+                                        min="1" max="24" value="1" oninput="calculateTotal()" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label font-weight-semibold">Price Per Hour (INR) <span
+                                            class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" name="price_per_hour" id="pricePerHour"
+                                        class="form-control" min="0" value="500.00" oninput="calculateTotal()" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="card p-4 shadow-sm h-100"
+                            style="border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0); background: var(--bg-card, #ffffff);">
+                            <h5 class="form-section-title mb-3"><i class="fa fa-credit-card mr-2"></i>Billing & Payment
+                            </h5>
+
+                            <div class="mb-4">
+                                <label class="form-label font-weight-semibold">Mode of Payment <span
+                                        class="text-danger">*</span></label>
+                                <select name="payment_method" id="paymentMethod" class="form-control"
+                                    style="height: auto; padding: 10px;" onchange="togglePaymentMethod()" required>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Razorpay">Online (Razorpay)</option>
+                                </select>
+                            </div>
+
+                            <div class="billing-summary-box mb-4 flex-grow-1">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Total Hours:</span>
+                                    <span id="summaryHours" class="font-weight-semibold text-dark">1 hr</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Price Rate:</span>
+                                    <span id="summaryRate" class="font-weight-semibold text-dark">&#8377;500.00 /
+                                        hr</span>
+                                </div>
+                                <hr style="border-top: 1px solid #cbd5e1; margin: 15px 0;">
+                                <div class="d-flex justify-content-between">
+                                    <span class="font-weight-bold text-dark" style="font-size: 18px;">Total
+                                        Amount:</span>
+                                    <span id="summaryTotal" class="font-weight-bold text-primary"
+                                        style="font-size: 24px;">&#8377;500.00</span>
+                                </div>
+                                <div class="mt-3 small text-muted text-center">
+                                    Payment must be collected immediately for hourly bookings.
+                                </div>
+                            </div>
+
+                            <button type="submit" id="submitBtn"
+                                class="btn btn-warning btn-lg w-100 font-weight-bold text-dark"
+                                style="border-radius: 8px; border: none; padding: 14px; transition: all 0.3s;">
+                                <i id="btnIcon" class="fa fa-check-circle mr-2"></i> <span id="btnText">Confirm &
+                                    Generate Bill</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    function togglePaymentMethod() {
+        const method = document.getElementById('paymentMethod').value;
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnIcon = document.getElementById('btnIcon');
+
+        if (method === 'Cash') {
+            btnText.innerText = 'Confirm & Generate Bill';
+            btnIcon.className = 'fa fa-check-circle mr-2';
+            submitBtn.className = 'btn btn-warning btn-lg w-100 font-weight-bold text-dark';
+            submitBtn.style.background = '';
+            submitBtn.style.borderColor = '';
+            submitBtn.style.color = '';
+        } else {
+            btnText.innerText = 'Pay Online via Razorpay';
+            btnIcon.className = 'fa fa-credit-card mr-2';
+            submitBtn.className = 'btn btn-primary btn-lg w-100 font-weight-bold text-white';
+            submitBtn.style.background = '#4f46e5';
+            submitBtn.style.borderColor = '#4f46e5';
+            submitBtn.style.color = '#ffffff';
+        }
+    }
+
+    function setCustomerType(type) {
+        document.getElementById('customerType').value = type;
+
+        const btnGuest = document.getElementById('btnGuestType');
+        const btnReg = document.getElementById('btnRegisteredType');
+        const secGuest = document.getElementById('guestCustomerSection');
+        const secReg = document.getElementById('registeredCustomerSection');
+
+        if (type === 'guest') {
+            btnGuest.className = "btn btn-primary btn-toggle-custom";
+            btnReg.className = "btn btn-outline-secondary btn-toggle-custom";
+            secGuest.style.display = "block";
+            secReg.style.display = "none";
+            document.getElementById('guestName').required = true;
+            document.getElementById('guestPhone').required = true;
+            document.getElementById('customerId').value = '';
+        } else {
+            btnGuest.className = "btn btn-outline-secondary btn-toggle-custom";
+            btnReg.className = "btn btn-primary btn-toggle-custom";
+            secGuest.style.display = "none";
+            secReg.style.display = "block";
+            document.getElementById('guestName').required = false;
+            document.getElementById('guestPhone').required = false;
+            
+            // Clear validation errors from hidden inputs
+            ['guestName', 'guestPhone', 'guestEmail'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.remove('is-invalid');
+                    el.style.borderColor = '';
+                    el.style.color = '';
+                    const container = el.closest('.mb-3, .form-group, .col-md-6, .col-md-4, .zen-form-group');
+                    if (container) {
+                        const label = container.querySelector('label');
+                        if (label) label.style.color = '';
+                        const errorMsg = container.querySelector('.invalid-feedback-custom');
+                        if (errorMsg) errorMsg.remove();
+                    }
+                }
+            });
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('room_id');
+        const checkin = urlParams.get('checkin');
+        const checkout = urlParams.get('checkout');
+        const duration = urlParams.get('duration');
+        const roomName = urlParams.get('room_name');
+        const bookingType = urlParams.get('booking_type');
+
+        // Auto-select the room from the URL param
+        if (roomId) {
+            const roomSelect = document.querySelector('select[name="room_id"]');
+            if (roomSelect) {
+                roomSelect.value = roomId;
+                roomSelect.dispatchEvent(new Event('change'));
+            }
+        }
+
+        calculateTotal();
+    });
+
+    function searchCustomer() {
+        const phone = document.getElementById('searchPhone').value.trim();
+        if (!phone) {
+            alert('Please enter a phone number');
+            return;
+        }
+
+        fetch(`{% url 'api_search_customer' %}?phone=${encodeURIComponent(phone)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.customer) {
+                    document.getElementById('customerDetailsCard').style.display = 'block';
+                    document.getElementById('customerSearchError').style.display = 'none';
+
+                    const c = data.customer;
+                    document.getElementById('customerId').value = c.id;
+                    document.getElementById('custName').innerText = c.name;
+                    document.getElementById('custEmail').innerText = c.email || 'N/A';
+
+                    // Copy into hidden fields so form validation passes
+                    document.getElementById('guestName').value = c.name;
+                    document.getElementById('guestPhone').value = c.phone;
+
+                } else {
+                    document.getElementById('customerDetailsCard').style.display = 'none';
+                    document.getElementById('customerSearchError').style.display = 'block';
+                    document.getElementById('customerId').value = '';
+                }
+            })
+            .catch(err => {
+                console.error('Error searching customer:', err);
+                document.getElementById('customerSearchError').style.display = 'block';
+                document.getElementById('customerId').value = '';
+            });
+    }
+
+    function calculateTotal() {
+        let hours = parseInt(document.getElementById('hoursRequired').value) || 0;
+        let rate = parseFloat(document.getElementById('pricePerHour').value) || 0;
+        let total = hours * rate;
+
+        document.getElementById('summaryHours').innerText = hours + (hours === 1 ? ' hr' : ' hrs');
+        document.getElementById('summaryRate').innerText = '\u20B9' + rate.toFixed(2) + ' / hr';
+        document.getElementById('summaryTotal').innerText = '\u20B9' + total.toFixed(2);
+    }
+
+    document.getElementById('freshUpForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        if (this.querySelectorAll('.is-invalid').length > 0) {
+            Swal.fire({
+                title: 'Validation Error',
+                text: 'Please resolve all errors before submitting.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'stayzen-swal-popup',
+                    title: 'stayzen-swal-title',
+                    confirmButton: 'stayzen-swal-confirm'
+                },
+                buttonsStyling: false
+            });
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        const originalBtnHTML = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>Processing...';
+
+        const formData = new FormData(this);
+        formData.append('ajax', '1');
+
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.razorpay) {
+                        const ctx = data.context;
+                        const options = {
+                            key: ctx.razorpay_key,
+                            amount: (function () {
+                                var amt = parseFloat(ctx.amount);
+                                var key = ctx.razorpay_key;
+                                if (key && key.indexOf("rzp_test") === 0 && amt > 50000) {
+                                    return 50000 * 100;
+                                }
+                                return Math.round(amt * 100);
+                            })(),
+                            currency: "INR",
+                            name: "StayZen",
+                            description: "Offline Fresh-up Booking #" + ctx.booking_id,
+                            prefill: {
+                                name: ctx.name,
+                                email: ctx.email,
+                                contact: ctx.phone
+                            },
+                            handler: function (response) {
+                                fetch("{% url 'razorpay_callback' %}", {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRFToken": "{{ csrf_token }}"
+                                    },
+                                    body: JSON.stringify({
+                                        booking_id: ctx.booking_id,
+                                        booking_type: ctx.booking_type,
+                                        razorpay_payment_id: response.razorpay_payment_id
+                                    })
+                                })
+                                    .then(res => res.json())
+                                    .then(cbData => {
+                                        if (cbData.success) {
+                                            Swal.fire({
+                                                title: 'Payment Successful',
+                                                text: cbData.details ? cbData.details.message : 'Fresh-up booking has been confirmed successfully!',
+                                                icon: 'success',
+                                                confirmButtonText: 'OK',
+                                                customClass: {
+                                                    popup: 'stayzen-swal-popup',
+                                                    title: 'stayzen-swal-title',
+                                                    confirmButton: 'stayzen-swal-confirm'
+                                                },
+                                                buttonsStyling: false
+                                            }).then(() => {
+                                                window.location.href = cbData.redirect_url || "{% url 'receptionist_room_bookings' %}";
+                                            });
+                                        } else {
+                                            Swal.fire({
+                                                title: 'Error',
+                                                text: 'Payment confirmation failed: ' + cbData.message,
+                                                icon: 'error',
+                                                confirmButtonText: 'OK',
+                                                customClass: {
+                                                    popup: 'stayzen-swal-popup',
+                                                    title: 'stayzen-swal-title',
+                                                    confirmButton: 'stayzen-swal-confirm'
+                                                },
+                                                buttonsStyling: false
+                                            });
+                                            submitBtn.disabled = false;
+                                            submitBtn.innerHTML = originalBtnHTML;
+                                        }
+                                    })
+                                    .catch(err => {
+                                        console.error(err);
+                                        Swal.fire({
+                                            title: 'Error',
+                                            text: 'Failed to verify payment with server.',
+                                            icon: 'error',
+                                            confirmButtonText: 'OK',
+                                            customClass: {
+                                                popup: 'stayzen-swal-popup',
+                                                title: 'stayzen-swal-title',
+                                                confirmButton: 'stayzen-swal-confirm'
+                                            },
+                                            buttonsStyling: false
+                                        });
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML = originalBtnHTML;
+                                    });
+                            },
+                            modal: {
+                                ondismiss: function () {
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = originalBtnHTML;
+                                }
+                            },
+                            theme: {
+                                color: "#a57f5a"
+                            }
+                        };
+                        const rzp = new Razorpay(options);
+                        rzp.open();
+                    } else {
+                        Swal.fire({
+                            title: 'Success',
+                            text: data.message || 'Fresh-Up Room Booked successfully!',
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                popup: 'stayzen-swal-popup',
+                                title: 'stayzen-swal-title',
+                                confirmButton: 'stayzen-swal-confirm'
+                            },
+                            buttonsStyling: false
+                        }).then(() => {
+                            window.location.href = data.redirect_url || "{% url 'receptionist_room_bookings' %}";
+                        });
+                    }
+                } else {
+                    Swal.fire({
+                        title: 'Booking Blocked',
+                        text: data.message || 'Something went wrong while initiating booking.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'stayzen-swal-popup',
+                            title: 'stayzen-swal-title',
+                            confirmButton: 'stayzen-swal-confirm'
+                        },
+                        buttonsStyling: false
+                    });
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHTML;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An error occurred during booking creation.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'stayzen-swal-popup',
+                        title: 'stayzen-swal-title',
+                        confirmButton: 'stayzen-swal-confirm'
+                    },
+                    buttonsStyling: false
+                });
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHTML;
+            });
+    });
+
+    // Live validation logic
+    document.addEventListener('DOMContentLoaded', function () {
+        const guestName = document.getElementById('guestName');
+        const guestPhone = document.getElementById('guestPhone');
+        const guestEmail = document.getElementById('guestEmail');
+        const customerType = document.getElementById('customerType');
+
+        function toggleError(input, condition, msg) {
+            const container = input.closest('.mb-3, .form-group, .col-md-6, .col-md-4, .zen-form-group');
+            const label = container ? container.querySelector('label') : null;
+            if (condition) {
+                input.classList.add('is-invalid');
+                input.style.borderColor = 'red';
+                input.style.color = 'red';
+                if (label) label.style.color = 'red';
+
+                if (msg && container) {
+                    let errorMsg = container.querySelector('.invalid-feedback-custom');
+                    if (!errorMsg) {
+                        errorMsg = document.createElement('div');
+                        errorMsg.className = 'invalid-feedback-custom';
+                        errorMsg.style.color = 'red';
+                        errorMsg.style.fontSize = '12px';
+                        errorMsg.style.marginTop = '4px';
+                        container.appendChild(errorMsg);
+                    }
+                    errorMsg.innerText = msg;
+                }
+            } else {
+                input.classList.remove('is-invalid');
+                input.style.borderColor = '';
+                input.style.color = '';
+                if (label) label.style.color = '';
+                if (container) {
+                    let errorMsg = container.querySelector('.invalid-feedback-custom');
+                    if (errorMsg) errorMsg.remove();
+                }
+            }
+        }
+
+        if (guestName) {
+            guestName.addEventListener('input', function () {
+                toggleError(this, this.value.trim() === '');
+            });
+        }
+
+        if (guestPhone) {
+            guestPhone.addEventListener('input', function () {
+                const val = this.value;
+                if (!val.match(/^\d{10}$/)) {
+                    toggleError(this, true, "Invalid phone format");
+                } else {
+                    const currentType = customerType ? customerType.value : 'guest';
+                    if (currentType === 'guest') {
+                        fetch("{% url 'api_check_phone' %}?phone=" + encodeURIComponent(val))
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.exists) {
+                                    toggleError(this, true, "Phone number already exist. try another");
+                                } else {
+                                    toggleError(this, false);
+                                }
+                            })
+                            .catch(err => console.error(err));
+                    } else {
+                        toggleError(this, false);
+                    }
+                }
+            });
+        }
+
+        if (guestEmail) {
+            guestEmail.addEventListener('input', function () {
+                const val = this.value;
+                if (val.trim() !== '' && !val.includes('@')) {
+                    toggleError(this, true, "Invalid email format");
+                } else if (val.trim() !== '') {
+                    const currentType = customerType ? customerType.value : 'guest';
+                    if (currentType === 'guest') {
+                        fetch("{% url 'api_check_guest_email' %}?email=" + encodeURIComponent(val))
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.exists) {
+                                    toggleError(this, true, "Email already exist. try another");
+                                } else {
+                                    toggleError(this, false);
+                                }
+                            })
+                            .catch(err => console.error(err));
+                    } else {
+                        toggleError(this, false);
+                    }
+                } else {
+                    toggleError(this, false);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

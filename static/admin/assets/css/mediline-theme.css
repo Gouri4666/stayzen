@@ -1,0 +1,624 @@
+/* ===================================================================
+   STAYZEN ADMIN — SIDEBAR + TOPBAR THEME
+   SINGLE SOURCE OF TRUTH for the sidebar system. Load this AFTER
+   custom.css and style.css so it wins the cascade.
+
+   This file fully owns:
+     - Sidebar structure/position (expanded + collapsed)
+     - Sidebar colors, menu list, submenu
+     - Collapse system: ONE class only — body.sidebar-collapsed
+     - Collapsed-state tooltips
+     - Mobile slide-in + overlay: body.sidebar-visible
+     - Topbar (floating icon cluster skin)
+
+   Do not add sidebar rules anywhere else. If the sidebar needs to
+   change, it changes here.
+=================================================================== */
+
+:root {
+    --ml-green: #6e6bd6;
+    --ml-green-dark: #4b3f8f;
+    --ml-green-darker: #2c2350;
+    --ml-green-light: #edebfb;
+    --ml-yellow: #f6c343;
+    --ml-radius: 18px;
+    --ml-radius-sm: 12px;
+
+    /* Single set of sidebar width tokens used everywhere below */
+    --sidebar-width-expanded: 260px;
+    --sidebar-width-collapsed: 70px;
+    --sidebar-transition: width 0.28s ease, left 0.28s ease, transform 0.28s ease;
+    /* How far the topbar tucks in behind the sidebar's rounded corner
+       (--ml-radius is 18px) so its own background fills that curve
+       instead of exposing the page background behind it. */
+    --topbar-tuck: 20px;
+}
+
+/* -------------------------------------------------------------
+   1. THEME VARIABLE OVERRIDES
+------------------------------------------------------------- */
+html[data-theme="light"] {
+    --sb-bg: #ffffff;
+    --sb-sub-bg: #f3f8f5;
+    --sb-border: #e6eeea;
+    --sb-text: #44544d;
+    --sb-icon: #8a9a94;
+    --sb-hover-bg: var(--ml-green-light);
+    --sb-hover-text: var(--ml-green);
+}
+
+html[data-theme="dark"] {
+    --sb-bg: #16291f;
+    --sb-sub-bg: #11211a;
+    --sb-border: #234a36;
+    --sb-text: #d7ead9;
+    --sb-icon: #8fb39b;
+    --sb-hover-bg: #1c3c2a;
+    --sb-hover-text: #5fe3a4;
+}
+
+html,
+body {
+    background-color: #f4f7f5 !important;
+    background-image: none !important;
+}
+html[data-theme="light"] body {
+    background-color: #f4f7f5 !important;
+}
+html[data-theme="dark"] body {
+    background-color: #0d1b14 !important;
+}
+
+/* -------------------------------------------------------------
+   2. TOPBAR — floating icon cluster
+------------------------------------------------------------- */
+.page-topbar.page-topbar-floating {
+    position: fixed !important;
+    top: 0 !important;
+    left: calc(var(--sidebar-width-expanded) - var(--topbar-tuck, 20px)) !important;
+    width: calc(100% - var(--sidebar-width-expanded) + var(--topbar-tuck, 20px)) !important;
+    height: 68px !important;
+    background: linear-gradient(90deg, var(--t-sidebar-grad-start, #7c82ea) 0%, var(--t-sidebar-grad-end, #344d7e) 100%) !important;
+    border-bottom: none !important;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.12) !important;
+    z-index: 998 !important;
+    pointer-events: auto !important;
+    display: flex !important;
+    align-items: center;
+    padding: 0 24px 0 calc(24px + var(--topbar-tuck, 20px));
+    transition: left 0.28s ease, width 0.28s ease;
+}
+html[data-theme="light"] .page-topbar.page-topbar-floating,
+html[data-theme="dark"] .page-topbar.page-topbar-floating {
+    background: linear-gradient(90deg, var(--t-sidebar-grad-start, #7c82ea) 0%, var(--t-sidebar-grad-end, #344d7e) 100%) !important;
+    border-bottom: none !important;
+}
+.page-topbar.page-topbar-floating .quick-area {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    pointer-events: auto !important;
+}
+.page-topbar.page-topbar-floating .quick-area .float-left,
+.page-topbar.page-topbar-floating .quick-area .float-right {
+    position: static !important;
+    display: flex !important;
+    align-items: center;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    top: auto;
+    left: auto;
+    right: auto;
+}
+
+@media (min-width: 992px) {
+    body.sidebar-collapsed .page-topbar.page-topbar-floating {
+        left: calc(var(--sidebar-width-collapsed) - var(--topbar-tuck, 20px)) !important;
+        width: calc(100% - var(--sidebar-width-collapsed) + var(--topbar-tuck, 20px)) !important;
+    }
+}
+
+@media (max-width: 991px) {
+    .page-topbar.page-topbar-floating {
+        left: 0 !important;
+        width: 100% !important;
+    }
+}
+
+.page-topbar .quick-area .info-menu > li > a,
+.page-topbar.page-topbar-floating .quick-area .float-right a {
+    transition: background-color 0.2s ease, color 0.2s ease;
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+.page-topbar .quick-area .info-menu > li > a:hover,
+.page-topbar.page-topbar-floating .quick-area .float-right a:hover {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+}
+.page-topbar.page-topbar-floating .quick-area .float-right .sun-icon,
+.page-topbar.page-topbar-floating .quick-area .float-right .moon-icon {
+    filter: brightness(1.3);
+}
+
+.page-topbar,
+.page-topbar.page-topbar-floating {
+    border-bottom: none !important;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.12) !important;
+}
+
+.admin-main-content {
+    padding: 84px 40px 20px 40px !important;
+    margin-left: var(--sidebar-width-expanded) !important;
+    width: calc(100% - var(--sidebar-width-expanded)) !important;
+    transition: margin-left 0.28s ease, width 0.28s ease;
+}
+@media (max-width: 768px) {
+    .admin-main-content {
+        padding: 76px 16px 16px 16px !important;
+    }
+}
+
+.notification-badge {
+    background-color: #ef4444 !important;
+    color: #fff !important;
+}
+
+.sidebar_toggle_custom {
+    color: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 10px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.sidebar_toggle_custom:hover {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+}
+
+.admin-theme-toggle {
+    background-color: rgba(255, 255, 255, 0.14) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 999px !important;
+    padding: 4px 10px !important;
+}
+
+.profile-trigger-avatar {
+    border-radius: 999px;
+    transition: background-color 0.2s ease;
+}
+.profile-hover-container:hover .profile-trigger-avatar {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+.default-avatar-placeholder {
+    background: linear-gradient(135deg, var(--ml-green), var(--ml-green-dark)) !important;
+    color: #fff !important;
+}
+
+/* -------------------------------------------------------------
+   3. SIDEBAR — structure & position (expanded, default state)
+------------------------------------------------------------- */
+.page-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    margin-top: 0 !important;
+    height: 100vh !important;
+    width: var(--sidebar-width-expanded) !important;
+    min-width: var(--sidebar-width-expanded) !important;
+    max-width: var(--sidebar-width-expanded) !important;
+    box-sizing: border-box !important;
+    z-index: 1000 !important;
+    background: linear-gradient(180deg, var(--t-sidebar-grad-start, #a9abf4) 0%, var(--t-sidebar-grad-end, #726bc1) 100%) !important;
+    border-right: none !important;
+    border-radius: 0 var(--ml-radius) var(--ml-radius) 0;
+    box-shadow: 0 10px 30px rgba(15, 92, 61, 0.2);
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    transition: var(--sidebar-transition);
+}
+html[data-theme="dark"] .page-sidebar {
+    background: linear-gradient(180deg, var(--t-sidebar-grad-start, #2e1065) 0%, var(--t-sidebar-grad-end, #1e0a45) 100%) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Brand header */
+.page-sidebar .sidebar-brand-wrapper {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    height: auto !important;
+    min-height: 64px;
+    padding: 22px 18px 4px 18px;
+    flex: none !important;
+    overflow: hidden;
+    transition: padding 0.28s ease, justify-content 0.28s ease;
+}
+.sidebar-brand-icon {
+    background: linear-gradient(135deg, var(--t-sidebar-grad-start, #a9abf4), var(--t-accent, #2563eb)) !important;
+    color: #fff !important;
+    border-radius: 11px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.sidebar-brand-text {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    font-size: 17px;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity 0.2s ease;
+}
+html[data-theme="dark"] .sidebar-brand-text {
+    color: #ffffff !important;
+}
+
+.page-sidebar .sidebar-brand-wrapper,
+.page-sidebar .sidebar-profile {
+    flex: none !important;
+}
+.page-sidebar-wrapper {
+    background: transparent !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-top: 0;
+}
+.page-sidebar-wrapper::-webkit-scrollbar {
+    width: 4px;
+}
+.page-sidebar-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+.page-sidebar-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 4px;
+}
+.page-sidebar .project-info {
+    flex: none !important;
+}
+
+.sidebar-profile {
+    background: transparent !important;
+    border-bottom: none !important;
+    padding: 18px 12px 20px 12px !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    overflow: hidden;
+    transition: padding 0.28s ease;
+}
+.sidebar-profile .profile-img {
+    width: 58px;
+    height: 58px;
+    border: 2.5px solid rgba(255, 255, 255, 0.85) !important;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    transition: width 0.28s ease, height 0.28s ease;
+}
+.sidebar-profile .profile-info-text {
+    overflow: hidden;
+    white-space: nowrap;
+    min-width: 0;
+    transition: opacity 0.2s ease;
+}
+.sidebar-profile .profile-name {
+    color: #ffffff !important;
+    display: block;
+    font-size: 15.5px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sidebar-profile .profile-role {
+    color: var(--t-sidebar-text-muted, rgba(255, 255, 255, 0.72)) !important;
+    display: block;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.project-info,
+.page-chatapi,
+.chatapi-windows {
+    display: none !important;
+}
+
+/* -------------------------------------------------------------
+   4. MENU LIST — links, icons, active/hover, arrows, submenu
+------------------------------------------------------------- */
+.page-sidebar ul.wraplist {
+    width: auto !important;
+    padding: 4px 12px !important;
+    margin: 0 !important;
+    background: transparent !important;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.page-sidebar ul.wraplist > li {
+    position: relative;
+    border: none !important;
+}
+
+.page-sidebar ul.wraplist > li > a {
+    display: flex !important;
+    align-items: center;
+    position: relative;
+    width: auto !important;
+    min-width: 0;
+    box-sizing: border-box;
+    gap: 12px;
+    padding: 10px 14px !important;
+    border-radius: var(--ml-radius-sm) !important;
+    margin-bottom: 3px;
+    color: var(--t-sidebar-text, rgba(255, 255, 255, 0.9)) !important;
+    text-decoration: none !important;
+    font-weight: 500;
+    border: none !important;
+    background: transparent !important;
+    transition: background-color 0.2s ease, color 0.2s ease, padding 0.2s ease, justify-content 0.2s ease;
+}
+
+.page-sidebar ul.wraplist > li > a i.fa {
+    font-size: 16px !important;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    flex: 0 0 28px;
+    text-align: center;
+    color: var(--t-sidebar-text-muted, rgba(255, 255, 255, 0.7)) !important;
+    transition: color 0.2s ease;
+    margin: 0 !important;
+}
+
+.page-sidebar ul.wraplist > li > a > span.title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 20px;
+}
+
+.page-sidebar ul.wraplist li a span.arrow {
+    position: relative !important;
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    line-height: 1 !important;
+    font-family: 'FontAwesome';
+    font-size: 12px;
+}
+.page-sidebar ul.wraplist li a span.arrow::before {
+    content: "\f105";
+}
+.page-sidebar ul.wraplist li.open > a span.arrow::before {
+    content: "\f107";
+}
+
+.page-sidebar ul.wraplist > li.open > a,
+.page-sidebar ul.wraplist > li.active > a,
+.page-sidebar ul.wraplist > li > a:hover {
+    background-color: var(--t-sidebar-active-bg, rgba(255, 255, 255, 0.18)) !important;
+    color: #ffffff !important;
+}
+.page-sidebar ul.wraplist > li.open > a i.fa,
+.page-sidebar ul.wraplist > li.active > a i.fa,
+.page-sidebar ul.wraplist > li > a:hover i.fa {
+    color: #ffffff !important;
+}
+
+/* Submenu */
+.page-sidebar .sub-menu {
+    background-color: var(--t-sidebar-submenu-bg, rgba(0, 0, 0, 0.12)) !important;
+    width: auto !important;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-radius: var(--ml-radius-sm);
+    margin: 2px 6px 6px 6px !important;
+    padding: 4px 0 !important;
+    box-sizing: border-box;
+}
+.page-sidebar .sub-menu > li > a {
+    display: block;
+    color: var(--t-sidebar-text-muted, rgba(255, 255, 255, 0.7)) !important;
+    padding: 10px 16px 10px 44px !important;
+    text-decoration: none !important;
+    font-size: 13px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.page-sidebar .sub-menu > li > a:hover,
+.page-sidebar .sub-menu > li.active > a {
+    color: #ffffff !important;
+    background-color: var(--t-sidebar-active-bg, rgba(255, 255, 255, 0.18)) !important;
+}
+
+.page-sidebar ul.wraplist > li:last-child > a {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+.page-sidebar ul.wraplist > li:last-child > a:hover {
+    background-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* -------------------------------------------------------------
+   5. COLLAPSED STATE — single system, body.sidebar-collapsed only.
+   Desktop only (>=992px); mobile always resets to expanded width
+   (see section 6).
+------------------------------------------------------------- */
+@media (min-width: 992px) {
+    body.sidebar-collapsed .page-sidebar {
+        width: var(--sidebar-width-collapsed) !important;
+        min-width: var(--sidebar-width-collapsed) !important;
+        max-width: var(--sidebar-width-collapsed) !important;
+    }
+
+    body.sidebar-collapsed .admin-main-content {
+        margin-left: var(--sidebar-width-collapsed) !important;
+        width: calc(100% - var(--sidebar-width-collapsed)) !important;
+    }
+
+    body.sidebar-collapsed .sidebar-brand-wrapper {
+        padding: 15px 5px !important;
+        justify-content: center !important;
+    }
+    body.sidebar-collapsed .sidebar-brand-text {
+        opacity: 0;
+        width: 0;
+        display: none !important;
+    }
+
+    body.sidebar-collapsed .sidebar-profile {
+        padding: 14px 5px !important;
+        justify-content: center;
+    }
+    body.sidebar-collapsed .sidebar-profile .profile-img {
+        width: 36px !important;
+        height: 36px !important;
+    }
+    body.sidebar-collapsed .sidebar-profile .profile-info-text {
+        display: none !important;
+    }
+
+    body.sidebar-collapsed .page-sidebar ul.wraplist > li > a {
+        justify-content: center !important;
+        padding: 12px 0 !important;
+        gap: 0 !important;
+    }
+    body.sidebar-collapsed .page-sidebar ul.wraplist > li > a span.title,
+    body.sidebar-collapsed .page-sidebar ul.wraplist > li > a span.arrow {
+        display: none !important;
+    }
+
+    /* Submenu flyout on hover — labels are hidden, no room for an
+       inline accordion, so the submenu opens beside the rail and
+       auto-closes when the pointer leaves the item. */
+    body.sidebar-collapsed .page-sidebar ul.wraplist > li {
+        position: relative !important;
+    }
+    body.sidebar-collapsed .page-sidebar ul.wraplist > li > .sub-menu {
+        display: none;
+        position: absolute !important;
+        left: 100% !important;
+        top: 0 !important;
+        width: 220px !important;
+        margin: 0 0 0 8px !important;
+        border-radius: 0 10px 10px 10px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25) !important;
+        z-index: 10000 !important;
+    }
+    body.sidebar-collapsed .page-sidebar ul.wraplist > li:hover > .sub-menu {
+        display: flex !important;
+    }
+    body.sidebar-collapsed .page-sidebar ul.wraplist > li > .sub-menu > li > a {
+        padding: 10px 16px !important;
+    }
+
+    /* Tooltip on hover for collapsed labels. scripts.js copies each
+       link's visible label into data-tooltip once on init — no
+       markup/template changes needed. Delayed so it doesn't fight
+       the submenu flyout for items that have one. */
+    body.sidebar-collapsed .page-sidebar ul.wraplist > li > a[data-tooltip] {
+        position: relative;
+    }
+    body.sidebar-collapsed .page-sidebar ul.wraplist > li > a[data-tooltip]::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: calc(100% + 12px);
+        top: 50%;
+        transform: translateY(-50%) translateX(-6px);
+        white-space: nowrap;
+        background: var(--ml-green-darker);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 10px;
+        border-radius: 8px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        transition-delay: 0.35s;
+        z-index: 10001;
+    }
+    body.sidebar-collapsed .page-sidebar ul.wraplist > li:hover > a[data-tooltip]::after {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
+    /* Items with a submenu show the flyout instead of the tooltip */
+    body.sidebar-collapsed .page-sidebar ul.wraplist > li:has(.sub-menu):hover > a[data-tooltip]::after {
+        opacity: 0;
+    }
+}
+
+/* -------------------------------------------------------------
+   6. MOBILE — slide-in + overlay, fully independent of desktop
+   collapse. Uses body.sidebar-visible only; never reads
+   body.sidebar-collapsed.
+------------------------------------------------------------- */
+@media (max-width: 991px) {
+    .page-sidebar {
+        width: 280px !important;
+        min-width: 280px !important;
+        max-width: 280px !important;
+        transform: translateX(-100%);
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2) !important;
+        transition: transform 0.3s ease-in-out !important;
+    }
+
+    body.sidebar-visible .page-sidebar {
+        transform: translateX(0) !important;
+    }
+
+    .admin-main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    .sidebar-toggle-wrap {
+        margin-left: 20px !important;
+    }
+
+    /* Overlay backdrop, inserted by scripts.js right after
+       .page-sidebar and toggled via .active alongside
+       body.sidebar-visible. Tapping it closes the sidebar. */
+    .sidebar-mobile-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(4, 6, 15, 0.6);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    .sidebar-mobile-backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}

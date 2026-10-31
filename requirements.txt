@@ -1,0 +1,26 @@
+# ==============================================================================
+# StayZen Hotel & Resort Management System - Dependencies
+# ==============================================================================
+
+# Core Framework
+Django>=5.0.0,<7.0.0
+asgiref>=3.7.0
+sqlparse>=0.4.4
+tzdata>=2024.1
+
+# REST Framework & API Tools
+djangorestframework>=3.14.0
+django-cors-headers>=4.0.0
+
+# Database Connectors
+mysqlclient>=2.2.0
+psycopg2-binary>=2.9.0
+
+# Document & Media Generation
+Pillow>=10.0.0
+reportlab>=4.0.0
+
+# Utilities & Configuration
+python-dotenv>=1.0.0
+charset-normalizer>=3.3.0
+

@@ -1,0 +1,575 @@
+{% extends 'accounts/dashboard_base.html' %}
+{% load static %}
+{% load cart_tags %}
+
+{% block title %}My Cart - StayZen{% endblock %}
+
+{% block extra_css %}
+
+/* Page header */
+.page-header {
+    margin-bottom: 25px;
+}
+.page-header h2 {
+    font-size: 26px;
+    font-weight: 600;
+}
+.page-header p {
+    color: var(--text-muted);
+}
+
+/* Cart container */
+.cart-wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+/* Card style matching food menu */
+.cart-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+}
+
+/* Table */
+.cart-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cart-table th {
+    background: #111;
+    color: #fff;
+    font-size: 14px;
+    padding: 14px;
+    text-align: left;
+}
+
+.cart-table td {
+    padding: 14px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+/* Buttons */
+.qty-btn {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.qty-btn:hover {
+    border-color: var(--text-highlight);
+    color: var(--text-highlight);
+}
+
+/* Summary box */
+.cart-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px;
+    border-top: 1px solid var(--border-color);
+    background: rgba(255,255,255,0.02);
+}
+
+.cart-total {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-highlight);
+}
+
+/* Floating cart button style reuse */
+.floating-cart-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: var(--text-highlight);
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: 50px;
+    text-decoration: none;
+    z-index: 9999;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+/* Browse menu button upgrade */
+.browse-btn {
+    display: inline-block;
+    padding: 12px 20px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f5b301, #ff8c00);
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+    transition: 0.3s ease;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
+
+.browse-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    background: linear-gradient(135deg, #ff8c00, #f5b301);
+}
+
+/* ORDER NOW BUTTON */
+.order-btn {
+    display: inline-block;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    color: #fff;
+
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+
+    transition: all 0.3s ease;
+    border: none;
+}
+
+/* hover effect */
+.order-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #1e7e34, #28a745);
+}
+
+/* optional disabled style */
+.order-btn:disabled {
+    background: #999;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* ======================
+   ORDER SIDE PANEL
+====================== */
+
+.order-panel{
+    position:fixed;
+    top:0;
+    right:-450px;
+    width:420px;
+    max-width:100%;
+    height:100vh;
+
+    background:var(--card-bg);
+
+    z-index:10001;
+
+    box-shadow:-5px 0 25px rgba(0,0,0,.25);
+
+    transition:.35s ease;
+
+    padding:25px;
+
+    overflow-y:auto;
+}
+
+.order-panel.show{
+    right:0;
+}
+
+.order-panel-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+}
+
+.close-btn{
+    background:none;
+    border:none;
+    font-size:24px;
+    cursor:pointer;
+    color:red;
+}
+
+.panel-backdrop{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.5);
+    z-index:10000;
+
+    opacity:0;
+    visibility:hidden;
+
+    transition:.3s;
+}
+
+.panel-backdrop.show{
+    opacity:1;
+    visibility:visible;
+}
+
+.order-panel label{
+    font-weight:600;
+    margin-bottom:6px;
+    display:block;
+}
+
+.order-panel .form-control{
+    width:100%;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid var(--border-color);
+}
+
+.order-total-box{
+    background:rgba(255,255,255,.05);
+    padding:15px;
+    border-radius:10px;
+    margin:20px 0;
+}
+
+.order-confirm-btn{
+    width:100%;
+    border:none;
+    padding:14px;
+    border-radius:10px;
+
+    background:#28a745;
+    color:#fff;
+
+    font-weight:600;
+}
+
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2>My Cart</h2>
+    <p>Review your selected items before checkout</p>
+</div>
+
+<div class="cart-wrapper">
+
+    <div class="cart-card">
+
+        {% if cart_items %}
+
+        {% for item in cart_items %}
+
+        <!-- CART ITEM CARD -->
+        <div style="
+            display:flex;
+            gap:16px;
+            padding:16px;
+            border-bottom:1px solid var(--border-color);
+            align-items:center;
+        ">
+
+            <!-- IMAGE -->
+            <div style="width:120px; flex-shrink:0;">
+                {% if item.food.image %}
+                    <img src="{{ item.food.image.url }}"
+                         style="width:100%;height:90px;object-fit:cover;border-radius:10px;">
+                {% else %}
+                    <img src="{% static 'guest/images/room/1.webp' %}"
+                         style="width:100%;height:90px;object-fit:cover;border-radius:10px;">
+                {% endif %}
+            </div>
+
+            <!-- DETAILS -->
+            <div style="flex:1;">
+                <h4 style="margin:0;">{{ item.food.item_name }}</h4>
+                <p style="color:var(--text-muted);margin:4px 0;">
+                    {{ item.food.category }} • {{ item.food.cuisine }}
+                </p>
+
+                <span style="color:var(--text-highlight);font-weight:600;">
+                    ₹{{ item.food.price }}
+                </span>
+            </div>
+
+            <!-- QUANTITY -->
+            <div style="text-align:center;">
+
+                <div style="display:flex;align-items:center;gap:8px;">
+
+                    <a href="{% url 'decrease_cart_dashboard' item.food.id %}?next={{ request.path }}" class="qty-btn">-</a>
+
+<span>{{ item.qty }}</span>
+
+<a href="{% url 'increase_cart_dashboard' item.food.id %}?next={{ request.path }}" class="qty-btn">+</a>
+                </div>
+
+                <small style="color:var(--text-muted);">
+                    Subtotal: ₹{{ item.subtotal }}
+                </small>
+
+            </div>
+
+            <!-- REMOVE -->
+            <div>
+                <a href="{% url 'remove_from_cart_dashboard' item.food.id %}?next={{ request.path }}"
+                   class="qty-btn"
+                   style="border-color:red;color:red;">
+                    Remove
+                </a>
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+        <!-- SUMMARY -->
+        <div class="cart-summary">
+
+            <div>
+                <h5 style="margin:0;">Total Amount</h5>
+                <small style="color:var(--text-muted);">
+                    Taxes calculated at checkout
+                </small>
+            </div>
+
+            <div style="text-align:right;">
+                <div class="cart-total">₹{{ total }}</div>
+                <button class="order-btn" onclick="openOrderPanel()">
+    🛒 Order Now →
+</button>
+            </div>
+
+        </div>
+
+        {% else %}
+
+        <div style="text-align:center;padding:60px;">
+            <div style="font-size:60px;">🛒</div>
+            <h3>Your cart is empty</h3>
+            <p style="color:var(--text-muted);">
+                Add items from the food menu
+            </p>
+
+            <a href="{% url 'food_menu' %}" class="btn-dash btn-gold browse-btn">
+    Browse Menu
+</a>
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+<!-- ORDER PANEL -->
+<div id="orderPanel" class="order-panel">
+
+    <div class="order-panel-header">
+
+        <h3>Complete Your Order</h3>
+
+        <button class="close-btn" onclick="closeOrderPanel()">
+            ✕
+        </button>
+
+    </div>
+
+    <form method="POST" action="{% url 'food_order_dashboard' %}">
+
+        {% csrf_token %}
+
+        <div class="mb-3">
+
+            <label>Order Type</label>
+
+            <select
+                name="order_type"
+                class="form-control"
+                id="orderType">
+
+                <option value="DineIn">Dine In</option>
+                <option value="RoomService">Room Service</option>
+                <option value="Delivery">Home Delivery</option>
+                <option value="Takeaway">Takeaway</option>
+
+            </select>
+
+        </div>
+
+        <div class="mb-3" id="extraField">
+
+            <label id="extraLabel">
+                Home Address
+            </label>
+
+            <textarea
+                name="delivery_address"
+                id="extraInput"
+                class="form-control"
+                rows="3">
+            </textarea>
+
+        </div>
+
+        <div class="mb-3" id="phoneSection">
+
+            <label>Phone Number</label>
+
+            <input
+                type="text"
+                name="phone"
+                class="form-control"
+                value="{{ request.user.customer.phone }}"
+                readonly>
+
+        </div>
+
+        <div class="order-total-box">
+
+            <strong>Total Amount:</strong>
+
+            <h3>₹{{ total }}</h3>
+
+        </div>
+
+        <button
+            type="submit"
+            class="order-confirm-btn">
+
+            Confirm Order
+
+        </button>
+
+    </form>
+
+</div>
+
+<!-- BACKDROP -->
+<div id="panelBackdrop"
+     class="panel-backdrop"
+     onclick="closeOrderPanel()">
+</div>
+
+<script>
+
+function openOrderPanel(){
+
+    document
+        .getElementById('orderPanel')
+        .classList.add('show');
+
+    document
+        .getElementById('panelBackdrop')
+        .classList.add('show');
+}
+
+function closeOrderPanel(){
+
+    document
+        .getElementById('orderPanel')
+        .classList.remove('show');
+
+    document
+        .getElementById('panelBackdrop')
+        .classList.remove('show');
+}
+
+const orderType = document.getElementById("orderType");
+
+if(orderType){
+
+    orderType.addEventListener("change", toggleFields);
+
+    function toggleFields(){
+
+        let value = orderType.value;
+
+        let extraField =
+            document.getElementById("extraField");
+
+        let extraLabel =
+            document.getElementById("extraLabel");
+
+        let extraInput =
+            document.getElementById("extraInput");
+
+        let phoneSection =
+            document.getElementById("phoneSection");
+
+        if(value === "Delivery"){
+
+            extraField.style.display="block";
+            phoneSection.style.display="block";
+
+            extraLabel.innerText="Home Address";
+            extraInput.placeholder="Enter delivery address";
+        }
+
+        else if(value === "RoomService"){
+
+            extraField.style.display="block";
+            phoneSection.style.display="none";
+
+            extraLabel.innerText="Room Number";
+            extraInput.placeholder="Enter room number";
+        }
+
+        else if(value === "DineIn"){
+
+            extraField.style.display="block";
+            phoneSection.style.display="none";
+
+            extraLabel.innerText="Table Number";
+            extraInput.placeholder="Enter table number";
+        }
+
+        else{
+
+            extraField.style.display="none";
+            phoneSection.style.display="none";
+        }
+    }
+
+    toggleFields();
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const orderForm = document.querySelector('#orderPanel form');
+    if (orderForm) {
+        orderForm.addEventListener("submit", function(e) {
+            e.preventDefault();
+            const formData = new FormData(orderForm);
+            formData.append("ajax", "1");
+            
+            fetch(orderForm.action, {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": formData.get("csrfmiddlewaretoken")
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.razorpay) {
+                        closeOrderPanel();
+                        handleRazorpayPayment(data);
+                    } else if (data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                    }
+                } else {
+                    showToast(data.message || "An error occurred during ordering.", "error");
+                }
+            })
+            .catch(err => {
+                console.error("Order error:", err);
+                showToast("Something went wrong. Please try again.", "error");
+            });
+        });
+    }
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="card border-0 shadow-lg">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">🛏️ Room List</h4>
+            {% if request.user.is_superuser or permissions.room_list.add %}
+            <a href="{% url 'add_room' %}" class="btn btn-light btn-sm">+ Add Room</a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <!-- Live Filter UI -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label text-muted font-weight-bold" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Search Room Number</label>
+                    <input type="text" id="liveSearchInput" class="form-control" placeholder="Type room number..." value="{{ q }}" style="border-radius: 8px; padding: 10px 14px; font-size: 14px;">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted font-weight-bold" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Category (Room Type)</label>
+                    <select id="liveCategorySelect" class="form-control" style="border-radius: 8px; height: auto; padding: 10px 14px; font-size: 14px;">
+                        <option value="">All Categories</option>
+                        <option value="Single" {% if category == 'Single' %}selected{% endif %}>Single</option>
+                        <option value="Double" {% if category == 'Double' %}selected{% endif %}>Double</option>
+                        <option value="Deluxe" {% if category == 'Deluxe' %}selected{% endif %}>Deluxe</option>
+                        <option value="Suite" {% if category == 'Suite' %}selected{% endif %}>Suite</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="tableContainer">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Sl.No.</th>
+                                <th>Image</th>
+                                <th>Room Number</th>
+                                <th>Type</th>
+                                <th>Adults</th>
+                                <th>Children</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Audit Logs</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room in rooms %}
+                            <tr class="{% if room.is_deleted %}table-danger opacity-75{% endif %}">
+                                <td>{{ forloop.counter0|add:rooms.start_index }}</td>
+                                <td>
+                                    {% if room.image %}
+                                        <img src="{{ room.image.url }}" width="100" class="img-fluid rounded">
+                                    {% else %}
+                                        No Image
+                                    {% endif %}
+                                </td>
+                                <td>{{ room.room_number }}</td>
+                                <td>{{ room.room_type }}</td>
+                                <td>{{ room.max_adults }}</td>
+                                <td>{{ room.max_children }}</td>
+                                <td>{{ room.price }}</td>
+                                <td>
+                                    {% if room.is_deleted %}
+                                        <span class="badge bg-danger">Deleted</span>
+                                    {% else %}
+                                        {% if room.status == 'Available' %}
+                                            <span class="badge bg-success">Available</span>
+                                        {% elif room.status == 'Not Available' %}
+                                            <span class="badge bg-danger">Not Available</span>
+                                        {% elif room.status == 'Reserved' %}
+                                            <span class="badge bg-primary">Reserved</span>
+                                        {% elif room.status == 'Occupied' %}
+                                            <span class="badge bg-warning text-dark">Occupied</span>
+                                        {% elif room.status == 'Maintenance' %}
+                                            <span class="badge bg-secondary">Maintenance</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ room.status }}</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="small">
+                                        <span class="text-muted">Created:</span> {{ room.created_by.username|default:"System" }}<br>
+                                        <span class="text-muted" style="font-size: 11px;">{{ room.created_at|date:"Y-m-d H:i" }}</span>
+                                        {% if room.edited_by %}
+                                            <hr class="my-1">
+                                            <span class="text-muted">Edited:</span> {{ room.edited_by.username }}<br>
+                                            <span class="text-muted" style="font-size: 11px;">{{ room.edited_at|date:"Y-m-d H:i" }}</span>
+                                        {% endif %}
+                                        {% if room.is_deleted %}
+                                            <hr class="my-1">
+                                            <span class="text-danger fw-semibold">Deleted:</span> {{ room.deleted_by.username }}<br>
+                                            <span class="text-danger" style="font-size: 11px;">{{ room.deleted_at|date:"Y-m-d H:i" }}</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        {% if request.user.is_superuser or permissions.room_list.edit %}
+                                            <a href="{% url 'edit_room' room.id %}" class="btn btn-sm btn-warning btn-action-icon" title="Edit">
+                                                <i class="fa fa-pencil"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if request.user.is_superuser or permissions.room_list.delete %}
+                                            <form action="{% url 'delete_room' room.id %}" method="POST" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger btn-action-icon" title="Delete" onclick="return confirm('Are you sure?')">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center">No Rooms Found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <nav class="mt-4 d-flex justify-content-center"><ul class="pagination">
+                    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&category={{ category }}">← Prev</a></li>{% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}&q={{ q }}&category={{ category }}">{{ num }}</a></li>
+                    {% endfor %}
+                    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}&category={{ category }}">Next →</a></li>{% endif %}
+                </ul></nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('liveSearchInput');
+    const categorySelect = document.getElementById('liveCategorySelect');
+    let debounceTimeout = null;
+
+    function performSearch() {
+        const q = searchInput ? searchInput.value.trim() : '';
+        const cat = categorySelect ? categorySelect.value : '';
+        const url = new URL(window.location.href);
+        url.searchParams.set('q', q);
+        url.searchParams.set('category', cat);
+        url.searchParams.set('page', '1'); // Reset to page 1
+
+        fetch(url.toString(), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTable = doc.getElementById('tableContainer');
+            if (newTable) {
+                document.getElementById('tableContainer').innerHTML = newTable.innerHTML;
+            }
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(performSearch, 300);
+        });
+    }
+    if (categorySelect) {
+        categorySelect.addEventListener('change', performSearch);
+    }
+});
+</script>
+{% endblock %}

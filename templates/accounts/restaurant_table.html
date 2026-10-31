@@ -1,0 +1,642 @@
+{% extends 'accounts/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Restaurant Tables - StayZen{% endblock %}
+
+{% block extra_css %}
+
+/* ================= PAGE HEADER ================= */
+
+.page-header{
+margin-bottom:35px;
+}
+
+.page-header h2{
+font-size:34px;
+font-weight:700;
+color:var(--text-primary);
+margin-bottom:8px;
+}
+
+.page-header p{
+font-size:15px;
+color:var(--text-muted);
+}
+
+/* ================= FILTER BOX ================= */
+
+.filter-box{
+background:var(--card-bg);
+border-radius:24px;
+padding:30px;
+border:1px solid rgba(255,255,255,.08);
+box-shadow:0 15px 35px rgba(0,0,0,.08);
+margin-bottom:40px;
+}
+
+.filter-box .form-label{
+font-size:13px;
+font-weight:600;
+margin-bottom:8px;
+color:var(--text-primary);
+}
+
+.filter-box .form-control,
+.filter-box .form-select{
+height:55px;
+border-radius:12px;
+border:1px solid var(--border-color);
+background:var(--card-bg);
+color:var(--text-primary);
+width:100%;
+padding:0 16px;
+outline:none;
+}
+
+.filter-box .form-control:focus,
+.filter-box .form-select:focus{
+border-color:var(--text-highlight);
+box-shadow:0 0 0 4px rgba(199,161,122,.15);
+}
+
+.filter-row {
+display: flex;
+flex-wrap: nowrap;
+gap: 16px;
+align-items: flex-end;
+width: 100%;
+}
+
+.filter-col {
+flex: 1;
+min-width: 120px;
+}
+
+.filter-buttons {
+display: flex;
+gap: 16px;
+min-width: 180px;
+align-items: center;
+height: 55px;
+}
+
+.filter-link {
+background: none;
+border: none;
+color: var(--text-highlight);
+font-size: 15px;
+font-weight: 600;
+text-decoration: none;
+cursor: pointer;
+transition: color 0.3s ease, transform 0.2s ease;
+padding: 10px 15px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+}
+
+.filter-link:hover {
+color: var(--text-primary);
+text-decoration: underline;
+transform: translateY(-1px);
+}
+
+@media(max-width:992px){
+.filter-row {
+flex-wrap: wrap;
+}
+.filter-col {
+flex: 1 1 calc(50% - 8px);
+min-width: 150px;
+}
+.filter-buttons {
+flex: 1 1 100%;
+}
+}
+
+@media(max-width:576px){
+.filter-col {
+flex: 1 1 100%;
+}
+}
+
+/* ================= TABLE GRID ================= */
+
+.table-grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(330px,1fr));
+gap:28px;
+}
+
+/* ================= TABLE CARD ================= */
+
+.table-card{
+background:var(--card-bg);
+border-radius:22px;
+overflow:hidden;
+border:1px solid var(--border-color);
+transition:.35s ease;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+.table-card:hover{
+transform:translateY(-8px);
+box-shadow:0 20px 40px rgba(0,0,0,.15);
+border-color:var(--text-highlight);
+}
+
+/* ================= IMAGE ================= */
+
+.table-card img{
+width:100%;
+height:240px;
+object-fit:cover;
+}
+
+/* ================= BODY ================= */
+
+.table-body{
+padding:24px;
+}
+
+.table-title{
+font-size:22px;
+font-weight:700;
+color:var(--text-primary);
+margin-bottom:10px;
+}
+
+.table-meta{
+font-size:14px;
+color:var(--text-muted);
+margin-bottom:6px;
+}
+
+/* ================= BUTTON ================= */
+
+.btn-dash{
+border:none;
+border-radius:12px;
+padding:10px 18px;
+font-size:14px;
+font-weight:600;
+transition:.3s ease;
+text-decoration:none;
+cursor:pointer;
+}
+
+.btn-gold{
+background:linear-gradient(135deg,#c7a17a,#a57f5a);
+color:white;
+}
+
+.btn-gold:hover{
+transform:translateY(-2px);
+color:white;
+}
+
+/* ================= STATUS ================= */
+
+.status-badge{
+padding:7px 14px;
+border-radius:30px;
+font-size:12px;
+font-weight:700;
+display:inline-block;
+}
+
+.status-available{
+background:#eafaf0;
+color:#16a34a;
+}
+
+.status-reserved{
+background:#fdecec;
+color:#dc2626;
+}
+
+/* ================= SIDEBAR ================= */
+
+.booking-sidebar{
+position:fixed;
+right:-420px;
+top:0;
+width:380px;
+height:100%;
+background:var(--card-bg);
+box-shadow:-10px 0 30px rgba(0,0,0,.2);
+padding:25px;
+transition:.4s ease;
+z-index:9999;
+}
+
+.booking-sidebar.active{
+right:0;
+}
+
+.booking-sidebar h3{
+color:var(--text-primary);
+margin-bottom:20px;
+}
+
+.booking-sidebar label{
+font-size:13px;
+font-weight:600;
+color:var(--text-muted);
+margin-top:10px;
+}
+
+.booking-sidebar input{
+width:100%;
+height:45px;
+margin-top:5px;
+margin-bottom:10px;
+border-radius:10px;
+border:1px solid var(--border-color);
+background:var(--card-bg);
+color:var(--text-primary);
+padding:0 10px;
+}
+
+.close-btn{
+position:absolute;
+right:15px;
+top:10px;
+font-size:22px;
+cursor:pointer;
+color:var(--text-primary);
+}
+
+/* ================= EMPTY ================= */
+
+.no-data{
+grid-column:1/-1;
+text-align:center;
+padding:60px;
+color:var(--text-muted);
+}
+
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<style>
+    /* Custom disabled date styling for Flatpickr */
+    .flatpickr-day.flatpickr-disabled.date-reserved {
+        opacity: 0.85;
+        text-decoration: line-through !important;
+    }
+
+    .flatpickr-calendar {
+        z-index: 99999 !important;
+        background: #ffffff !important;
+        border: 1px solid #e0e0e0 !important;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2) !important;
+    }
+
+    .flatpickr-month {
+        height: 40px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .flatpickr-calendar .flatpickr-current-month {
+        position: relative !important;
+        left: 0 !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        height: 34px !important;
+        padding: 0 40px !important;
+        box-sizing: border-box !important;
+    }
+
+    .flatpickr-calendar .flatpickr-monthDropdown-months {
+        padding: 4px 24px 4px 8px !important;
+        height: 30px !important;
+        font-size: 14px !important;
+        color: #1c1d1f !important;
+        background-color: #ffffff !important;
+        border: 1px solid rgba(197, 168, 128, 0.3) !important;
+        border-radius: 6px !important;
+        width: auto !important;
+        display: inline-block !important;
+        cursor: pointer !important;
+    }
+
+    .flatpickr-calendar .numInputWrapper {
+        width: 75px !important;
+        display: inline-block !important;
+        position: relative !important;
+    }
+
+    .flatpickr-calendar .numInputWrapper input.cur-year {
+        padding: 4px 6px !important;
+        height: 30px !important;
+        font-size: 14px !important;
+        color: #1c1d1f !important;
+        background-color: #ffffff !important;
+        width: 100% !important;
+        display: inline-block !important;
+        box-sizing: border-box !important;
+    }
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <h2>Restaurant Tables</h2>
+    <p>Select your preferred table and reserve instantly.</p>
+</div>
+
+<!-- FILTER -->
+<div class="filter-box">
+    <form method="GET">
+        <div class="filter-row">
+
+            <div class="filter-col" style="min-width: 150px;">
+                <label class="form-label">Table Type</label>
+                <select name="table_type" class="form-select">
+                    <option value="">All Types</option>
+                    {% for value, label in locations %}
+                    <option value="{{ value }}" {% if selected_table_type == value %}selected{% endif %}>{{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-col" style="min-width: 150px;">
+                <label class="form-label">Minimum Capacity</label>
+                <input type="number" name="capacity" class="form-control" placeholder="Enter capacity"
+                    value="{{ selected_capacity }}">
+            </div>
+
+            <div class="filter-buttons">
+                <button type="submit" class="filter-link">Search</button>
+                <a href="{% url 'restaurant_table_dashboard' %}" class="filter-link">Reset</a>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<!-- TABLE GRID -->
+<div class="table-grid">
+
+    {% for table in tables %}
+
+    <div class="table-card">
+
+        {% if table.table_image %}
+        <img src="{{ table.table_image.url }}">
+        {% else %}
+        <img src="{% static 'guest/images/room/1.webp' %}">
+        {% endif %}
+
+        <div class="table-body">
+
+            <h3 class="table-title">Table {{ table.table_number }}</h3>
+
+            <p class="table-meta"><strong>Capacity:</strong> {{ table.table_capacity }}</p>
+            <p class="table-meta"><strong>Location:</strong> {{ table.location }}</p>
+
+            {% if table.status == "Available" %}
+            <span class="status-badge status-available">Available</span>
+            {% else %}
+            <!-- <span class="status-badge status-reserved">Reserved</span> -->
+            {% endif %}
+
+            <div style="margin-top:15px;">
+                {% if table.status == 'Maintenance' %}
+                <button class="btn-dash" disabled
+                    style="background-color: #cbd5e1 !important; color: #64748b !important; border: none !important; cursor: not-allowed !important; pointer-events: none; width: 100%; text-align: center;">Maintenance</button>
+                {% else %}
+                <button class="btn-dash btn-gold openBooking" data-id="{{ table.id }}"
+                    data-table="{{ table.table_number }}" style="width: 100%; text-align: center;">
+                    Reserve Now
+                </button>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+    {% empty %}
+    <div class="no-data">No tables available</div>
+    {% endfor %}
+
+</div>
+
+<!-- SIDEBAR -->
+<div class="booking-sidebar" id="bookingSidebar">
+
+    <span class="close-btn" id="closeBooking">&times;</span>
+
+    <h3>Reserve Table</h3>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <input type="hidden" name="table_id" id="selectedTable">
+
+        <label>Table</label>
+        <input type="text" id="tableDisplay" readonly>
+
+
+        <label>Date</label>
+        <input type="date" name="reservation_date" id="reservation_date" required>
+
+        <label>Reservation Slot</label>
+        <select name="reservation_slot" id="reservation_slot" class="form-select"
+            style="width:100%; padding:10px; margin-bottom:15px; background:var(--card-bg); color:var(--text-primary); border:1px solid var(--border-color); border-radius:6px;"
+            required>
+            <option value="Breakfast">Breakfast (08:00 - 11:00)</option>
+            <option value="Lunch">Lunch (12:00 - 15:00)</option>
+            <option value="Dinner">Dinner (19:00 - 22:00)</option>
+        </select>
+
+        <label>Guests</label>
+        <input type="number" name="guests" required>
+
+        <button type="submit" class="btn-dash btn-gold" style="width:100%; margin-top:15px;">
+            Confirm Reservation
+        </button>
+
+    </form>
+</div>
+
+<!-- SCRIPT -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // View Switcher logic
+        const btnGridView = document.getElementById("btn-grid-view");
+        const btnMapView = document.getElementById("btn-map-view");
+        const gridContainer = document.getElementById("table-grid-view-container");
+        const mapContainer = document.getElementById("table-map-view-container");
+
+        if (btnGridView && btnMapView && gridContainer && mapContainer) {
+            btnGridView.addEventListener("click", function () {
+                btnGridView.classList.add("active");
+                btnGridView.style.background = "var(--text-highlight)";
+                btnGridView.style.color = "#ffffff";
+
+                btnMapView.classList.remove("active");
+                btnMapView.style.background = "transparent";
+                btnMapView.style.color = "var(--text-muted)";
+
+                gridContainer.style.display = "block";
+                mapContainer.style.display = "none";
+            });
+
+            btnMapView.addEventListener("click", function () {
+                btnMapView.classList.add("active");
+                btnMapView.style.background = "var(--text-highlight)";
+                btnMapView.style.color = "#ffffff";
+
+                btnGridView.classList.remove("active");
+                btnGridView.style.background = "transparent";
+                btnGridView.style.color = "var(--text-muted)";
+
+                gridContainer.style.display = "none";
+                mapContainer.style.display = "block";
+            });
+        }
+
+        const sidebar = document.getElementById("bookingSidebar");
+        const reservationDateInput = document.getElementById("reservation_date");
+        const slotSelect = document.getElementById("reservation_slot");
+        let tablePicker = null;
+        let currentBookedSlots = {};
+
+        function formatDate(date) {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1);
+            let day = '' + d.getDate();
+            const year = d.getFullYear();
+
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+
+            return [year, month, day].join('-');
+        }
+
+        function updateSlotDropdown(dateStr) {
+            if (!slotSelect) return;
+            const bookedForDate = currentBookedSlots[dateStr] || [];
+
+            let firstAvailable = null;
+            Array.from(slotSelect.options).forEach(option => {
+                if (bookedForDate.includes(option.value)) {
+                    option.disabled = true;
+                    option.text = option.value + " (Booked)";
+                } else {
+                    option.disabled = false;
+                    const slotName = option.value;
+                    const slotLabel = slotName === 'Breakfast' ? 'Breakfast (08:00 - 11:00)' :
+                        slotName === 'Lunch' ? 'Lunch (12:00 - 15:00)' : 'Dinner (19:00 - 22:00)';
+                    option.text = slotLabel;
+                    if (!firstAvailable) {
+                        firstAvailable = option.value;
+                    }
+                }
+            });
+
+            if (firstAvailable) {
+                slotSelect.value = firstAvailable;
+            } else {
+                slotSelect.value = "";
+            }
+        }
+
+        function initPicker(booked) {
+            if (tablePicker) {
+                tablePicker.destroy();
+            }
+            tablePicker = flatpickr(reservationDateInput, {
+                minDate: 'today',
+                disable: booked,
+                dateFormat: 'Y-m-d',
+                monthSelectorType: 'dropdown',
+                onChange: function (selectedDates, dateStr, instance) {
+                    updateSlotDropdown(dateStr);
+                },
+                onDayCreate: function (dObj, dStr, fp, dayElem) {
+                    if (!dayElem.dateObj) return;
+                    const dateStr = formatDate(dayElem.dateObj);
+                    if (booked.includes(dateStr)) {
+                        dayElem.classList.add('date-reserved');
+                    }
+                }
+            });
+        }
+
+        document.querySelectorAll(".openBooking").forEach(btn => {
+            btn.addEventListener("click", function () {
+                const tableId = this.dataset.id;
+                document.getElementById("selectedTable").value = tableId;
+                document.getElementById("tableDisplay").value = "Table " + this.dataset.table;
+                sidebar.classList.add("active");
+                reservationDateInput.value = "";
+                if (slotSelect) slotSelect.value = "Breakfast";
+
+                // Fetch and initialize calendar with booked dates
+                fetch(`/booking/booked-dates/table/${tableId}/`)
+                    .then(r => r.json())
+                    .then(data => {
+                        const booked = data.booked || [];
+                        currentBookedSlots = data.booked_slots || {};
+                        initPicker(booked);
+                    })
+                    .catch(err => {
+                        console.error('Error fetching booked dates:', err);
+                        currentBookedSlots = {};
+                        initPicker([]);
+                    });
+            });
+        });
+
+        document.getElementById("closeBooking").addEventListener("click", function () {
+            sidebar.classList.remove("active");
+        });
+
+        const tableForm = document.querySelector('#bookingSidebar form');
+        if (tableForm) {
+            tableForm.addEventListener("submit", function(e) {
+                e.preventDefault();
+                const formData = new FormData(tableForm);
+                formData.append("ajax", "1");
+                
+                fetch(window.location.href, {
+                    method: "POST",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRFToken": formData.get("csrfmiddlewaretoken")
+                    },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.razorpay) {
+                            sidebar.classList.remove("active");
+                            handleRazorpayPayment(data);
+                        } else if (data.redirect_url) {
+                            window.location.href = data.redirect_url;
+                        }
+                    } else {
+                        showToast(data.message || "An error occurred during reservation.", "error");
+                    }
+                })
+                .catch(err => {
+                    console.error("Table reservation error:", err);
+                    showToast("Something went wrong. Please try again.", "error");
+                });
+            });
+        }
+    });
+</script>
+
+{% endblock %}

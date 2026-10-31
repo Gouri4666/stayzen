@@ -1,0 +1,148 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <div class="card border-0 shadow-lg">
+
+        <div class="card-header bg-warning text-white">
+            <h4 class="mb-0">✏️ Edit Restaurant Table</h4>
+        </div>
+
+        <div class="card-body p-4">
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="row g-3">
+
+                    <!-- Table Number -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Table Number
+                        </label>
+                        {{ form.table_number }}
+                    </div>
+
+                    <!-- Capacity -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Seating Capacity
+                        </label>
+                        {{ form.table_capacity }}
+                    </div>
+
+                    <!-- Location -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Location
+                        </label>
+                        {{ form.location }}
+                    </div>
+
+                    <!-- Status -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Status
+                        </label>
+                        {{ form.status }}
+                    </div>
+
+                    <!-- Price -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Table Price (INR)
+                        </label>
+                        {{ form.price }}
+                    </div>
+
+                    <!-- Current Image -->
+                    {% if form.instance.table_image %}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Current Image
+                        </label>
+                        <br>
+                        <img src="{{ form.instance.table_image.url }}"
+                             width="180"
+                             class="img-thumbnail rounded"
+                             style="height:120px;object-fit:cover;">
+                    </div>
+                    {% endif %}
+
+                    <!-- Upload New Image -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Table Image
+                        </label>
+                        {{ form.table_image }}
+                    </div>
+
+                    <!-- Description -->
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">
+                            Description
+                        </label>
+                        {{ form.description }}
+                    </div>
+
+                </div>
+
+                <div class="mt-4 d-flex justify-content-between">
+
+                    <a href="{% url 'table_list' %}"
+                       class="btn btn-secondary">
+                        Back
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-warning text-white px-4">
+                        Update Table
+                    </button>
+
+                </div>
+
+            </form>
+
+            {% with instance=form.instance %}
+            <!-- Auditing Metadata -->
+            <div class="card border-0 shadow-sm mt-4 bg-light text-dark">
+                <div class="card-header bg-secondary text-white py-2">
+                    <h6 class="mb-0">📋 Auditing Metadata</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row text-center text-md-start">
+                        <div class="col-md-4 border-end">
+                            <span class="text-muted small d-block">Created By & At</span>
+                            <strong>{{ instance.created_by.username|default:"System" }}</strong>
+                            <span class="text-muted small d-block">{{ instance.created_at|date:"Y-m-d H:i" }}</span>
+                        </div>
+                        <div class="col-md-4 border-end">
+                            <span class="text-muted small d-block">Last Edited By & At</span>
+                            <strong>{{ instance.edited_by.username|default:"System" }}</strong>
+                            <span class="text-muted small d-block">{{ instance.edited_at|date:"Y-m-d H:i" }}</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="text-muted small d-block">Status & Deletion Log</span>
+                            {% if instance.is_deleted %}
+                            <span class="badge bg-danger">Soft Deleted</span>
+                            <span class="text-muted small d-block mt-1">Deleted By: {{ instance.deleted_by.username }}</span>
+                            <span class="text-muted small d-block">{{ instance.deleted_at|date:"Y-m-d H:i" }}</span>
+                            {% else %}
+                            <span class="badge bg-success">Active</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,51 @@
+
+{% extends 'admin/base.html' %}
+{% load static %}
+{% block content %}
+<div class="container-fluid mt-4">
+```
+<div class="card border-0 shadow-lg">
+    <div class="card-header bg-warning text-white">
+        <h4 class="mb-0">✏️ Edit Service</h4>
+    </div>
+    <div class="card-body p-4">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">
+                        Service Name
+                    </label>
+                    {{ form.service_name }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">
+                        Service Price
+                    </label>
+                    {{ form.service_price }}
+                </div>
+            </div>
+            <div class="mt-4 d-flex justify-content-between">
+                {% if package %}
+                <a href="{% url 'view_package' package.package_id %}"
+                   class="btn btn-secondary">
+                    Back
+                </a>
+                {% else %}
+                <a href="{% url 'package_list' %}"
+                   class="btn btn-secondary">
+                    Back
+                </a>
+                {% endif %}
+                <button type="submit"
+                        class="btn btn-warning text-white px-4">
+                    Update Service
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+```
+</div>
+{% endblock %}
+

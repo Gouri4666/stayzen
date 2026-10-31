@@ -1,0 +1,349 @@
+{% extends 'guest/base.html' %}
+{% load static %}
+
+{% block title %}Room {{ room.room_number }} - StayZen{% endblock %}
+
+{% block content %}
+<!-- EXTERNAL RESOURCES -->
+<link rel="stylesheet" href="{% static 'guest/css/event.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<style>
+    .detail-container {
+        max-width: 1200px;
+        margin: 60px auto;
+        padding: 0 20px;
+    }
+
+    .gallery-main {
+        width: 100%;
+        height: 500px;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-bottom: 15px;
+        position: relative;
+    }
+    
+    .gallery-main img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .gallery-main img:hover {
+        transform: scale(1.02);
+    }
+
+    .gallery-thumbnails {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 15px;
+        margin-bottom: 40px;
+        max-width: 450px;
+    }
+
+    .gallery-thumbnails .thumb {
+        height: 150px;
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .gallery-thumbnails .thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+    .gallery-thumbnails .thumb:hover img {
+        opacity: 1;
+    }
+
+    .room-header h1 {
+        font-family: 'Gilda Display', serif;
+        font-size: 42px;
+        color: #1a1a1a;
+        margin-bottom: 10px;
+    }
+
+    .room-type-badge {
+        display: inline-block;
+        background: #c89b63;
+        color: #fff;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 20px;
+    }
+
+    .room-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
+        background: #fdfbf7;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 40px;
+        border: 1px solid #f2eadc;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .info-item i {
+        font-size: 24px;
+        color: #c89b63;
+        margin-bottom: 10px;
+    }
+
+    .info-item span {
+        font-weight: 600;
+        color: #1a1a1a;
+        font-size: 18px;
+    }
+    
+    .info-item small {
+        color: #666;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .room-description {
+        font-size: 16px;
+        line-height: 1.8;
+        color: #555;
+        margin-bottom: 40px;
+    }
+
+    .amenities-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 40px;
+    }
+
+    .amenity-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #444;
+        font-size: 15px;
+    }
+
+    .amenity-item i {
+        color: #c89b63;
+    }
+
+    /* Embedded Booking Box Styling */
+    .booking-widget {
+        background: #fff;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        border: 1px solid #eee;
+        position: sticky;
+        top: 100px;
+    }
+    
+    .booking-widget h3 {
+        font-family: 'Gilda Display', serif;
+        margin-bottom: 25px;
+        color: #1a1a1a;
+        border-bottom: 1px solid #f0f0f0;
+        padding-bottom: 15px;
+    }
+</style>
+
+<!-- TOP GAP SPACER -->
+<div style="height: 60px; width: 100%; display: block;"></div>
+
+<div class="detail-container">
+    <div class="row">
+        <!-- LEFT COLUMN: IMAGES & DETAILS -->
+        <div class="col-lg-8">
+            
+            <div class="room-header">
+                <span class="room-type-badge">{{ room.room_type }}</span>
+                <h1>Room {{ room.room_number }}</h1>
+            </div>
+
+            <!-- Image Gallery -->
+            <div class="gallery-main">
+                {% if room.image %}
+                    <img src="{{ room.image.url }}" alt="Room {{ room.room_number }} Main" id="mainImage">
+                {% else %}
+                    <img src="{% static 'guest/images/no-image.jpg' %}" alt="No Image" id="mainImage">
+                {% endif %}
+            </div>
+            <!-- Dynamic Image Gallery Thumbnails -->
+            <div class="gallery-thumbnails">
+                {% if room.image %}
+                <div class="thumb" onclick="document.getElementById('mainImage').src = this.querySelector('img').src">
+                    <img src="{{ room.image.url }}" alt="Room Image 1">
+                </div>
+                {% endif %}
+                {% if room.image2 %}
+                <div class="thumb" onclick="document.getElementById('mainImage').src = this.querySelector('img').src">
+                    <img src="{{ room.image2.url }}" alt="Room Image 2">
+                </div>
+                {% endif %}
+                {% if room.image3 %}
+                <div class="thumb" onclick="document.getElementById('mainImage').src = this.querySelector('img').src">
+                    <img src="{{ room.image3.url }}" alt="Room Image 3">
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Room Info Grid -->
+            <div class="room-info-grid">
+                <div class="info-item">
+                    <i class="flaticon-user"></i>
+                    <span>{{ room.max_adults }}</span>
+                    <small>Max Adults</small>
+                </div>
+                <div class="info-item">
+                    <i class="flaticon-user-1"></i>
+                    <span>{{ room.max_children }}</span>
+                    <small>Max Children</small>
+                </div>
+                <div class="info-item">
+                    <i class="flaticon-tag"></i>
+                    <span>₹{{ room.price }}</span>
+                    <small>Per Night</small>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <h3 style="font-family: 'Gilda Display', serif; margin-bottom: 20px;">Room Description</h3>
+            <div class="room-description">
+                <ul class="list-unstyled" style="padding-left: 0; display: flex; flex-direction: column; gap: 10px; list-style: none;">
+                    {% for point in description_points %}
+                        <li style="display: flex; align-items: start; gap: 12px; font-size: 16px; color: #555; line-height: 1.6;">
+                            <i class="fa fa-check-circle" style="color: #c89b63; margin-top: 4px; font-size: 16px;"></i>
+                            <span>{{ point }}</span>
+                        </li>
+                    {% empty %}
+                        <li style="display: flex; align-items: start; gap: 12px; font-size: 16px; color: #555; line-height: 1.6;">
+                            <i class="fa fa-check-circle" style="color: #c89b63; margin-top: 4px; font-size: 16px;"></i>
+                            <span>{{ room.description|default:"Experience the ultimate comfort and luxury in this beautifully designed room." }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Static Amenities (Since there is no DB field for it) -->
+            <h3 style="font-family: 'Gilda Display', serif; margin-bottom: 20px;">Premium Amenities</h3>
+            <div class="amenities-list">
+                <div class="amenity-item"><i class="fa fa-wifi"></i> High-Speed Wi-Fi</div>
+                <div class="amenity-item"><i class="fa fa-tv"></i> Flat-screen TV</div>
+                <div class="amenity-item"><i class="fa fa-coffee"></i> Coffee Machine</div>
+                <div class="amenity-item"><i class="fa fa-bath"></i> Luxury Bath Amenities</div>
+                <div class="amenity-item"><i class="fa fa-snowflake-o"></i> Air Conditioning</div>
+                <div class="amenity-item"><i class="fa fa-bed"></i> Premium Bedding</div>
+                <div class="amenity-item"><i class="fa fa-lock"></i> In-room Safe</div>
+                <div class="amenity-item"><i class="fa fa-phone"></i> 24/7 Room Service</div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: BOOKING WIDGET -->
+        <div class="col-lg-4">
+            <div class="booking-widget">
+                <h3>Reserve Your Stay</h3>
+                <!-- {% if not is_available %}
+                    <div class="alert alert-danger text-center">
+                        <strong>{{ room.status }}</strong><br>
+                        This room is currently not available for the selected dates.
+                    </div>
+                {% endif %} -->
+                
+                <!-- Embed Booking Form -->
+                {% include 'booking/room_booking.html' %}
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const roomId = "{{ room.id }}";
+        
+        // Disable form if not available
+        {% if not is_available %}
+            const submitBtn = document.querySelector('.bf-submit-btn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.style.backgroundColor = '#cbd5e1';
+                submitBtn.style.cursor = 'not-allowed';
+            }
+        {% endif %}
+
+        // Flatpickr setup
+        function formatDate(date) {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1);
+            let day   = '' + d.getDate();
+            const year = d.getFullYear();
+            if (month.length < 2) month = '0' + month;
+            if (day.length   < 2) day   = '0' + day;
+            return [year, month, day].join('-');
+        }
+
+        function initPickers(booked, reserved, notAvailable) {
+            const config = {
+                appendTo: document.body,
+                minDate: 'today',
+                disable: booked,
+                dateFormat: 'Y-m-d',
+                monthSelectorType: 'dropdown',
+                onDayCreate: function (dObj, dStr, fp, dayElem) {
+                    if (!dayElem.dateObj) return;
+                    const dateStr = formatDate(dayElem.dateObj);
+                    if (reserved.includes(dateStr)) {
+                        dayElem.classList.add('date-reserved');
+                    } else if (notAvailable.includes(dateStr)) {
+                        dayElem.classList.add('date-not-available');
+                    }
+                }
+            };
+            
+            const ciEl = document.querySelector('#check_in');
+            const coEl = document.querySelector('#check_out');
+            if (ciEl && ciEl._flatpickr) ciEl._flatpickr.destroy();
+            if (coEl && coEl._flatpickr) coEl._flatpickr.destroy();
+            
+            flatpickr('#check_in', config);
+            flatpickr('#check_out', config);
+        }
+
+        // Fetch booked dates on load
+        fetch(`/booking/booked-dates/${roomId}/`)
+            .then(r => r.json())
+            .then(data => {
+                initPickers(
+                    data.booked       || [],
+                    data.reserved     || [],
+                    data.not_available || []
+                );
+            })
+            .catch(err => {
+                console.error('Error loading booked dates:', err);
+            });
+    });
+</script>
+
+{% endblock %}
+

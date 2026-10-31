@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zxx">
+{% load static %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="description" content="StayZen - Luxury Hotel & Resort">
+    <meta name="keywords" content="hotel, resort, Spa, luxury, StayZen">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="StayZen - Luxury Hotel and Resort">
+    <meta property="og:description"
+        content="Welcome to StayZen, where luxury meets comfort. We provide a peaceful retreat for mind, body, and soul.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="StayZen - Luxury Hotel and Resort">
+    <meta name="twitter:description"
+        content="Welcome to StayZen, where luxury meets comfort. We provide a peaceful retreat for mind, body, and soul.">
+    <link rel="icon" href="{% static 'guest/images/favicon.ico' %}" type="image/x-icon">
+    <title>{% block title %}StayZen - Luxury Hotel and Resort{% endblock %}</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Gilda+Display&family=Jost:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'guest/fonts/flaticon_bokinn.css' %}">
+    <link rel="stylesheet" href="{% static 'guest/css/plugins.min.css' %}">
+    <link rel="stylesheet" href="{% static 'guest/css/style.css' %}">
+    <base href="/">
+
+    <link rel="stylesheet" href="{% static 'guest/css/custom.css' %}?v={% now 'U' %}">
+</head>
+
+<body>
+
+
+    {% if messages %}
+    <div class="global-toast-container">
+        {% for message in messages %}
+            {% if 'logout-success' not in message.tags %}
+        <div class="toast-item {% if message.tags %}{{ message.tags }}{% endif %}">
+            <div class="toast-icon">
+                {% if message.tags == 'success' %}
+                ✓
+                {% elif message.tags == 'error' or message.tags == 'danger' %}
+                ⚠️
+                {% elif message.tags == 'warning' %}
+                ⚡
+                {% else %}
+                ℹ
+                {% endif %}
+            </div>
+            <div class="toast-content">
+                {{ message }}
+            </div>
+            <button class="toast-close" aria-label="Close">&times;</button>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Centered SweetAlert for Logout -->
+    {% for message in messages %}
+        {% if 'logout-success' in message.tags %}
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: "success",
+                    title: "{{ message|escapejs }}",
+                    showConfirmButton: false,
+                    timer: 3000,
+                    position: 'center',
+                    background: 'rgba(15, 23, 42, 0.9)',
+                    color: '#ffffff',
+                    backdrop: `rgba(0,0,0,0.4)`
+                });
+            });
+        </script>
+        {% endif %}
+    {% endfor %}
+
+    <style>
+        .global-toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 380px;
+            width: calc(100% - 48px);
+        }
+
+        .toast-item {
+            background: #ffffff;
+            color: #1e293b;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid #3b82f6;
+            animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            pointer-events: auto;
+        }
+
+        [data-theme="dark"] .toast-item {
+            background: #1e293b;
+            color: #f8fafc;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast-item.success {
+            border-left-color: #22c55e;
+        }
+
+        .toast-item.error,
+        .toast-item.danger {
+            border-left-color: #ef4444;
+        }
+
+        .toast-item.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .toast-icon {
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        .toast-item.success .toast-icon {
+            color: #22c55e;
+        }
+
+        .toast-item.error .toast-icon,
+        .toast-item.danger .toast-icon {
+            color: #ef4444;
+        }
+
+        .toast-item.warning .toast-icon {
+            color: #f59e0b;
+        }
+
+        .toast-content {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            transition: color 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+        }
+
+        .toast-close:hover {
+            color: #64748b;
+            transform: scale(1.1);
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(60px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes toastFadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toasts = document.querySelectorAll('.toast-item');
+            toasts.forEach(toast => {
+                const closeBtn = toast.querySelector('.toast-close');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function () {
+                        dismissToast(toast);
+                    });
+                }
+                setTimeout(() => {
+                    dismissToast(toast);
+                }, 5000);
+            });
+
+            function dismissToast(toast) {
+                toast.style.animation = 'toastFadeOut 0.3s forwards';
+                setTimeout(() => {
+                    toast.remove();
+                    const container = document.querySelector('.global-toast-container');
+                    if (container && container.children.length === 0) {
+                        container.remove();
+                    }
+                }, 300);
+            }
+        });
+    </script>
+    {% endif %}
+    <header
+        class="main__header header__function{% if request.resolver_match.url_name == 'contact' or request.resolver_match.url_name == 'about' %} inner__header{% endif %}{% block header_class %}{% endblock %}">
+        <div class="container-fluid"> <!-- Changed from container to container-fluid -->
+            <div class="row">
+                <div class="main__header__wrapper">
+                    <div class="main__logo">
+                        <a href="{% url 'home' %}" class="logo__link" aria-label="StayZen Home">
+                            <img class="logo__class logo__dark" src="{% static 'guest/images/logo/gold.svg' %}"
+                                alt="StayZen Hotel & Restaurant">
+                            <img class="logo__class logo__light" src="{% static 'guest/images/logo/gold.svg' %}"
+                                alt="StayZen Hotel & Restaurant">
+                        </a>
+                    </div>
+                    <div class="main__nav">
+                        <div class="navigation d-none d-lg-block">
+                            <nav class="navigation__menu" id="main__menu">
+                                <ul class="list-unstyled">
+                                    <li class="navigation__menu--item">
+                                        <a href="{% url 'home' %}" class="navigation__menu--item__link" {% if request.resolver_match.url_name == 'home' %} style="color:var(--btn-1) !important;" {% endif %}>
+                                            Home
+                                        </a>
+                                    </li>
+                                    <li class="navigation__menu--item">
+                                        <a href="{% url 'about' %}" class="navigation__menu--item__link" {% if request.resolver_match.url_name == 'about' %} style="color:var(--btn-1) !important;" {% endif %}>
+                                            About
+                                        </a>
+                                    </li>
+                                    <li class="navigation__menu--item">
+                                        <a href="{% url 'rooms' %}" class="navigation__menu--item__link" {% if request.resolver_match.url_name == 'rooms' %} style="color:var(--btn-1) !important;" {% endif %}>
+                                            Rooms
+                                        </a>
+                                    </li>
+                                    <li class="navigation__menu--item">
+                                        <a href="{% url 'food_menu' %}" class="navigation__menu--item__link" {% if request.resolver_match.url_name == 'food_menu' %} style="color:var(--btn-1) !important;" {% endif %}>
+                                            Restaurant
+                                        </a>
+                                    </li>
+                                    <li class="navigation__menu--item">
+                                        <a href="{% url 'event' %}" class="navigation__menu--item__link" {% if request.resolver_match.url_name == 'event' %} style="color:var(--btn-1) !important;" {% endif %}>
+                                            Events
+                                        </a>
+                                    </li>
+
+                                    {% if request.user.is_authenticated %}
+                                    <li class="navigation__menu--item">
+                                        <a href="{% url 'activity' %}" class="navigation__menu--item__link" {% if request.resolver_match.url_name == 'activity' or request.resolver_match.url_name == 'activity_detail' %} style="color:var(--btn-1) !important;" {% endif %}>
+                                            Activities
+                                        </a>
+                                    </li>
+                                    {% endif %}
+
+                                    <li class="navigation__menu--item">
+                                        <a href="{% url 'contact' %}" class="navigation__menu--item__link" {% if request.resolver_match.url_name == 'contact' %} style="color:var(--btn-1) !important;" {% endif %}>
+                                            Contact
+                                        </a>
+                                    </li>
+
+                                    {% if request.user.is_authenticated and not request.user.is_staff and not request.user.is_superuser %}
+                                    <li class="navigation__menu--item"
+                                        style="margin-right: 8px; display: flex !important; align-items: center;">
+                                        <a href="{% url 'notifications' %}" class="navigation__menu--item__link"
+                                            id="nav-notif-bell"
+                                            style="position: relative; display: flex; align-items: center; {% if request.resolver_match.url_name == 'notifications' %}color:var(--btn-1) !important;{% else %}color:#ffffff;{% endif %}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round"
+                                                style="display:block; min-width: 22px;">
+                                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                                            </svg>
+                                            <span id="notif-badge"
+                                                style="display:none; position:absolute; top:-4px; right:-6px; background:#e53e3e; color:#fff; border-radius:50%; font-size:10px; font-weight:700; width:16px; height:16px; line-height:16px; text-align:center;"></span>
+                                        </a>
+                                    </li>
+                                    <li class="navigation__menu--item has-child has-arrow">
+                                        <a href="#" class="navigation__menu--item__link"
+                                            style="display: flex; align-items: center; gap: 8px; padding: 0 8px;">
+                                            <span
+                                                style="width:34px; height:34px; border-radius:50%; background:var(--zen-gold,#c19b76); color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; overflow:hidden; border:2px solid var(--zen-gold,#c19b76); flex-shrink:0;">
+                                                {% if request.user.customer.image %}
+                                                <img src="{{ request.user.customer.image.url }}" alt="Profile"
+                                                    style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                                                {% else %}
+                                                {{ request.user.first_name|slice:":1"|upper|default:request.user.username|slice:":1"|upper }}
+                                                {% endif %}
+                                            </span>
+                                            <span
+                                                style="font-size:14px; font-weight:500; max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ request.user.first_name|default:request.user.username }}</span>
+                                        </a>
+                                        <ul class="submenu">
+                                            <li><a href="{% url 'dashboard' %}">My Account</a></li>
+                                            <li><a href="{% url 'my_bookings' %}">My Bookings</a></li>
+                                            <li><a href="{% url 'my_profile' %}">Profile</a></li>
+                                            <li><a href="{% url 'notifications' %}">Notifications</a></li>
+                                            <li><a href="{% url 'loyalty_points' %}">Loyalty Points</a></li>
+                                            <li><a href="{% url 'logout_view' %}" style="color:#e53e3e;">Logout</a></li>
+                                        </ul>
+                                    </li>
+                                    {% else %}
+                                    <li class="navigation__menu--item">
+                                        <a href="{% url 'login' %}" class="navigation__menu--item__link">Sign In</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                    <div class="main__right">
+                        <button class="theme-btn btn-style sm-btn fill menu__btn d-lg-none" data-bs-toggle="offcanvas"
+                            data-bs-target="#offcanvasRight" aria-controls="#offcanvasRight">
+                            <span><img src="{% static 'guest/images/icon/menu-icon.svg' %}" alt=""></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    {% block content %}
+    {% endblock %}
+
+    <div class="modal similar__modal fade " id="loginModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="max-content similar__form form__padding">
+                    <div class="d-flex mb-3 align-items-center justify-content-between">
+                        <h6 class="mb-0">Login To StayZen</h6>
+                        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{% url 'login' %}" method="post" class="d-flex flex-column gap-3">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="username" class="text-dark mb-3">Username or Email</label>
+                            <div class="position-relative">
+                                <input type="text" name="username" id="username"
+                                    placeholder="Enter your username or email" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="password" class="text-dark mb-3">Password</label>
+                            <div class="position-relative">
+                                <input type="password" name="password" id="password" placeholder="Enter your password"
+                                    required>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap justify-content-between align-items-center ">
+                            <div class="form-check d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" value="" id="flexCheckDefault">
+                                <label class="form-check-label mb-0" for="flexCheckDefault">
+                                    Remember me
+                                </label>
+                            </div>
+                            <a href="#" class="forgot__password text-para" data-bs-toggle="modal"
+                                data-bs-target="#forgotModal">Forgot Password?</a>
+                        </div>
+                        <div class="form-group my-3">
+                            <button class="theme-btn btn-style sm-btn fill w-100"><span>Login</span></button>
+                        </div>
+                    </form>
+                    <div class="d-block has__line text-center">
+                        <p>Or</p>
+                    </div>
+                    <div class="d-flex gap-4 flex-wrap justify-content-center mt-20 mb-20">
+                        <div class="is__social google">
+                            <button class="theme-btn btn-style sm-btn"><span>Continue with Google</span></button>
+                        </div>
+                        <div class="is__social facebook">
+                            <button class="theme-btn btn-style sm-btn"><span>Continue with Facebook</span></button>
+                        </div>
+                    </div>
+                    <span class="d-block text-center ">Don't have an account? <a href="#" data-bs-target="#signupModal"
+                            data-bs-toggle="modal" class="text-primary">Sign Up</a> </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal similar__modal fade " id="signupModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="max-content similar__form form__padding">
+                    <div class="d-flex mb-3 align-items-center justify-content-between">
+                        <h6 class="mb-0">Create A Free Account</h6>
+                        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{% url 'register' %}" method="post" class="d-flex flex-column gap-3">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="sname" class=" text-dark mb-3">Your Name</label>
+                            <div class="position-relative">
+                                <input type="text" name="sname" id="sname" placeholder="Enter your name" required>
+                                <i class="fa-light fa-user icon"></i>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="signemail" class=" text-dark mb-3">Your Email</label>
+                            <div class="position-relative">
+                                <input type="email" name="signemail" id="signemail" placeholder="Enter your email"
+                                    required>
+                                <i class="fa-sharp fa-light fa-envelope icon"></i>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="spassword" class=" text-dark mb-3">Password</label>
+                            <div class="position-relative">
+                                <input type="password" name="password" id="spassword" placeholder="Enter your password"
+                                    required>
+                                <i class="fa-light fa-lock icon"></i>
+                            </div>
+                        </div>
+                        <div class="form-group my-3">
+                            <button class="theme-btn btn-style sm-btn fill w-100"><span>Register</span></button>
+                        </div>
+                    </form>
+                    <div class="d-block has__line text-center">
+                        <p>Or</p>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-center gap-4 mt-20 mb-20">
+                        <div class="is__social google">
+                            <button class="theme-btn btn-style sm-btn"><span>Continue with Google</span></button>
+                        </div>
+                        <div class="is__social facebook">
+                            <button class="theme-btn btn-style sm-btn"><span>Continue with Facebook</span></button>
+                        </div>
+                    </div>
+                    <span class="d-block text-center ">Have an account? <a href="#" data-bs-target="#loginModal"
+                            data-bs-toggle="modal" class="text-primary">Login</a> </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal similar__modal fade " id="forgotModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="max-content similar__form form__padding">
+                    <div class="d-flex mb-3 align-items-center justify-content-between">
+                        <h6 class="mb-0">Forgot Password</h6>
+                        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="#" class="d-flex flex-column gap-3">
+                        <div class="form-group">
+                            <label for="fmail" class=" text-dark mb-3">Your Email</label>
+                            <div class="position-relative">
+                                <input type="email" name="email" id="fmail" placeholder="Enter your email" required>
+                                <i class="fa-sharp fa-light fa-envelope icon"></i>
+                            </div>
+                        </div>
+                        <div class="form-group my-3">
+                            <button class="theme-btn btn-style sm-btn fill w-100"><span>Reset Password</span></button>
+                        </div>
+                    </form>
+                    <span class="d-block text-center ">Remember Your Password?
+                        <a href="#" data-bs-target="#loginModal" data-bs-toggle="modal" class="text-primary">Login</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="offcanvas offcanvas-start" id="offcanvasRight">
+        <div class="rts__btstrp__offcanvase">
+            <div class="offcanvase__wrapper">
+                <div class="left__side mobile__menu">
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                        aria-label="Close"></button>
+                    <div class="offcanvase__top">
+                        <div class="offcanvase__logo">
+                            <a href="{% url 'home' %}">
+                                <img src="{% static 'guest/images/logo/gold.svg' %}" alt="StayZen Hotel & Restaurant"
+                                    style="filter: brightness(0) invert(1); height: 75px; max-height: 80px;">
+                            </a>
+                        </div>
+                        <p class="description">
+                            Welcome to StayZen, where luxury meets comfort. We have been dedicated to providing.
+                        </p>
+                    </div>
+                    <div class="offcanvase__mobile__menu">
+                        <div class="mobile__menu__active"></div>
+                    </div>
+                    <div class="offcanvase__bottom">
+                        <div class="offcanvase__address">
+                            <div class="item">
+                                <span class="h6">Phone</span>
+                                <a href="tel:+1234567890"><i class="flaticon-phone-flip"></i> 4568235555</a>
+                            </div>
+                            <div class="item">
+                                <span class="h6">Email</span>
+                                <a href="mailto:stayzen@gmail.com"><i
+                                        class="flaticon-envelope"></i>stayzen@gmail.com</a>
+                            </div>
+                            <div class="item">
+                                <span class="h6">Address</span>
+                                <a href="#"><i class="flaticon-marker"></i>StayZen Hotel & Resort, Kerala, India</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="right__side desktop__menu">
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                        aria-label="Close"></button>
+                    <div class="rts__desktop__menu">
+                        <nav class="desktop__menu offcanvas__menu">
+                            <ul class="list-unstyled">
+                                <li class="slide">
+                                    <a class="slide__menu__item" href="{% url 'home' %}">Home</a>
+                                </li>
+                                <li class="slide">
+                                    <a class="slide__menu__item" href="{% url 'about' %}">About Us</a>
+                                </li>
+                                <li class="slide">
+                                    <a class="slide__menu__item" href="{% url 'rooms' %}">Rooms</a>
+                                </li>
+                                <li class="slide">
+                                    <a class="slide__menu__item" href="{% url 'food_menu' %}">Restaurant</a>
+                                </li>
+                                <li class="slide">
+                                    <a class="slide__menu__item" href="{% url 'event' %}">Events</a>
+                                </li>
+
+                                <li class="slide">
+                                    <a class="slide__menu__item" href="{% url 'contact' %}">Contact Us</a>
+                                </li>
+                                {% if request.user.is_authenticated %}
+                                <li class="slide">
+                                    <a class="slide__menu__item" href="{% url 'activity' %}">Activities</a>
+                                </li>
+                                <li class="slide">
+                                    <a class="slide__menu__item" href="{% url 'dashboard' %}">My Account</a>
+                                </li>
+                                <li class="slide">
+                                    <a class="slide__menu__item" href="{% url 'my_bookings' %}">My Bookings</a>
+                                </li>
+                                <li class="slide">
+                                    <a class="slide__menu__item" href="{% url 'my_profile' %}">Profile</a>
+                                </li>
+                                <li class="slide">
+                                    <a class="slide__menu__item" href="{% url 'loyalty_points' %}">Loyalty Points</a>
+                                </li>
+                                <li class="slide">
+                                    <a class="slide__menu__item" href="{% url 'logout_view' %}" style="color:#e53e3e;">Logout</a>
+                                </li>
+                                {% else %}
+                                <li class="slide">
+                                    <a class="slide__menu__item" href="{% url 'login' %}">Sign In</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="rts__section rts__footer is__common__footer footer__background has__shape">
+        <div class="section__shape">
+            <div class="shape__1">
+                <img src="{% static 'guest/images/footer/shape-1.svg' %}" alt="">
+            </div>
+            <div class="shape__2">
+                <img src="{% static 'guest/images/footer/shape-2.svg' %}" alt="">
+            </div>
+            <div class="shape__3">
+                <img src="{% static 'guest/images/footer/shape-3.svg' %}" alt="">
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="footer__widget__wrapper">
+                    <div class="rts__widget">
+                        <a href="{% url 'home' %}"><img class="footer__logo"
+                                src="{% static 'guest/images/logo/gold.svg' %}" alt="StayZen Hotel & Restaurant"></a>
+                    </div>
+                    <div class="rts__widget">
+                        <span class="widget__title">Quick Links</span>
+                        <ul>
+                            <li><a href="#" aria-label="footer__link">Rooms & Suites</a></li>
+                            <li><a href="#" aria-label="footer__link">Dining</a></li>
+                            <li><a href="#" aria-label="footer__link">Spa & Wellness</a></li>
+                            <li><a href="#" aria-label="footer__link">Special Offers</a></li>
+                        </ul>
+                    </div>
+                    <div class="rts__widget">
+                        <span class="widget__title">Guest Service</span>
+                        <ul>
+                            <li>24/7 Front Desk</li>
+                            <li>Parking</li>
+                            <li>Room Service</li>
+                            <li>Free Wi-Fi</li>
+                            <li>Concierge Service</li>
+                        </ul>
+                    </div>
+                    <div class="rts__widget">
+                        <span class="widget__title">Contact Us</span>
+                        <ul>
+                            <li><a aria-label="footer__contact" href="tel:{{ settings.contact_phone }}"><i
+                                        class="flaticon-phone-flip"></i> {{ settings.contact_phone|default:'+91 452 584 9632' }}</a></li>
+                            <li><a aria-label="footer__contact" href="mailto:{{ settings.contact_email }}"><i
+                                        class="flaticon-envelope"></i>{{ settings.contact_email|default:'stayzen@gmail.com' }}</a></li>
+                            <li><a aria-label="footer__contact" href="#"><i class="flaticon-marker"></i>{{ settings.contact_address|default:'StayZen Hotel & Resort, Kerala, India' }}</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="copyright__text">
+            <div class="container">
+                <div class="row">
+                    <div class="copyright__wrapper">
+                        <p class="mb-0">Copyright © <span id="year"></span> Stayzen. All rights reserved.</p>
+                        <div class="footer__social__link">
+                            <a href="{{ settings.social_facebook|default:'#' }}" aria-label="footer__social"
+                                class="link__item">Facebook</a>
+                            <a href="{{ settings.social_linkedin|default:'#' }}" aria-label="footer__social"
+                                class="link__item">Linkedin</a>
+                            <a href="{{ settings.social_twitter|default:'#' }}" aria-label="footer__social"
+                                class="link__item">Twitter</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <button type="button" class="rts__back__top" id="rts-back-to-top">
+        <svg width="20" height="20" viewBox="0 0 13 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+                d="M7.30201 1.51317L7.29917 21.3422C7.29912 21.7057 6.97211 21.9993 6.5674 21.9993C6.16269 21.9992 5.83577 21.7055 5.83582 21.342L5.83844 3.10055L1.39753 7.08842C1.11169 7.34511 0.647535 7.34506 0.361762 7.0883C0.0759894 6.83155 0.0760493 6.41464 0.361896 6.15795L6.05367 1.04682C6.26405 0.857899 6.5773 0.802482 6.85167 0.905201C7.12374 1.00792 7.30205 1.24823 7.30201 1.51317Z"
+                fill="#FFF" />
+            <path
+                d="M12.9991 6.6318C12.9991 6.80021 12.9282 6.96861 12.7841 7.09592C12.4983 7.35261 12.0341 7.35256 11.7483 7.0958L6.05118 1.97719C5.76541 1.72043 5.76547 1.30352 6.05131 1.04684C6.33716 0.790152 6.80131 0.790206 7.08709 1.04696L12.7842 6.16557C12.9283 6.29498 12.9991 6.46339 12.9991 6.6318Z"
+                fill="#FFF" />
+        </svg>
+    </button>
+
+
+
+    <script src="{% static 'guest/js/plugins.min.js' %}"></script>
+    <script src="{% static 'guest/js/gdpr.js' %}"></script>
+    <script src="{% static 'guest/js/main.js' %}"></script>
+    <script src="{% static 'guest/js/form_validation.js' %}?v={% now 'U' %}"></script>
+    <script>
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                window.location.reload();
+            }
+        });
+
+        if (sessionStorage.getItem('on_dashboard') === 'true') {
+            sessionStorage.removeItem('on_dashboard');
+            window.location.href = "{% url 'logout_view' %}";
+        }
+    </script>
+    <script src="{% static 'js/form_preservation.js' %}"></script>
+</body>
+
+</html>
+
+
+

@@ -1,0 +1,215 @@
+
+{% extends 'accounts/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile - StayZen{% endblock %}
+
+{% block extra_css %}
+
+/* ==========================================================
+   EDIT PROFILE - FIXED HEIGHT (NO PAGE SCROLL)
+   ========================================================== */
+
+.edit-page-container {
+    width: 100%;
+    min-height: calc(100vh - 120px);
+
+    display: flex;
+    justify-content: center;   /* Horizontal center */
+    align-items: center;       /* Vertical center */
+
+    padding: 20px;
+    box-sizing: border-box;
+}
+.profile-card {
+    width: 100%;
+    max-width: 520px;
+
+    background: linear-gradient(180deg, #FAEDFF 0%, #F3E8FF 100%);
+    border: 1px solid #EEE4FF;
+    border-radius: 28px;
+
+    padding: 30px;
+
+    box-shadow: 0 16px 40px rgba(139, 92, 246, 0.12);
+
+    margin: 0 auto;
+}
+
+.page-header{
+    text-align:center;
+    margin-bottom:22px;
+}
+
+.page-header h2{
+    margin:0;
+    font-size:24px;
+    font-weight:700;
+    color:#222;
+}
+
+/* Avatar */
+
+.profile-image{
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    object-fit:cover;
+    border:4px solid #fff;
+    box-shadow:0 8px 20px rgba(139,92,246,.15);
+    margin-bottom:15px;
+}
+
+/* Form */
+
+.form-group{
+    margin-bottom:15px;
+}
+
+.form-label{
+    display:block;
+    margin-bottom:6px;
+
+    font-size:12px;
+    font-weight:600;
+
+    color:#666;
+
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+.form-control{
+    width:100%;
+
+    padding:12px 14px;
+
+    border:1px solid #DDD;
+    border-radius:12px;
+
+    background:#fff;
+
+    font-size:14px;
+
+    box-sizing:border-box;
+}
+
+.form-control:focus{
+    outline:none;
+    border-color:#8B5CF6;
+}
+
+/* Buttons */
+
+.btn-update{
+    width:100%;
+
+    padding:14px;
+
+    background:#8B5CF6;
+
+    color:#fff;
+
+    border:none;
+
+    border-radius:14px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.25s;
+}
+
+.btn-update:hover{
+    background:#7C3AED;
+}
+
+.cancel-link{
+    display:block;
+
+    text-align:center;
+
+    margin-top:15px;
+
+    text-decoration:none;
+
+    color:#777;
+
+    font-size:13px;
+}
+
+/* Alerts */
+
+.alert{
+    padding:12px;
+
+    margin-bottom:18px;
+
+    border-radius:10px;
+
+    text-align:center;
+}
+
+.alert-success{
+    background:#E8F7EC;
+    color:#1E7E34;
+}
+
+.alert-error{
+    background:#FCE8E8;
+    color:#B3261E;
+}
+
+{% endblock %} %}
+
+{% block content %}
+<div class="edit-page-container">
+    <div class="profile-card">
+        <div class="page-header">
+            <h2>Edit Details</h2>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group" style="text-align: center;">
+                {% if customer.image %}
+                    <img src="{{ customer.image.url }}" alt="Profile" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin-bottom: 15px; border: 2px solid #fff;">
+                {% endif %}
+                <input type="file" class="form-control" name="image" accept="image/*">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">First Name</label>
+                <input type="text" class="form-control" name="first_name" value="{{ request.user.first_name }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Last Name</label>
+                <input type="text" class="form-control" name="last_name" value="{{ request.user.last_name }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" name="email" value="{{ request.user.email }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="text" class="form-control" name="phone" value="{{ customer.phone|default:'' }}">
+            </div>
+
+            <button type="submit" class="btn-update">Save Changes</button>
+            <a href="{% url 'my_profile' %}" style="display: block; text-align: center; margin-top: 15px; color: #777; text-decoration: none; font-size: 13px;">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

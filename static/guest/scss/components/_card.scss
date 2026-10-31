@@ -1,0 +1,111 @@
+.rts__card{
+    .card-body{
+        padding: 0;
+    }
+    &.is__home{
+        padding: 40px 30px;
+        text-align: center;
+        transition: var(--transition);
+        @include mq($xl){
+            padding: 40px 20px;
+        }
+        @include mq($md){
+            padding: 40px 30px;
+        }
+        &:hover{
+            box-shadow: 0px 30px 40px rgba(151, 151, 151, 0.16);
+        }
+    }
+    .icon{
+        margin-bottom: 30px;
+    }
+    .card-text{
+        color: var(--rts-para);
+    }
+}
+// home three card style
+.rts__card{
+    &.is__home__three{
+        max-width: 240px;
+        background-color: transparent;
+    }
+}
+// home four card style
+.rts__card{
+    &.is__home__four{
+        background-color: transparent;
+        border: 1px solid rgba(#F1F1F1, $alpha: 0.3);
+        padding: 38px 25px;
+        text-align: center;
+        transition: var(--transition);
+        &:hover{
+            background-color: #1b1b1b;
+            border-color: #484E6D;
+        }
+        .card-title{
+            color: var(--rts-white);
+        }
+        .card-text{
+            @extend .card-title;
+        }
+    }
+}
+
+// card five style
+.rts__card{
+    &.is__home__five{
+        max-width: 260px;
+    }
+}
+.rts__card{
+    &.is__home__six{
+        max-width: 250px;
+        background-color: transparent;
+    }
+}
+// applicant list
+.applicant__list {
+    display: flex;
+    margin-right: 15px;
+    flex-wrap: wrap;
+    .single__list {
+        margin-right: -15px;
+        position: relative;
+        .icon-plus{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            height: 100%;
+            width: 100%;
+            background-color: rgba(#553cdf, $alpha: 0.6) ;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: var(--rts-white);
+            font-size: 20px;
+            border: 5px solid #F9F8FF;
+        }
+    }
+
+    .single__list img {
+        height: 56px;
+        width: 56px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        border: 5px solid #F9F8FF;
+    }
+}
+
+// dark
+[data-theme="dark"] {
+    .rts__card{
+        &.is__home{
+            background-color: var(--body-bg);
+            &:hover{
+                box-shadow: none;
+            }
+        }
+    }
+}

@@ -1,0 +1,234 @@
+templates/admin/loyalty_transaction_list.html
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <div class="card border-0 shadow-lg">
+
+        <div class="card-header bg-primary text-white d-flex flex-wrap justify-content-between align-items-center">
+            <h4 class="mb-0">
+                {% if selected_customer %}
+                    Loyalty Transactions - {{ selected_customer.user.get_full_name|default:selected_customer.user.username }}
+                {% else %}
+                    Loyalty Transactions
+                {% endif %}
+            </h4>
+
+            <div class="d-flex flex-wrap gap-2">
+                {% if selected_customer %}
+                    <a href="{% url 'edit_loyalty_points' selected_customer.id %}"
+                       class="btn btn-light btn-sm">
+                        Manage Points
+                    </a>
+                    <a href="{% url 'loyalty_transaction_list' %}"
+                       class="btn btn-secondary btn-sm">
+                        All Transactions
+                    </a>
+                {% endif %}
+                <a href="{% url 'loyalty_customer_list' %}"
+                   class="btn btn-light btn-sm">
+                    Loyalty Customers
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            {% if selected_customer %}
+                <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center">
+                    <span>
+                        Showing transactions for
+                        <strong>{{ selected_customer.user.get_full_name|default:selected_customer.user.username }}</strong>.
+                    </span>
+                    <span>
+                        Current balance:
+                        <strong>{{ selected_customer.loyalty_points }}</strong>
+                        points
+                    </span>
+                </div>
+            {% endif %}
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-5">
+                    <input type="text"
+                           id="transactionSearch"
+                           class="form-control"
+                           placeholder="Search by customer, booking reference, or amount">
+                </div>
+
+                <div class="col-md-3">
+                    <select id="transactionTypeFilter" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="earned">Earned</option>
+                        <option value="redeemed">Redeemed</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <select id="transactionPointsFilter" class="form-select">
+                        <option value="">All Points</option>
+                        <option value="small">1 - 99</option>
+                        <option value="medium">100 - 499</option>
+                        <option value="large">500+</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="button"
+                            id="resetTransactionFilters"
+                            class="btn btn-secondary w-100">
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle" id="loyaltyTransactionTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Booking Reference</th>
+                            <th>Type</th>
+                            <th>Points</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th width="120">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr data-search="{{ transaction.customer.user.first_name }} {{ transaction.customer.user.last_name }} {{ transaction.customer.user.username }} {{ transaction.customer.user.email }} {{ transaction.booking_reference }} {{ transaction.amount }}"
+                            data-type="{{ transaction.transaction_type|lower }}"
+                            data-points="{{ transaction.points }}">
+                            <td>{{ transaction.id }}</td>
+
+                            <td>
+                                <strong>
+                                    {{ transaction.customer.user.get_full_name|default:transaction.customer.user.username }}
+                                </strong>
+                                <br>
+                                <small class="text-muted">
+                                    @{{ transaction.customer.user.username }}
+                                </small>
+                            </td>
+
+                            <td>{{ transaction.booking_reference }}</td>
+
+                            <td>
+                                {% if transaction.transaction_type == 'Earned' %}
+                                    <span class="badge bg-success">Earned</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Redeemed</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if transaction.transaction_type == 'Earned' %}
+                                    <strong class="text-success">+{{ transaction.points }}</strong>
+                                {% else %}
+                                    <strong class="text-danger">-{{ transaction.points }}</strong>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ transaction.amount }}</td>
+
+                            <td>{{ transaction.created_at|date:"d M Y, h:i A" }}</td>
+
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'edit_loyalty_points' transaction.customer.id %}"
+                                       class="btn btn-warning btn-sm btn-action-icon"
+                                       title="Manage Points">
+                                        <i class="fa fa-cogs"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">
+                                No loyalty transactions found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="transactionNoResults" class="alert alert-info text-center d-none">
+                No transactions match the selected filters.
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('transactionSearch');
+    const typeFilter = document.getElementById('transactionTypeFilter');
+    const pointsFilter = document.getElementById('transactionPointsFilter');
+    const resetButton = document.getElementById('resetTransactionFilters');
+    const rows = Array.from(document.querySelectorAll('#loyaltyTransactionTable tbody tr[data-search]'));
+    const noResults = document.getElementById('transactionNoResults');
+
+    function matchesPointRange(points, range) {
+        if (!range) {
+            return true;
+        }
+        if (range === 'small') {
+            return points >= 1 && points <= 99;
+        }
+        if (range === 'medium') {
+            return points >= 100 && points <= 499;
+        }
+        return points >= 500;
+    }
+
+    function applyFilters() {
+        const query = searchInput.value.trim().toLowerCase();
+        const type = typeFilter.value;
+        const pointsRange = pointsFilter.value;
+        let visibleRows = 0;
+
+        rows.forEach(function (row) {
+            const searchable = row.dataset.search.toLowerCase();
+            const transactionType = row.dataset.type;
+            const points = parseInt(row.dataset.points || '0', 10);
+
+            const visible = (!query || searchable.includes(query)) &&
+                (!type || transactionType === type) &&
+                matchesPointRange(points, pointsRange);
+
+            row.style.display = visible ? '' : 'none';
+            if (visible) {
+                visibleRows += 1;
+            }
+        });
+
+        if (noResults) {
+            noResults.classList.toggle('d-none', visibleRows > 0 || rows.length === 0);
+        }
+    }
+
+    [searchInput, typeFilter, pointsFilter].forEach(function (control) {
+        control.addEventListener('input', applyFilters);
+        control.addEventListener('change', applyFilters);
+    });
+
+    resetButton.addEventListener('click', function () {
+        searchInput.value = '';
+        typeFilter.value = '';
+        pointsFilter.value = '';
+        applyFilters();
+    });
+});
+</script>
+
+{% endblock %}

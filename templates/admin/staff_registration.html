@@ -1,0 +1,452 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    /* Pure Red Border - strictly overriding Bootstrap's default and focus states */
+    .form-control.is-invalid, 
+    .form-control.is-invalid:focus,
+    input.is-invalid, 
+    input.is-invalid:focus,
+    select.is-invalid, 
+    select.is-invalid:focus {
+        border-color: #ff0000 !important;
+        border-width: 2px !important;
+        /* Replaces the blue focus ring with a red focus ring */
+        box-shadow: 0 0 0 0.25rem rgba(255, 0, 0, 0.25) !important; 
+        outline: none !important;
+    }
+
+    /* Red Label Error State */
+    .label-invalid {
+        color: #ff0000 !important;
+        font-weight: 900 !important;
+    }
+    
+    /* Ensure default inputs have a transition for smooth color changing */
+    form input, form select, form textarea, form label {
+        transition: all 0.2s ease;
+    }
+
+    /* Centered Custom Modal Styles */
+    .custom-modal-overlay {
+        display: none; /* Hidden by default */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        z-index: 1050;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(3px);
+    }
+
+    .custom-modal-overlay.active {
+        display: flex;
+    }
+
+    .custom-modal-box {
+        background: #ffffff;
+        width: 100%;
+        max-width: 400px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        animation: modalFadeIn 0.3s ease-out forwards;
+        overflow: hidden;
+    }
+
+    .custom-modal-header {
+        background: #fff5f5;
+        padding: 16px 20px;
+        border-bottom: 2px solid #ffcccc;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .custom-modal-header h5 {
+        color: #d32f2f;
+        margin: 0;
+        font-weight: bold;
+    }
+
+    .custom-modal-body {
+        padding: 20px;
+        color: #333;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    .custom-modal-footer {
+        padding: 12px 20px;
+        background: #f8f9fa;
+        text-align: right;
+        border-top: 1px solid #e9ecef;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+</style>
+
+<div class="container-fluid mt-4">
+
+    <div class="card shadow-lg border-0">
+
+        <div class="card-header bg-primary text-white py-3">
+            <h3 class="mb-0">
+                📝 Register New Staff Profile
+            </h3>
+        </div>
+
+        <div class="card-body">
+
+            <form method="POST" enctype="multipart/form-data" id="staffRegistrationForm" novalidate>
+                {% csrf_token %}
+
+                <div class="card border-0 shadow-sm">
+
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            Staff Profile Details
+                        </h5>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Full Name</label>
+                                {{ form.full_name }}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Username</label>
+                                {{ form.username }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Email Address</label>
+                                {{ form.email }}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Phone Number</label>
+                                {{ form.phone }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Department</label>
+                                {{ form.department }}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Role</label>
+                                {{ form.role }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Resume / CV (PDF/Doc)</label>
+                                {{ form.resume }}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Profile Picture</label>
+                                {{ form.image }}
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'staff_registration_list' %}" class="btn btn-secondary">
+                        ← Back to List
+                    </a>
+
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="fa fa-save"></i>
+                        Register Staff Profile
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div id="customValidationModal" class="custom-modal-overlay">
+    <div class="custom-modal-box">
+        <div class="custom-modal-header">
+            <h5><i class="fa fa-exclamation-circle mr-2"></i>Validation Error</h5>
+        </div>
+        <div class="custom-modal-body" id="customModalMessage">
+            </div>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn btn-danger btn-sm px-4" onclick="closeValidationModal()" style="border-radius: 6px;">OK</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("staffRegistrationForm");
+        
+        // Modal Logic
+        const alertModal = document.getElementById("customValidationModal");
+        const alertMessage = document.getElementById("customModalMessage");
+
+        window.showValidationModal = function(message) {
+            alertMessage.innerHTML = message;
+            alertModal.classList.add("active");
+        }
+
+        window.closeValidationModal = function() {
+            alertModal.classList.remove("active");
+        }
+        
+        // Target Django rendered form fields by their 'name' attribute
+        const nameInput = form.querySelector('input[name="full_name"]');
+        const usernameInput = form.querySelector('input[name="username"]');
+        const emailInput = form.querySelector('input[name="email"]');
+        const phoneInput = form.querySelector('input[name="phone"]');
+        const deptInput = form.querySelector('select[name="department"], input[name="department"]');
+        const roleInput = form.querySelector('select[name="role"], input[name="role"]');
+        const resumeInput = form.querySelector('input[name="resume"]');
+        const imageInput = form.querySelector('input[name="image"]');
+
+        // Store all inputs in an array for easy checking
+        const allInputs = [nameInput, usernameInput, emailInput, phoneInput, deptInput, roleInput, resumeInput, imageInput];
+
+        // Helper function to toggle the red border on input AND red color on label
+        const toggleErrorState = (input, isInvalid, message = "") => {
+            if (!input) return;
+            const labelWrapper = input.closest('.mb-3');
+            const label = labelWrapper ? labelWrapper.querySelector('label') : null;
+            
+            let errDiv = input.parentNode.querySelector('.local-err-msg');
+            if (!errDiv && isInvalid && message) {
+                errDiv = document.createElement("div");
+                errDiv.className = "local-err-msg invalid-feedback d-block";
+                errDiv.style.color = "#ff0000";
+                errDiv.style.fontWeight = "bold";
+                errDiv.style.marginTop = "4px";
+                input.parentNode.appendChild(errDiv);
+            }
+
+            if (isInvalid) {
+                input.classList.add("is-invalid");
+                if (label) label.classList.add("label-invalid");
+                if (errDiv && message) {
+                    errDiv.innerText = message;
+                    errDiv.style.display = "block";
+                }
+            } else {
+                input.classList.remove("is-invalid");
+                if (label) label.classList.remove("label-invalid");
+                if (errDiv) {
+                    errDiv.style.display = "none";
+                }
+            }
+        };
+
+        // Helper function for real-time validation
+        const validateField = (input, validatorFunc, errorMsg) => {
+            if (!input) return;
+            input.addEventListener("input", function () {
+                // Only validate if user has typed something
+                if (this.value.trim().length > 0) {
+                    toggleErrorState(this, !validatorFunc(this.value), errorMsg);
+                } else {
+                    toggleErrorState(this, false); // Clear error if empty (handled by submit if required)
+                }
+            });
+        };
+
+        // Real-time Phone Validation (Strict 10 Digits & Bold Red if over/under)
+        if (phoneInput) {
+            phoneInput.addEventListener("input", function () {
+                // Strip out any non-numeric characters immediately
+                this.value = this.value.replace(/\D/g, '');
+                
+                // If the user types anything other than exactly 10 digits, show error
+                if (this.value.length > 0 && this.value.length !== 10) {
+                    toggleErrorState(this, true, "Phone number must be exactly 10 digits.");
+                } else {
+                    toggleErrorState(this, false);
+                }
+            });
+        }
+
+        // Apply Real-Time Validation to other text fields
+        if (nameInput) validateField(nameInput, val => val.trim().length >= 2, "Full Name must be at least 2 characters long.");
+        if (usernameInput) validateField(usernameInput, val => val.trim().length >= 3, "Username must be at least 3 characters long.");
+        if (emailInput) validateField(emailInput, val => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), "Please enter a valid Email Address.");
+
+        // --- Live API Duplicate Checking ---
+        const checkDuplicate = (inputElement, itemType, errorElementId, errorMessage) => {
+            if (!inputElement) return;
+            
+            // Create error element if it doesn't exist
+            let errDiv = document.getElementById(errorElementId);
+            if (!errDiv) {
+                errDiv = document.createElement("div");
+                errDiv.id = errorElementId;
+                errDiv.className = "invalid-feedback d-block";
+                errDiv.style.color = "#ff0000";
+                errDiv.style.fontWeight = "bold";
+                errDiv.style.marginTop = "4px";
+                errDiv.style.display = "none";
+                inputElement.parentNode.appendChild(errDiv);
+            }
+            
+            inputElement.addEventListener("blur", function () {
+                const val = this.value.trim();
+                if (val.length > 0) {
+                    fetch(`{% url 'validate_unique_item' %}?item_type=${itemType}&value=` + encodeURIComponent(val))
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.exists) {
+                                toggleErrorState(inputElement, true);
+                                errDiv.innerText = errorMessage;
+                                errDiv.style.display = "block";
+                            } else {
+                                errDiv.style.display = "none";
+                                // We don't blindly toggle false because length/format validations might still fail
+                            }
+                        })
+                        .catch(err => console.error("Error checking uniqueness:", err));
+                }
+            });
+        };
+
+        checkDuplicate(usernameInput, 'staff_username', 'username_error', 'This username is already taken!');
+        checkDuplicate(emailInput, 'staff_email', 'email_error', 'This email is already registered!');
+        checkDuplicate(phoneInput, 'staff_phone', 'phone_error', 'This phone number is already registered!');
+
+        // Real-time File Validation (Check Extensions on change)
+        const validateFile = (input, allowedExtensions, errorMsg) => {
+            if (!input) return;
+            input.addEventListener("change", function () {
+                if (this.value) {
+                    const ext = this.value.split('.').pop().toLowerCase();
+                    toggleErrorState(this, !allowedExtensions.includes(ext), errorMsg);
+                } else {
+                    toggleErrorState(this, false);
+                }
+            });
+        };
+
+        if (resumeInput) validateFile(resumeInput, ['pdf', 'doc', 'docx'], "Must be a PDF or Word document (.pdf, .doc, .docx).");
+        if (imageInput) validateFile(imageInput, ['jpg', 'jpeg', 'png', 'webp'], "Must be a valid image format (.jpg, .jpeg, .png, .webp).");
+
+        // Form Submit Validation (Final check before sending to server)
+        form.addEventListener("submit", function (e) {
+            let isMissingFields = false;
+            let isValid = true;
+            let errorMessages = [];
+
+            // Reset all error states before running checks
+            form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            form.querySelectorAll('.label-invalid').forEach(el => el.classList.remove('label-invalid'));
+            form.querySelectorAll('.local-err-msg').forEach(el => el.style.display = 'none');
+            form.querySelectorAll('[id$="_error"]').forEach(el => {
+                if(el.id === 'username_error' || el.id === 'email_error' || el.id === 'phone_error') {
+                    el.style.display = 'none';
+                }
+            });
+
+            // --- STEP 1: Check if any fields are completely empty ---
+            allInputs.forEach(input => {
+                if (input && (!input.value || input.value.trim() === '')) {
+                    isMissingFields = true;
+                    toggleErrorState(input, true, "This field is required."); // Highlight the empty field in red with message
+                }
+            });
+
+            // If fields are missing, trigger the popup and stop submission immediately
+            if (isMissingFields) {
+                e.preventDefault();
+                showValidationModal("Please fill in all the required fields before submitting.");
+                return; // Stop running further specific validations
+            }
+
+            // --- STEP 2: Specific Formatting Validation (Runs only if all fields are filled) ---
+
+            // 1. Full Name
+            if (nameInput && nameInput.value.trim().length < 2) {
+                isValid = false;
+                toggleErrorState(nameInput, true, "Full Name must be at least 2 characters long.");
+                errorMessages.push("Full Name must be at least 2 characters long.");
+            }
+
+            // 2. Username
+            if (usernameInput && usernameInput.value.trim().length < 3) {
+                isValid = false;
+                toggleErrorState(usernameInput, true, "Username must be at least 3 characters long.");
+                errorMessages.push("Username must be at least 3 characters long.");
+            }
+
+            // 3. Email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailInput && !emailRegex.test(emailInput.value)) {
+                isValid = false;
+                toggleErrorState(emailInput, true, "Please enter a valid Email Address.");
+                errorMessages.push("Please enter a valid Email Address.");
+            }
+
+            // 4. Phone
+            if (phoneInput && phoneInput.value.length !== 10) {
+                isValid = false;
+                toggleErrorState(phoneInput, true, "Phone number must be exactly 10 digits.");
+                errorMessages.push("Phone number must be exactly 10 digits.");
+            }
+
+            // 5. Resume File Extension
+            if (resumeInput && resumeInput.value) {
+                const ext = resumeInput.value.split('.').pop().toLowerCase();
+                if (!['pdf', 'doc', 'docx'].includes(ext)) {
+                    isValid = false;
+                    toggleErrorState(resumeInput, true, "Resume must be a PDF or Word document (.pdf, .doc, .docx).");
+                    errorMessages.push("Resume must be a PDF or Word document (.pdf, .doc, .docx).");
+                }
+            }
+
+            // 6. Profile Picture File Extension
+            if (imageInput && imageInput.value) {
+                const ext = imageInput.value.split('.').pop().toLowerCase();
+                if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+                    isValid = false;
+                    toggleErrorState(imageInput, true, "Profile Picture must be a valid image format (.jpg, .jpeg, .png, .webp).");
+                    errorMessages.push("Profile Picture must be a valid image format (.jpg, .jpeg, .png, .webp).");
+                }
+            }
+
+            // If there are formatting errors, stop submission and show popup
+            if (!isValid) {
+                e.preventDefault();
+                
+                // Format the error messages nicely as an HTML list
+                let formattedErrors = `Registration cannot be completed. Please fix the following errors:<br><br><ul style="text-align: left; margin-bottom: 0;"><li>${errorMessages.join("</li><li>")}</li></ul>`;
+                
+                showValidationModal(formattedErrors);
+            }
+        });
+    });
+</script>
+
+{% endblock %}

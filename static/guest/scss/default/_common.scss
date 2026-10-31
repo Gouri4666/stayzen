@@ -1,0 +1,123 @@
+.link__item {
+    display: flex;
+    align-items: center;
+}
+
+.focus-none {
+    &:focus {
+        outline: none;
+        box-shadow: none;
+    }
+}
+
+.br-lg-none {
+    @media only screen and (max-width: 1199px) {
+        br {
+            display: none;
+        }
+    }
+}
+
+.br-md-none {
+    @media only screen and (max-width: 768px) {
+        br {
+            display: none;
+        }
+    }
+}
+
+.br-sm-none {
+    @media only screen and (max-width: 576px) {
+        br {
+            display: none;
+        }
+    }
+}
+
+.rounded-50 {
+    border-radius: 50px !important;
+}
+
+.d-shadow {
+    filter: drop-shadow(0px 10px 30px rgba(153, 153, 153, 0.25));
+}
+
+.text-para {
+    color: var(--rts-para);
+}
+
+// list style dot
+.list__style__dot {
+    li {
+        position: relative;
+        padding-left: 20px;
+        margin-bottom: 25px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+
+        &::before {
+            position: absolute;
+            left: 0;
+            top: 20%;
+            transform: translate(0, -20%);
+            height: 6px;
+            width: 6px;
+            border-radius: 50%;
+            background-color: var(--rts-para);
+            content: '';
+        }
+    }
+}
+
+.number__style__dot {
+    padding-left: 15px;
+
+    li {
+        list-style: number;
+        margin-bottom: 25px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+
+.min-fit-content {
+    min-width: fit-content;
+}
+
+.bg-primary {
+    background: var(--rts-primary) !important;
+    color: var(--rts-white) !important;
+}
+
+.focus-none {}
+
+.pointer {
+    cursor: pointer;
+}
+
+.radius-6 {
+    border-radius: 6px;
+}
+
+.radius-10 {
+    border-radius: 10px;
+}
+
+.center-item {
+    display: grid;
+    place-items: center;
+}
+.no-border{
+    border: none !important;
+}
+
+// hide savefrom extension download icon
+a[savefrom_lm="1"][savefrom_lm_is_link="1"] {
+    display: none !important;
+    background-image: none !important;
+    position: absolute !important;
+}

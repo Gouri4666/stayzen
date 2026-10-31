@@ -1,0 +1,143 @@
+{% extends 'guest/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="account-wrapper" style="padding-top: 140px !important; padding-bottom: 80px !important; background-color: var(--zen-light-bg);">
+    <div class="container">
+        <!-- Breadcrumb / Back button on Mobile -->
+        <div class="mobile-back-btn mb-3" style="display: none;">
+            <a href="{% url 'dashboard' %}" class="text-decoration-none" style="color: var(--zen-gold); font-weight: 500; font-family: 'Jost', sans-serif;">
+                ← Back to Account Menu
+            </a>
+        </div>
+
+        <div class="row">
+            <!-- Left Sidebar -->
+            <div class="col-lg-3 col-md-4 account-sidebar-col">
+                <!-- User Profile Header Card -->
+                <div class="profile-header-card d-flex align-items-center p-3 mb-3 bg-white border rounded" style="border-color: var(--zen-border-gold) !important; box-shadow: var(--zen-shadow-premium); border-radius: 12px !important;">
+                    <div class="avatar-circle me-3" style="width: 50px; height: 50px; border-radius: 50%; background: var(--zen-gold); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; overflow: hidden; border: 2px solid var(--zen-gold);">
+                        {% if request.user.customer.image %}
+                            <img src="{{ request.user.customer.image.url }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            {{ request.user.first_name|slice:":1"|upper|default:request.user.username|slice:":1"|upper }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h5 class="m-0 font-weight-bold" style="font-size: 16px; font-family: 'Jost', sans-serif; color: var(--rts-heading);">{{ request.user.get_full_name|default:request.user.username }}</h5>
+                        <span class="text-muted" style="font-size: 12px; display: block; font-family: 'Jost', sans-serif;">StayZen Member</span>
+                    </div>
+                </div>
+
+                <!-- Flipkart/Amazon-style navigation menu card -->
+                <div class="account-menu-card bg-white border rounded" style="border-color: var(--zen-border-gold) !important; box-shadow: var(--zen-shadow-premium); overflow: hidden; border-radius: 12px !important;">
+                    <!-- Group 1: Bookings -->
+                    <div class="menu-group border-bottom p-3">
+                        <a href="{% url 'my_bookings' %}" class="d-flex align-items-center text-dark text-decoration-none {% if request.resolver_match.url_name == 'my_bookings' %}active-link{% endif %}" style="font-family: 'Jost', sans-serif;">
+                            <span class="me-2" style="font-size: 18px; color: var(--zen-gold);">📦</span>
+                            <span style="font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: 0.05em;">My Orders / Bookings</span>
+                        </a>
+                    </div>
+
+                    <!-- Group 2: Account Settings -->
+                    <div class="menu-group border-bottom p-3">
+                        <div class="d-flex align-items-center text-muted mb-2" style="font-family: 'Jost', sans-serif;">
+                            <span class="me-2" style="font-size: 18px; color: var(--zen-gold);">👤</span>
+                            <span style="font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Account Settings</span>
+                        </div>
+                        <ul class="list-unstyled ps-4 m-0" style="font-family: 'Jost', sans-serif;">
+                            <li class="py-1">
+                                <a href="{% url 'my_profile' %}" class="text-decoration-none {% if request.resolver_match.url_name == 'my_profile' or request.resolver_match.url_name == 'edit_profile' %}active-sublink{% else %}text-secondary{% endif %}" style="font-size: 14px;">Profile Information</a>
+                            </li>
+                            <li class="py-1">
+                                <a href="{% url 'change_password' %}" class="text-decoration-none {% if request.resolver_match.url_name == 'change_password' %}active-sublink{% else %}text-secondary{% endif %}" style="font-size: 14px;">Manage Password</a>
+                            </li>
+                            <li class="py-1">
+                                <a href="{% url 'account_settings' %}" class="text-decoration-none {% if request.resolver_match.url_name == 'account_settings' %}active-sublink{% else %}text-secondary{% endif %}" style="font-size: 14px;">Settings</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Group 3: My Stuff -->
+                    <div class="menu-group border-bottom p-3">
+                        <div class="d-flex align-items-center text-muted mb-2" style="font-family: 'Jost', sans-serif;">
+                            <span class="me-2" style="font-size: 18px; color: var(--zen-gold);">💎</span>
+                            <span style="font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">My Stuff</span>
+                        </div>
+                        <ul class="list-unstyled ps-4 m-0" style="font-family: 'Jost', sans-serif;">
+                            <li class="py-1">
+                                <a href="{% url 'loyalty_points' %}" class="text-decoration-none {% if request.resolver_match.url_name == 'loyalty_points' %}active-sublink{% else %}text-secondary{% endif %}" style="font-size: 14px;">Loyalty & Reward Points</a>
+                            </li>
+                            <li class="py-1">
+                                <a href="{% url 'membership_status' %}" class="text-decoration-none {% if request.resolver_match.url_name == 'membership_status' %}active-sublink{% else %}text-secondary{% endif %}" style="font-size: 14px;">Membership Details</a>
+                            </li>
+                            <li class="py-1">
+                                <a href="{% url 'notifications' %}" class="text-decoration-none {% if request.resolver_match.url_name == 'notifications' %}active-sublink{% else %}text-secondary{% endif %}" style="font-size: 14px;">Notifications</a>
+                            </li>
+                            <li class="py-1">
+                                <a href="{% url 'payment_history' %}" class="text-decoration-none {% if request.resolver_match.url_name == 'payment_history' %}active-sublink{% else %}text-secondary{% endif %}" style="font-size: 14px;">Payment History</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Group 4: Logout -->
+                    <div class="menu-group p-3">
+                        <a href="{% url 'logout_view' %}" class="d-flex align-items-center text-danger text-decoration-none" style="font-family: 'Jost', sans-serif;">
+                            <span class="me-2" style="font-size: 18px;">🚪</span>
+                            <span style="font-weight: 600; font-size: 13px; text-transform: uppercase;">Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Content Area -->
+            <div class="col-lg-9 col-md-8 account-content-col">
+                <div class="account-content-card bg-white border rounded p-4" style="min-height: 450px; border-color: var(--zen-border-gold) !important; box-shadow: var(--zen-shadow-premium); border-radius: 12px !important;">
+                    {% block account_content %}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Premium accents */
+    .active-link {
+        color: var(--zen-gold-hover) !important;
+        font-weight: bold;
+    }
+    .active-sublink {
+        color: var(--zen-gold-hover) !important;
+        font-weight: 600 !important;
+    }
+    .menu-group a:hover, .menu-group ul li a:hover {
+        color: var(--zen-gold) !important;
+    }
+    
+    /* Responsive Flipkart-style behaviors for Mobile view */
+    @media (max-width: 767.98px) {
+        /* On subpages (where URL name is NOT 'dashboard'), hide the sidebar, show back btn and stretch content */
+        {% if request.resolver_match.url_name != 'dashboard' %}
+        .account-sidebar-col {
+            display: none !important;
+        }
+        .mobile-back-btn {
+            display: inline-flex !important;
+        }
+        .account-content-col {
+            width: 100% !important;
+        }
+        {% else %}
+        /* On the main account landing page, show only the menu cards, hide the empty block */
+        .account-content-col {
+            display: none !important;
+        }
+        .account-sidebar-col {
+            width: 100% !important;
+        }
+        {% endif %}
+    }
+</style>
+{% endblock %}
+

@@ -1,0 +1,76 @@
+{% extends 'accounts/dashboard_base.html' %}
+
+{% block title %}Account Settings - StayZen{% endblock %}
+
+{% block content %}
+<div class="welcome-banner mb-4">
+    <h2 style="font-family:'Gilda Display',serif; font-size:26px; color:var(--text-primary);">Account Settings</h2>
+    <p style="color:var(--text-muted); font-size:14px; margin-top:4px;">Manage your account preferences and security.</p>
+</div>
+
+<!-- Account Info -->
+<div style="background:#fff; border:1px solid var(--border-color); border-radius:16px; padding:24px; margin-bottom:20px;">
+    <h5 style="font-weight:600; font-size:14px; color:var(--text-primary); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.5px;">Account Information</h5>
+    <div style="display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; justify-content:space-between; font-size:14px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+            <span style="color:var(--text-muted);">Username</span>
+            <span style="font-weight:500; color:var(--text-primary);">{{ request.user.username }}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:14px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+            <span style="color:var(--text-muted);">Email</span>
+            <span style="font-weight:500; color:var(--text-primary);">{{ request.user.email|default:"Not set" }}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:14px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+            <span style="color:var(--text-muted);">Account Status</span>
+            <span style="font-weight:600; color:#22c55e;">Active</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:14px;">
+            <span style="color:var(--text-muted);">Member Since</span>
+            <span style="font-weight:500; color:var(--text-primary);">{{ request.user.date_joined|date:"d F Y" }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div style="background:#fff; border:1px solid var(--border-color); border-radius:16px; padding:24px; margin-bottom:20px;">
+    <h5 style="font-weight:600; font-size:14px; color:var(--text-primary); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.5px;">Quick Actions</h5>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+        <a href="{% url 'edit_profile' %}" style="display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:10px; border:1px solid var(--border-color); background:var(--card-bg); text-decoration:none; transition:all 0.2s;">
+            <span style="font-size:20px;">👤</span>
+            <div>
+                <div style="font-size:14px; font-weight:500; color:var(--text-primary);">Edit Profile</div>
+                <div style="font-size:12px; color:var(--text-muted);">Update your name, phone, and address</div>
+            </div>
+            <span style="margin-left:auto; color:var(--text-muted); font-size:18px;">›</span>
+        </a>
+        <a href="{% url 'change_password' %}" style="display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:10px; border:1px solid var(--border-color); background:var(--card-bg); text-decoration:none; transition:all 0.2s;">
+            <span style="font-size:20px;">🔒</span>
+            <div>
+                <div style="font-size:14px; font-weight:500; color:var(--text-primary);">Change Password</div>
+                <div style="font-size:12px; color:var(--text-muted);">Update your login password securely</div>
+            </div>
+            <span style="margin-left:auto; color:var(--text-muted); font-size:18px;">›</span>
+        </a>
+        <a href="{% url 'my_bookings' %}" style="display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:10px; border:1px solid var(--border-color); background:var(--card-bg); text-decoration:none; transition:all 0.2s;">
+            <span style="font-size:20px;">📦</span>
+            <div>
+                <div style="font-size:14px; font-weight:500; color:var(--text-primary);">My Bookings</div>
+                <div style="font-size:12px; color:var(--text-muted);">View all your orders and reservations</div>
+            </div>
+            <span style="margin-left:auto; color:var(--text-muted); font-size:18px;">›</span>
+        </a>
+    </div>
+</div>
+
+<!-- Danger Zone -->
+<div style="background:#fff5f5; border:1px solid #fecaca; border-radius:16px; padding:24px;">
+    <h5 style="font-weight:600; font-size:14px; color:#dc2626; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.5px;">Danger Zone</h5>
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Deactivating your account will log you out and disable access. This action can be reversed by contacting support.</p>
+    <form method="POST" onsubmit="return confirm('Are you sure you want to deactivate your account? This will log you out.');">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="deactivate">
+        <button type="submit" style="padding:10px 24px; background:#dc2626; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">Deactivate Account</button>
+    </form>
+</div>
+{% endblock %}
+

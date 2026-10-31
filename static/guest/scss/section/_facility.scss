@@ -1,0 +1,134 @@
+.facility__area{
+    padding: 65px 0;
+    &::before{
+        position: absolute;
+        content: "";
+        height: 100%;
+        width: 100%;
+        background-color: var(--rts-gray);
+        z-index: -1;
+        top: 0;
+        left: 40%;
+        @include mq($md){
+            left: 0
+        }
+    };
+    .facility__image{
+        height: 765px;
+        width: 100%;
+        right: 30px;
+        @include mq($sm){
+            height: 100%;
+            right: 0;
+        }
+    }
+    &.has__shape{
+        .section__shape{
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            @include mq($sm){
+                display: none;
+            }
+        }
+    }
+    &.is__about{
+        &::before{
+            right: 40%;
+            left: auto;
+            @include mq($md){
+                right: 0;
+            }
+        }
+        .section__shape{
+            left: 0;
+            right: auto;
+        }
+    }
+}
+// facility home four
+.facility{
+    &.has__background{
+        background-color: var(--rts-heading);
+    }
+    .facility__thumb{
+        height: 620px;
+        width: 100%;
+        border-radius: 10px;
+        overflow: hidden;
+        @include mq($xs){
+            height: 100%;
+        }
+        img{
+            border-radius: 10px;
+            height: 100%;
+            width: 100%;
+        }
+    }
+}
+
+// facility home five
+.facility{
+    &.is__home__five{
+        &::before{
+            position: absolute;
+            content: "";
+            height: 335px;
+            width: 49.4%;
+            background-color: var(--rts-gray);
+            z-index: -1;
+            right: 0;
+            bottom: 0;
+        }
+    }
+}
+// facility home six
+.facility{
+    &.is__home__six{
+        background-color: var(--rts-gray);
+        @include mq($md){
+            padding-bottom: 60px;
+        }
+    }
+}
+.facility__image__container{
+    position: absolute;
+    right: 0;
+    top: 0;
+    @include mq($xxl){
+        right: -10%;
+    }
+    @include mq($xl){
+        right: -15%;
+    }
+    @media screen and (max-width: 1280px) {
+        right: -20%;
+    }
+    @include mq($lg){
+        right: -30%;
+    }
+    @media screen and (max-width: 1024px) {
+        right: -35%;
+    }
+    @include mq($md){
+        position: relative;
+        right: 0;
+    }
+    img{
+        @include mq($md){
+            height: 100%;
+        }
+    }
+}
+.facilities__area{
+    &.has__shape{
+        .section__shape{
+            position: absolute;
+            top: 0;
+            right: 0;
+            @include mq($md){
+                display: none;
+            }
+        }
+    }
+}

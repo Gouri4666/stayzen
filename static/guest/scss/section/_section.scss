@@ -1,0 +1,60 @@
+/* All section styles */
+.facilities__area {
+    &.has__background {
+        background-color: var(--rts-gray);
+    }
+
+    &.py-90 {
+        padding: 90px 0;
+    }
+
+
+}
+
+.section__wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 25px;
+    @include mq($md) {
+        flex-wrap: wrap;
+        gap: 25px;
+    }
+
+    .section__content__right {
+        max-width: 645px;
+
+        p {
+            font-size: 18px;
+        }
+    }
+}
+
+// dark mode
+[data-theme="dark"] {
+    .facilities__area.has__background{
+        background-color:var(--rts-white);
+    }
+}
+
+
+@import 'common-style';
+@import 'banner';
+@import 'about';
+@import 'rooms';
+@import 'testimonial';
+@import 'video';
+@import 'offer';
+@import 'advance__search';
+@import 'newsletter';
+@import 'facility';
+@import 'blog';
+@import 'service';
+@import 'team';
+@import 'resturant-menu';
+@import 'gallery';
+@import 'event';
+@import 'offcanvase__menu';
+@import 'contact';
+@import 'form';
+@import 'footer';

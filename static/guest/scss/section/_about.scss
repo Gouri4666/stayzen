@@ -1,0 +1,451 @@
+// about home main
+.about__area {
+  &.is__home__main {
+    .section__shape {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translate(0, -50%);
+    }
+    .about__wrapper {
+        gap: 10px;
+        @include mq($lg) {
+            gap: 50px;
+        }
+    }
+    .image {
+      margin-left: 85px;
+      @include mq($lg) {
+          margin-left: 0;
+      }
+    }
+    .image__card {
+      bottom: 40px;
+      left: -100px;
+      top: unset !important;
+      @include mq($md){
+        left: 0;
+        bottom: 0;
+      }
+    }
+    .image__card__image{
+        background-color: var(--rts-white);
+        border: 8px solid var(--rts-white);
+        border-radius: 10px;
+        position: absolute;
+        top: -40px;
+        right: -60px;
+        @include mq($lg){
+            display: none;
+        }
+        img{
+            border-radius: 10px;
+        }
+    }
+  }
+}
+
+// aboutus home one
+.about__area {
+  &.is__home__one {
+    .section__shape {
+      position: absolute;
+      left: 0;
+      top: 150px;
+
+      @include mq($xl) {
+        display: none;
+      }
+    }
+  }
+
+  &.is__home__two {
+    .section__shape {
+      position: absolute;
+      left: 0;
+      top: 150px;
+
+      @include mq($md) {
+        display: none;
+      }
+    }
+
+    .about__wrapper {
+      flex-direction: row-reverse;
+
+      .image {
+        margin-right: 0;
+      }
+    }
+  }
+}
+
+.about__wrapper {
+  display: flex;
+  gap: 45px;
+  align-items: center;
+
+  @include mq($md) {
+    flex-wrap: wrap;
+  }
+
+  .content {
+    &__title {
+      margin-bottom: 30px;
+    }
+
+    &__subtitle {
+      font-size: 18px;
+      max-width: 645px;
+      margin-bottom: 45px;
+    }
+  }
+
+  .image {
+    position: relative;
+    margin-right: 85px;
+
+    @include mq($lg) {
+      margin-right: 0;
+    }
+
+    .image-height {
+      min-height: 580px;
+      min-width: 485px;
+
+      @include mq($sm) {
+        min-width: 100%;
+        min-height: 100%;
+      }
+    }
+
+    .image__card {
+      padding: 22px 30px 22px 22px;
+      box-shadow: 0px 0px 60px rgba(0, 0, 0, 0.16);
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      max-width: max-content;
+      background-color: var(--rts-white);
+      position: absolute;
+      top: 40px;
+      right: -100px;
+
+      @include mq($sm) {
+        right: 0;
+      }
+
+      .icon {
+        height: 82px;
+        min-width: 82px;
+        background-color: var(--rts-gray);
+        font-size: 45px;
+        color: var(--heading-color);
+      }
+    }
+  }
+}
+
+// about us home four
+.about {
+  &.is__home__four {
+  }
+
+  &__images {
+    position: relative;
+
+    .image__left {
+      img {
+        border-radius: 10px;
+
+        @include mq($xs) {
+          height: 100%;
+        }
+      }
+    }
+
+    .image__right {
+      position: relative;
+      margin-left: 200px;
+      margin-top: -250px;
+      border-radius: 10px;
+      width: 100%;
+
+      @include mq($xl) {
+        margin-left: 150px;
+      }
+
+      @include mq($lg) {
+        margin-left: 80px;
+      }
+
+      @include mq($md) {
+        margin-left: 200px;
+      }
+
+      @include mq($sm) {
+        margin-left: 100px;
+      }
+
+      @include mq($xs) {
+        margin-left: 0;
+        margin-top: 0;
+      }
+
+      img {
+        border-radius: 10px;
+        border: 6px solid var(--rts-white);
+      }
+    }
+  }
+
+  &__content {
+    margin-left: 65px;
+
+    @include mq($md) {
+      margin-left: 0;
+    }
+  }
+}
+
+// about us home five
+.about {
+  &.is__home__five {
+    &.has__background {
+      &:before {
+        position: absolute;
+        content: "";
+        height: 115%;
+        width: 100%;
+        background-color: var(--rts-gray);
+        z-index: -1;
+        top: 0;
+        left: 0;
+
+        @include mq($md) {
+          height: 100%;
+        }
+      }
+    }
+
+    .about__positioned__images {
+      position: relative;
+
+      .image__1 {
+        position: absolute;
+        left: -28%;
+        clip-path: polygon(
+          69.249% 0%,
+          0% 0%,
+          0% 100%,
+          99.939% 100%,
+          99.939% 50%,
+          69.249% 50%,
+          69.249% 0%
+        );
+        top: -195px;
+
+        @include mq($lg) {
+          left: -42%;
+        }
+
+        @include mq($md) {
+          display: none;
+        }
+      }
+
+      .image__2 {
+        position: absolute;
+        right: 0;
+        bottom: -550px;
+        height: 530px;
+        width: 385px;
+
+        @include mq($md) {
+          height: 400px;
+          bottom: -450px;
+          display: none;
+        }
+
+        @include mq($sm) {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+// about us home six
+.about {
+  &.is__home__six {
+    &.has__background {
+      background-color: var(--rts-gray);
+
+      @include mq($md) {
+        padding: 100px 0;
+      }
+
+      @include mq($sm) {
+        padding: 60px 0;
+      }
+    }
+
+    .about__content {
+      @include mq($md) {
+        margin-left: 0;
+      }
+    }
+
+    .about__image {
+      position: absolute;
+      left: 0;
+
+      @include mq($xxl) {
+        left: -10%;
+      }
+
+      @media screen and (max-width: 1680px) {
+        left: -8%;
+      }
+
+      @media screen and (max-width: 1440px) {
+        left: -15%;
+      }
+
+      @include mq($xl) {
+        left: -18%;
+      }
+
+      @media screen and (max-width: 1280px) {
+        left: -20%;
+      }
+
+      @include mq($lg) {
+        left: -40%;
+      }
+
+      @include mq($md) {
+        position: relative;
+        left: 0;
+      }
+
+      img {
+        @include mq($md) {
+          height: 100%;
+        }
+      }
+    }
+
+    .about__content__full {
+      padding: 140px 0;
+      margin-left: 20px;
+
+      @include mq($xl) {
+        padding: 95px 0;
+      }
+
+      @include mq($md) {
+        padding-top: 40px;
+        margin-left: 0;
+        padding-bottom: 0;
+      }
+
+      @include mq($sm) {
+        padding-top: 40px;
+        padding-bottom: 0;
+      }
+    }
+  }
+}
+
+// about resturant
+.about {
+  &.is__resturant {
+    padding-top: 120px;
+    padding-bottom: 0;
+    .about__images {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      position: relative;
+      left: -65%;
+      @include mq($xl) {
+        left: -90%;
+      }
+      @include mq($lg) {
+        left: -125%;
+      }
+      @include mq($md) {
+        left: 0;
+      }
+      @include mq($sm) {
+        flex-wrap: wrap;
+      }
+      .image__left,
+      .image__right {
+        img {
+          min-width: 428px;
+          @include mq($md) {
+            min-width: 100%;
+            height: 100%;
+          }
+          @include mq($sm) {
+            width: 100%;
+          }
+        }
+      }
+      .image__right {
+        margin-left: 0;
+        margin-top: 0;
+        width: auto;
+        img {
+          border: 0;
+        }
+      }
+    }
+  }
+}
+
+.reservation__meta {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  margin-top: 40px;
+  @include mq($sm) {
+    flex-wrap: wrap;
+  }
+  .reservation__item {
+    border: 1px solid var(--rts-border);
+    max-width: max-content;
+    padding: 20px;
+    transition: var(--transition);
+    &:hover {
+      border-color: var(--heading-color);
+      background-color: var(--heading-color);
+      color: var(--rts-white);
+      a,
+      span {
+        color: var(--rts-white);
+      }
+      img {
+        filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(2%)
+          hue-rotate(104deg) brightness(103%) contrast(101%);
+      }
+    }
+    p {
+      margin-bottom: 10px;
+    }
+
+    a,
+    span {
+      color: var(--rts-heading);
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      margin-bottom: 0;
+    }
+    a {
+      font-size: 14px;
+    }
+  }
+}

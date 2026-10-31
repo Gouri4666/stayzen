@@ -1,0 +1,117 @@
+{% extends 'accounts/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Book Event - StayZen{% endblock %}
+
+{% block extra_css %}
+.page-header { margin-bottom: 28px; }
+.page-header h2 { font-size: 26px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+.page-header p { font-size: 14px; color: var(--text-muted); }
+.page-header a { color: var(--text-highlight); text-decoration: none; font-weight: 500; }
+.page-header a:hover { text-decoration: underline; }
+
+.section-title { font-size: 18px; font-weight: 600; color: var(--text-primary); margin: 36px 0 16px; display: flex;
+align-items: center; gap: 10px; }
+.section-title .st-icon { font-size: 20px; }
+
+.booking-status-table {
+width: 100%;
+border-collapse: collapse;
+background: var(--card-bg);
+border: 1px solid var(--border-color);
+border-radius: 12px;
+overflow: hidden;
+max-width: 900px;
+}
+.booking-status-table thead { background: var(--card-hover-bg); }
+.booking-status-table th {
+padding: 13px 16px;
+font-size: 11px; font-weight: 700;
+color: var(--text-muted);
+text-transform: uppercase; letter-spacing: 0.5px;
+text-align: left;
+}
+.booking-status-table td {
+padding: 13px 16px;
+font-size: 13px; color: var(--text-primary);
+border-top: 1px solid var(--border-color);
+vertical-align: middle;
+}
+
+.status-pill {
+display: inline-block; padding: 3px 11px;
+border-radius: 20px; font-size: 11px; font-weight: 700;
+text-transform: uppercase; letter-spacing: 0.5px;
+}
+.status-pending { background: rgba(251,191,36,.15); color: #f59e0b; }
+.status-booked { background: rgba(34,197,94,.15); color: #22c55e; }
+.status-confirmed { background: rgba(59,130,246,.15); color: #3b82f6; }
+.status-checkedin { background: rgba(16,185,129,.15); color: #10b981; }
+.status-cancelled { background: rgba(239,68,68,.15); color: #ef4444; }
+.status-completed { background: rgba(139,92,246,.15); color: #8b5cf6; }
+.status-failed { background: rgba(239,68,68,.15); color: #ef4444; }
+
+.no-data-inline { padding: 24px; text-align: center; color: var(--text-muted); font-size: 14px; }
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Book Event Hall</h2>
+    <p><a href="{% url 'event_halls_dashboard' %}">← Back to Event Halls</a></p>
+</div>
+
+<div class="premium-card" style="max-width:700px;">
+    <div class="card-content">
+        {% include 'booking/event_booking.html' %}
+    </div>
+</div>
+
+{% if event_bookings %}
+<h3 class="section-title"><span class="st-icon">📋</span> Your Event Booking Status</h3>
+<div class="table-responsive" style="max-width: 900px; border-radius: 12px; border: 1px solid var(--border-color); overflow-x: auto; background: var(--card-bg);">
+    <table class="booking-status-table" style="max-width: none; border: none; background: transparent; margin-bottom: 0;">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Hall</th>
+                <th>Dates</th>
+                <th>Guests</th>
+                <th>Payment Status</th>
+                <th>Booking Status</th>
+                <th>Submitted On</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in event_bookings %}
+            <tr>
+                <td><strong>{{ b.event_name }}</strong><br><small style="color:var(--text-muted);">{{ b.event_type }}</small></td>
+                <td>{{ b.hall.hall_name }}</td>
+                <td>{{ b.start_date|date:"d M Y" }}<br><small style="color:var(--text-muted);">to {{ b.end_date|date:"d M Y" }}</small></td>
+                <td>{{ b.guest_count }}</td>
+                <td>
+                    <span class="status-pill
+                        {% if b.payment_status == 'Pending' %}status-pending
+                        {% elif b.payment_status == 'Confirmed' %}status-confirmed
+                        {% else %}status-failed{% endif %}">
+                        {{ b.payment_status }}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-pill
+                        {% if b.status == 'Pending' %}status-pending
+                        {% elif b.status == 'Confirmed' %}status-confirmed
+                        {% elif b.status == 'Checked In' %}status-checkedin
+                        {% elif b.status == 'Cancelled' %}status-cancelled
+                        {% else %}status-completed{% endif %}">
+                        {{ b.status }}
+                    </span>
+                </td>
+                <td>{{ b.created_at|date:"d M Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% endblock %}

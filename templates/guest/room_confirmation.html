@@ -1,0 +1,241 @@
+{% extends 'guest/base.html' %}
+{% load static %}
+
+{% block title %}
+Room Booking Confirmed - StayZen
+{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background-color: #f4f5f7 !important;
+    }
+    /* Pushes the container down beneath a fixed/absolute navbar */
+    .receipt-wrapper {
+        margin-top: 90px !important; /* Adjust this value if your navbar is taller/shorter */
+        padding-top: 1rem;
+        padding-bottom: 3rem;
+    }
+    .receipt-container {
+        max-width: 420px;
+        margin: 0 auto;
+    }
+    .receipt-card {
+        border-radius: 24px 24px 0 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        background-color: #ffffff;
+        position: relative;
+        border: none;
+        padding: 20px 24px 14px 24px;
+    }
+    /* Smooth semi-circle scalloped bottom edge */
+    .receipt-footer-edge {
+        background-image: radial-gradient(circle at 8px 0px, #ffffff 8px, transparent 8px);
+        background-size: 16px 16px;
+        height: 16px;
+        width: 100%;
+        position: absolute;
+        bottom: -15px;
+        left: 0;
+        z-index: 2;
+    }
+    /* Side edge cutouts (notches) */
+    .notch-container {
+        position: relative;
+        margin: 1rem 0;
+    }
+    .notch-left, .notch-right {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        background-color: #f4f5f7;
+        border-radius: 50%;
+        z-index: 3;
+    }
+    .notch-left { left: -33px; }
+    .notch-right { right: -33px; }
+
+    .dashed-divider {
+        border-top: 1px dashed #e2e8f0;
+        width: 100%;
+    }
+    .receipt-table {
+        width: 100%;
+        margin-bottom: 0.25rem;
+    }
+    .receipt-table td {
+        padding: 5px 0;
+        font-size: 14px;
+        vertical-align: middle;
+    }
+    .receipt-label {
+        color: #6b7280;
+        font-weight: 500;
+        width: 45%;
+    }
+    .receipt-colon {
+        color: #4b5563;
+        width: 5%;
+        text-align: center;
+    }
+    .receipt-value {
+        color: #111827;
+        font-weight: 500;
+        width: 50%;
+        text-align: left;
+    }
+    .section-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 0.5rem;
+    }
+    .status-badge {
+        background-color: #10b981;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+    }
+</style>
+
+<div class="container receipt-wrapper" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <div class="receipt-container">
+        
+        <div class="card receipt-card">
+            <div class="d-flex justify-content-end mb-1">
+                <a href="{% url 'rooms' %}" class="text-muted" style="text-decoration: none; font-size: 22px; line-height: 1; color: #9ca3af !important;">&times;</a>
+            </div>
+
+            <div class="text-center pb-3">
+                <div class="d-inline-flex align-items-center justify-content-center mb-2">
+                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 5V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V5C5 3.9 5.9 3 7 3H13L15 5H17C18.1 5 19 5.9 19 5Z" stroke="#1e3a8a" stroke-width="1.5" stroke-linejoin="round"/>
+                        <path d="M9 3V17C9 17.6 9.4 18 10 18H18C18.6 18 19 17.6 19 17V7L16 4H11C10.4 4 10 4.4 10 5" stroke="#1e3a8a" stroke-width="1.5" stroke-linejoin="round"/>
+                        <circle cx="11" cy="11" r="3" fill="#10b981"/>
+                        <polyline points="10 11 11 12 12.5 10" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                
+                <h2 class="h5 font-weight-bold mb-0" style="color: #111827; font-weight: 700; letter-spacing: -0.3px;">
+                    {% if booking.payment_status == 'Confirmed' %}Payment Successful{% else %}Room Booked!{% endif %}
+                </h2>
+            </div>
+
+            {% if booking.payment_status == 'Confirmed' %}
+            <div class="p-2 mb-3 text-center rounded shadow-sm" style="background-color: #f0fdf4; border: 1px solid #bbf7d0;">
+                <span class="text-success" style="font-size: 12px; font-weight: 500;">
+                    Advance payment of 25% (₹{{ booking.advance_amount }}) processed via Razorpay.
+                </span>
+            </div>
+            {% else %}
+            <div class="p-2 mb-3 text-center rounded shadow-sm" style="background-color: #fffbeb; border: 1px solid #fde68a;">
+                <span style="font-size: 12px; font-weight: 500; color: #b45309;">
+                    ⚠️ Advance payment of 25% (₹{{ booking.advance_amount }}) is required to secure your stay.
+                </span>
+            </div>
+            {% endif %}
+
+            <div class="section-title">Payment Details</div>
+            
+            <table class="receipt-table">
+                <tr>
+                    <td class="receipt-label">Invoice Number</td>
+                    <td class="receipt-colon">:</td>
+                    <td class="receipt-value">{{ booking.long_order_id }}</td>
+                </tr>
+                <tr>
+                    <td class="receipt-label">Order Time</td>
+                    <td class="receipt-colon">:</td>
+                    <td class="receipt-value">{{ booking.check_in }}</td>
+                </tr>
+                <tr>
+                    <td class="receipt-label">Payment Method</td>
+                    <td class="receipt-colon">:</td>
+                    <td class="receipt-value">Razorpay</td>
+                </tr>
+                <tr>
+                    <td class="receipt-label">Payment Status</td>
+                    <td class="receipt-colon">:</td>
+                    <td class="receipt-value">
+                        <span class="status-badge">{{ booking.payment_status }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="receipt-label">Amount</td>
+                    <td class="receipt-colon">:</td>
+                    <td class="receipt-value" style="font-weight: 600;">₹{{ booking.advance_amount }}</td>
+                </tr>
+            </table>
+
+            <div class="notch-container">
+                <div class="notch-left"></div>
+                <div class="dashed-divider"></div>
+                <div class="notch-right"></div>
+            </div>
+
+            <div class="section-title">Product Details</div>
+
+            <table class="receipt-table">
+                <tr>
+                    <td class="receipt-label" style="width: 50%;">Room {{ booking.room.room_number }} <span class="text-lowercase">x</span>{{ nights }} night{{ nights|pluralize }}</td>
+                    <td class="receipt-colon">:</td>
+                    <td class="receipt-value" style="width: 45%;">₹{{ booking.total_amount }}</td>
+                </tr>
+                <tr style="line-height: 1;">
+                    <td colspan="3" style="padding-top: 0; padding-bottom: 6px;">
+                        <span class="text-muted" style="font-size: 12px; padding-left: 4px;">&bull; {{ booking.room.room_type }} ({{ booking.guest_name }})</span>
+                    </td>
+                </tr>
+                {% if booking.discount_amount %}
+                <tr>
+                    <td class="receipt-label">Redeemable Discount</td>
+                    <td class="receipt-colon">:</td>
+                    <td class="receipt-value text-success">-₹{{ booking.discount_amount }}</td>
+                </tr>
+                {% endif %}
+                {% if booking.pending_payment %}
+                <tr>
+                    <td class="receipt-label">Delivery Charges (Due)</td>
+                    <td class="receipt-colon">:</td>
+                    <td class="receipt-value">₹{{ booking.pending_payment }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td class="receipt-label" style="font-weight: 700; color: #111827;">Total Amount</td>
+                    <td class="receipt-colon" style="font-weight: 700; color: #111827;">:</td>
+                    <td class="receipt-value" style="font-size: 18px; font-weight: 700; color: #111827;">₹{{ booking.final_amount }}</td>
+                </tr>
+            </table>
+
+            <div class="notch-container">
+                <div class="notch-left"></div>
+                <div class="dashed-divider"></div>
+                <div class="notch-right"></div>
+            </div>
+
+            <div class="d-flex flex-column gap-2 pt-1 pb-1">
+                <a href="{% url 'download_invoice' booking_type='room' booking_id=booking.id %}" class="btn w-100 d-flex align-items-center justify-content-center py-2.5" style="background-color: #f1f5f9; color: #1f2937; border-radius: 12px; font-weight: 600; font-size: 14px; border: none; gap: 8px; transition: background 0.2s;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download PDF Receipt
+                </a>
+                <a href="{% url 'rooms' %}" class="btn w-100 text-center py-1.5" style="background-color: transparent; color: #9ca3af; font-weight: 500; font-size: 13px; border: none; text-decoration: none;">
+                    Book Another Room
+                </a>
+            </div>
+
+            <div class="receipt-footer-edge"></div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+

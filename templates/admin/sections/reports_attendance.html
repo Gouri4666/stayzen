@@ -1,0 +1,73 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+<style>
+    .sz-dashboard { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; padding: 32px; color: #0f172a; min-height: 100vh; }
+    .sz-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .sz-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    .sz-table th, .sz-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    .sz-table th { font-weight: 600; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+    .badge { padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; }
+    .badge-success { background: #dcfce7; color: #166534; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-danger { background: #fee2e2; color: #991b1b; }
+</style>
+
+<div class="sz-dashboard">
+    <div style="display:flex; justify-content:space-between; margin-bottom: 32px;">
+        <div>
+            <h1 style="margin:0; font-size:2rem; font-weight:700;">Staff Attendance</h1>
+            <p style="margin:4px 0 0; color:#64748b;">Human resources and shift tracking.</p>
+        </div>
+        <a href="{% url 'reports_overall' %}" style="padding:10px 20px; background:#e2e8f0; color:#0f172a; text-decoration:none; border-radius:8px; font-weight:600; height: fit-content;">&larr; Back to Dashboard</a>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:24px; margin-bottom:32px;">
+        <div class="sz-card" style="border-top: 4px solid #3b82f6;">
+            <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Total Records</div>
+            <div style="font-size:2rem; font-weight:800; margin-top:8px;">{{ total_count }}</div>
+        </div>
+        <div class="sz-card" style="border-top: 4px solid #10b981;">
+            <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Present</div>
+            <div style="font-size:2rem; font-weight:800; color:#10b981; margin-top:8px;">{{ present_count }}</div>
+        </div>
+        <div class="sz-card" style="border-top: 4px solid #f59e0b;">
+            <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Late</div>
+            <div style="font-size:2rem; font-weight:800; color:#f59e0b; margin-top:8px;">{{ late_count }}</div>
+        </div>
+        <div class="sz-card" style="border-top: 4px solid #ef4444;">
+            <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Absent</div>
+            <div style="font-size:2rem; font-weight:800; color:#ef4444; margin-top:8px;">{{ absent_count }}</div>
+        </div>
+    </div>
+
+    <div class="sz-card">
+        <h2 style="margin:0 0 16px; font-size:1.25rem; font-weight:700;">Attendance Log</h2>
+        <table class="sz-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Staff Member</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td style="color:#64748b;">{{ record.date|date:"M d, Y" }}</td>
+                    <td style="font-weight:600;">{{ record.staff.username }}</td>
+                    <td style="color:#10b981; font-weight:500;">{{ record.check_in_time|time:"H:i"|default:"-" }}</td>
+                    <td style="color:#ef4444; font-weight:500;">{{ record.check_out_time|time:"H:i"|default:"-" }}</td>
+                    <td>
+                        <span class="badge {% if record.status == 'Present' %}badge-success{% elif record.status == 'Late' %}badge-warning{% else %}badge-danger{% endif %}">
+                            {{ record.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

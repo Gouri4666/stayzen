@@ -1,0 +1,111 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <div class="card border-0 shadow-lg">
+
+        <div class="card-header d-flex justify-content-between align-items-center py-3" style="background: linear-gradient(135deg, #a57f5a, #c5a880); border: none;">
+            <div>
+                <h4 class="mb-0 text-white" style="font-family: 'Gilda Display', serif; font-weight: 600;">Activity Details</h4>
+                <small class="text-white opacity-75" style="font-weight: 500;">
+                    {{ activity.activity_name }} • {{ activity.activity_type }}
+                </small>
+            </div>
+            <div>
+                <a href="{% url 'edit_activity' activity.id %}" class="btn btn-sm me-2 text-white" style="background: rgba(255, 255, 255, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.4) !important;">Edit Activity</a>
+                <a href="{% url 'activity_list' %}" class="btn btn-light btn-sm" style="color: #a57f5a !important; font-weight: bold !important; background-color: #ffffff !important;">Back to List</a>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    {% if activity.activity_image %}
+                        <img src="{{ activity.activity_image.url }}" class="img-fluid rounded shadow-sm" alt="{{ activity.activity_name }}" style="width: 100% !important; height: auto !important; max-height: 350px; object-fit: cover;">
+                    {% else %}
+                        <div class="border rounded p-4 text-center text-muted">
+                            No image available
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <h3>{{ activity.activity_name }}</h3>
+                        <p class="mb-1"><strong>Type:</strong> {{ activity.activity_type }}</p>
+                        <p class="mb-1"><strong>Status:</strong>
+                            {% if activity.status == 'Available' %}
+                                <span class="badge bg-success">Available</span>
+                            {% else %}
+                                <span class="badge bg-danger">Unavailable</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-1"><strong>Price:</strong> ₹{{ activity.price }}</p>
+                        <p class="mb-1"><strong>Created At:</strong> {{ activity.created_at|date:'M d, Y H:i' }}</p>
+                    </div>
+
+                    <div>
+                        <h5>Description</h5>
+                        <p>{{ activity.description }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header text-white" style="background: rgba(30, 41, 59, 0.85); border-bottom: 1px solid rgba(59, 130, 246, 0.25);">
+                    <h5 class="mb-0 text-white">Activity Sessions</h5>
+                </div>
+                <div class="card-body">
+                    {% if sessions %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Start</th>
+                                        <th>End</th>
+                                        <th>Capacity</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for session in sessions %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>{{ session.start_time }}</td>
+                                            <td>{{ session.end_time }}</td>
+                                            <td>{{ session.capacity }}</td>
+                                            <td>
+                                                {% if session.status == 'Available' %}
+                                                    <span class="badge bg-success">{{ session.status }}</span>
+                                                {% elif session.status == 'Full' %}
+                                                    <span class="badge bg-danger">{{ session.status }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ session.status }}</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-0">
+                            No sessions have been added for this activity yet.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

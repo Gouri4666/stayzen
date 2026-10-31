@@ -1,0 +1,76 @@
+// contact form css
+.pr{
+    position: relative;
+}
+.rts__contact{
+    padding-right: 40px;
+    @include mq($md){
+        padding-right: 0;
+    }
+    &__form{
+        .form-input{
+            label{
+                font-size: 18px;
+                color: var(--rts-heading);
+                display: block;
+                margin-bottom: 10px;
+            }
+            input, textarea{
+                width: 100%;
+                border: 1px solid rgba(#65676B, $alpha: .3);
+                padding: 13px 15px 13px 50px;
+                border-radius: 4px;
+                margin-bottom: 15px;
+            }
+            textarea{
+                height: 100px;
+                resize: none;
+            }
+            .pr{
+                i{
+                    position: absolute;
+                    left: 15px;
+                    top: 45%;
+                    transform: translateY(-50%);
+                    font-size: 18px;
+                    color: var(--rts-para);
+                }
+                img{
+                    position: absolute;
+                    left: 15px;
+                    top: 20px;
+                }
+            }
+        }
+        .theme-btn{
+            padding: 13px 30px;
+            font-size: 18px;
+        }
+    }
+}
+.contact__info{
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    justify-content: space-around;
+    margin-left: 40px;
+    @include mq($md){
+        margin-left: 0;
+        gap: 30px;
+    }
+}
+.contact__info__item{
+    h4{
+        margin-bottom: 20px;
+    }
+    p{
+        font-size: 18px;
+        font-family: var(--glida);
+        line-height: 30px;
+    }
+}
+.contact__map{
+    iframe{
+        border-radius: 10px;
+    }
+}

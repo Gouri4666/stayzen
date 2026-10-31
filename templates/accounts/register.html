@@ -1,0 +1,704 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StayZen Registration</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            overflow: hidden;
+            /* Prevents whole-page scrolling */
+            position: relative;
+            background-color: #0f172a;
+            /* Fallback color while image loads */
+        }
+
+        /* Pseudo-element to handle the blurred background image safely */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(30, 58, 138, 0.5)),
+                url('https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(8px);
+            /* Adjust the pixels to get more or less blur */
+            transform: scale(1.05);
+            /* Marginally scales up the background to hide unblurred edge artifacts */
+            z-index: -1;
+            /* Pushes the layer behind the main container card */
+        }
+
+        /* Glassmorphic Container Card Layout */
+        .register-container {
+            width: 100%;
+            max-width: 620px;
+            background: rgba(255, 255, 255, 0.12);
+            /* Semi-transparent white */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            /* border: 1px solid rgba(255, 255, 255, 0.2); --- Removed for animated border */
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35);
+            overflow: hidden;
+            position: relative;
+            max-height: 96vh;
+            /* Ensure the card fits well within the viewport */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ==============================
+   Double Running Light Border
+============================== */
+        @property --angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        .register-container::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            padding: 3px;
+            /* Thickness of the lines */
+
+            /* Double line gradient: Two transparent gaps, two glowing tails (Cyan and Magenta) */
+            background: conic-gradient(from var(--angle),
+                    transparent 0%,
+                    transparent 35%,
+                    #00f3ff 50%,
+                    transparent 50%,
+                    transparent 85%,
+                    #f800ff 100%);
+
+            /* The mask cuts out the center */
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+
+            /* Apply the animation */
+            animation: spin-light 3.5s linear infinite;
+            pointer-events: none;
+            /* Ensures the border doesn't block clicks to inputs */
+            z-index: 10;
+            /* Sits above background but below the close button */
+        }
+
+        @keyframes spin-light {
+            to {
+                --angle: 360deg;
+            }
+        }
+
+        /* ============================== */
+
+        /* Compact Header Area Design with Translucent Blue Gradient */
+        .header-banner {
+            position: relative;
+            background: linear-gradient(135deg, rgba(27, 61, 109, 0.85), rgba(46, 123, 189, 0.85));
+            height: 110px;
+            /* Reduced to preserve vertical space */
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            margin-bottom: 45px;
+            /* Compact space for overlapping image cards */
+            flex-shrink: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        /* Floating Image Gallery Cards */
+        .gallery-strip {
+            position: absolute;
+            bottom: -35px;
+            display: flex;
+            gap: 12px;
+            z-index: 2;
+        }
+
+        .gallery-card {
+            width: 75px;
+            /* Made smaller to maintain proportion and fit the layout */
+            height: 75px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 3px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .gallery-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        /* Content Area styling */
+        .form-content {
+            padding: 0 35px 20px 35px;
+            overflow-y: auto;
+            /* Internal scroll if user screens are extremely small */
+        }
+
+        /* Webkit scrollbar tuning for a seamless dark-glass integration */
+        .form-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .form-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            z-index: 20;
+            /* Increased to ensure it stays above the border effect */
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .close-btn:hover {
+            color: #ffffff;
+            transform: scale(1.1);
+        }
+
+        .brand-title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffffff;
+            /* Switched to bright white */
+            margin-bottom: 2px;
+        }
+
+        .brand-subtitle {
+            text-align: center;
+            font-size: 12px;
+            color: #cbd5e1;
+            /* Switched to visible light slate */
+            margin-bottom: 20px;
+        }
+
+        /* Tight Flex Grid Layouts to remove scrolling */
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            /* Reduced vertical spacing */
+        }
+
+        .form-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Minimalist label styling */
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #f1f5f9;
+            /* High contrast light tone */
+            margin-bottom: 4px;
+        }
+
+        /* Glassmorphic fields updated for crisp black typed text */
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 13px;
+            color: #ffffff;
+            /* Rich dark slate/black code for clear contrast */
+            font-weight: 400;
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.05);
+            /* Lifted opacity slightly to pop black text */
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+        }
+
+        /* Ensure dropdown options have a dark background to be legible */
+        .form-group select option {
+            background-color: #1e293b;
+            color: #ffffff;
+        }
+
+        /* Refined placeholder styling for glass contrast */
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            /* Muted dark tone for placeholder text */
+        }
+
+        .form-group input:hover,
+        .form-group select:hover,
+        .form-group textarea:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: #3b82f6;
+            /* Keeps the blue glow on focus */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .form-group textarea {
+            resize: none;
+            height: 44px;
+            /* Reduced to save screen area */
+        }
+
+        .form-group.invalid label {
+            color: #ff4d4d;
+            /* Red label */
+        }
+
+        .form-group.invalid input,
+        .form-group.invalid select,
+        .form-group.invalid textarea {
+            border-color: #ff4d4d;
+            box-shadow: 0 0 0 3px rgba(255, 77, 77, 0.2);
+        }
+
+        /* Secondary sub-labels under input fields */
+        .input-sub-text {
+            font-size: 10px;
+            color: #e2e8f0;
+            /* Balanced visibility against glass panel background */
+            margin-top: 2px;
+            padding-left: 2px;
+        }
+
+        /* Password positioning rules */
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-wrapper input {
+            padding-right: 35px;
+        }
+
+        .eye-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #475569;
+            /* Darkened eye icon to fit the theme */
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+
+        .eye-icon:hover {
+            color: #0f172a;
+        }
+
+        /* Green Submit Button Layout Area */
+        .action-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            margin-bottom: 12px;
+        }
+
+        .register-btn {
+            width: 100%;
+            max-width: 200px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            /* Matched to beautiful emerald look */
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .register-btn:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .login-link {
+            text-align: center;
+            font-size: 13.5px;
+            color: #cbd5e1;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 15px;
+            margin-top: 5px;
+        }
+
+        .login-link a {
+            text-decoration: none;
+            color: #60a5fa;
+            /* Vibrant blue tone for dark glass accessibility */
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .login-link a:hover {
+            color: #93c5fd;
+            text-decoration: underline;
+        }
+
+        /* Responsive configurations */
+        @media(max-width: 600px) {
+            body {
+                padding: 5px;
+                overflow-y: auto;
+                /* Allow screen scrolling on small mobile devices */
+            }
+
+            .register-container {
+                max-height: none;
+                border-radius: 16px;
+            }
+
+            .form-content {
+                padding: 0 15px 20px 15px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="register-container">
+
+        <a href="{% url 'home' %}" class="close-btn">&times;</a>
+
+        <div class="header-banner">
+            <div class="gallery-strip">
+                <div class="gallery-card">
+                    <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=400" alt="Resort Room 1">
+                </div>
+                <div class="gallery-card">
+                    <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400" alt="Resort Room 2">
+                </div>
+                <div class="gallery-card">
+                    <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400" alt="Resort View">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-content">
+
+            <h2 class="brand-title">Registration Form</h2>
+            <p class="brand-subtitle">Experience something new every moment</p>
+
+            {% if messages %}
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    {% for message in messages %}
+                    Swal.fire({
+                        icon: "{% if message.tags == 'error' or message.tags == 'danger' %}error{% elif message.tags == 'warning' %}warning{% elif message.tags == 'info' %}info{% else %}success{% endif %}",
+                        title: "{{ message|escapejs }}",
+                        showConfirmButton: false,
+                        timer: 3000,
+                        position: 'center',
+                        background: 'rgba(15, 23, 42, 0.9)',
+                        color: '#ffffff',
+                        backdrop: `rgba(0,0,0,0.4)`
+                    });
+                    {% endfor %}
+                });
+            </script>
+            {% endif %}
+
+            <form method="POST" action="{% url 'register' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <div style="display: flex; gap: 10px;">
+                            <div style="flex: 1;">
+                                <input type="text" name="first_name" placeholder="First Name" required>
+                                <span class="input-sub-text">First Name</span>
+                            </div>
+                            <div style="flex: 1;">
+                                <input type="text" name="last_name" placeholder="Last Name" required>
+                                <span class="input-sub-text">Last Name</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="email" name="email" id="register_email" placeholder="ex: myname@example.com" required>
+                        <span id="email_error" style="color: #ff4d4d; font-size: 12px; display: none; margin-top: 4px;">This email is already registered.</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" name="phone" id="register_phone" placeholder="Phone Number" required>
+                        <span class="input-sub-text" id="phone_sub_text">Include area code</span>
+                        <span id="phone_error"
+                            style="color: #ff4d4d; font-size: 12px; display: none; margin-top: 4px;">This phone number
+                            is already registered.</span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select name="gender" required>
+                            <option value="">Please Select</option>
+                            <option>Male</option>
+                            <option>Female</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Profile Image</label>
+                        <input type="file" name="image" style="padding: 5px 10px;">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Address</label>
+                        <textarea name="address" placeholder="Street address, city, and zip code..."
+                            required></textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" name="password" required>
+                            <i class="fa-solid fa-eye eye-icon" onclick="togglePassword('password', this)"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="confirm_password" name="confirm_password" required>
+                            <i class="fa-solid fa-eye eye-icon" onclick="togglePassword('confirm_password', this)"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-container">
+                    <button type="submit" class="register-btn">Submit</button>
+                </div>
+
+            </form>
+            <div class="login-link">
+                Already have an account? <a href="{% url 'login' %}">Login</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(fieldId, icon) {
+            const field = document.getElementById(fieldId);
+            if (field.type === "password") {
+                field.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                field.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+
+        const form = document.querySelector('form');
+
+        // Function to validate individual fields
+        function validateField(input) {
+            const formGroup = input.closest('.form-group');
+            if (!formGroup) return;
+            let isValid = true;
+
+            // Basic check for empty fields
+            if (!input.value.trim()) {
+                isValid = false;
+            }
+
+            // Specific Email check
+            if (input.type === 'email' && !input.value.includes('@')) {
+                isValid = false;
+            }
+
+            // Specific Phone check
+            if (input.name === 'phone') {
+                const phoneVal = input.value.trim();
+                const phoneRegex = /^[0-9]{10}$/;
+                if (!phoneRegex.test(phoneVal)) {
+                    isValid = false;
+                }
+            }
+
+            // Specific Password check (if you want min length)
+            if (input.name === 'password' && input.value.length < 6) {
+                isValid = false;
+            }
+
+            // Toggle the class
+            if (!isValid) {
+                formGroup.classList.add('invalid');
+            } else {
+                formGroup.classList.remove('invalid');
+            }
+        }
+
+        // Apply listeners to all inputs/selects/textareas
+        form.querySelectorAll('input, select, textarea').forEach(field => {
+            field.addEventListener('input', () => validateField(field));
+            field.addEventListener('blur', () => validateField(field));
+        });
+    </script>
+
+    /*
+    <script src="{% static 'guest/js/form_validation.js' %}"></script> */
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const phoneInput = document.getElementById("register_phone");
+            const phoneError = document.getElementById("phone_error");
+            const emailInput = document.getElementById("register_email");
+            const emailError = document.getElementById("email_error");
+            const submitBtn = document.querySelector(".btn-submit") || document.querySelector(".register-btn");
+
+            let phoneValid = true;
+            let emailValid = true;
+
+            function updateSubmitBtn() {
+                if (submitBtn) {
+                    submitBtn.disabled = !(phoneValid && emailValid);
+                }
+            }
+
+            if (phoneInput) {
+                phoneInput.addEventListener("blur", function () {
+                    const val = this.value.trim();
+                    if (val) {
+                        fetch("{% url 'api_check_phone' %}?phone=" + encodeURIComponent(val))
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.exists) {
+                                    phoneError.style.display = "block";
+                                    phoneInput.style.border = "1px solid #ff4d4d";
+                                    const label = phoneInput.closest('.form-group').querySelector('label');
+                                    if(label) label.style.color = "#ff4d4d";
+                                    phoneValid = false;
+                                } else {
+                                    phoneError.style.display = "none";
+                                    phoneInput.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+                                    const label = phoneInput.closest('.form-group').querySelector('label');
+                                    if(label) label.style.color = "#f1f5f9";
+                                    phoneValid = true;
+                                }
+                                updateSubmitBtn();
+                            })
+                            .catch(err => console.error("Error checking phone:", err));
+                    } else {
+                        phoneError.style.display = "none";
+                        phoneInput.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+                        const label = phoneInput.closest('.form-group').querySelector('label');
+                        if(label) label.style.color = "#f1f5f9";
+                        phoneValid = true;
+                        updateSubmitBtn();
+                    }
+                });
+            }
+
+            if (emailInput) {
+                emailInput.addEventListener("blur", function () {
+                    const val = this.value.trim();
+                    if (val) {
+                        fetch("{% url 'api_check_email' %}?email=" + encodeURIComponent(val))
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.exists) {
+                                    emailError.style.display = "block";
+                                    emailInput.style.border = "1px solid #ff4d4d";
+                                    const label = emailInput.closest('.form-group').querySelector('label');
+                                    if(label) label.style.color = "#ff4d4d";
+                                    emailValid = false;
+                                } else {
+                                    emailError.style.display = "none";
+                                    emailInput.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+                                    const label = emailInput.closest('.form-group').querySelector('label');
+                                    if(label) label.style.color = "#f1f5f9";
+                                    emailValid = true;
+                                }
+                                updateSubmitBtn();
+                            })
+                            .catch(err => console.error("Error checking email:", err));
+                    } else {
+                        emailError.style.display = "none";
+                        emailInput.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+                        const label = emailInput.closest('.form-group').querySelector('label');
+                        if(label) label.style.color = "#f1f5f9";
+                        emailValid = true;
+                        updateSubmitBtn();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,405 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+
+<section id="main-content" class="fadeIn">
+
+    <div class="container-fluid">
+
+        <div class="row">
+
+            <div class="col-md-12">
+
+                <div class="card p-4">
+                    <h2 class="mb-2" style="font-weight:700;">
+                        Welcome {{ staff.user.first_name|default:staff.user.username }}
+                    </h2>
+
+                    <div style="
+display:inline-flex;
+align-items:center;
+width:fit-content;
+padding:6px 14px;
+margin-bottom:12px;
+background:#eef4ff;
+color:#2563eb;
+border:1px solid #bfdbfe;
+border-radius:20px;
+font-size:13px;
+font-weight:600;">
+                        Employee ID: {{ staff.employee_id|default:'Not Assigned' }}
+                    </div>
+
+                    <p class="mb-0" style="font-size:14px;">
+                        <strong>Username:</strong>
+                        {{ staff.user.username }}
+                    </p>
+                </div>
+
+                <div class="card p-4 mt-4 attendance-panel">
+                    <div class="attendance-panel-header">
+                        <h4><i class="fa fa-clock-o"></i> Today's Attendance</h4>
+                        <span class="attendance-date">{{ attendance.date|date:"D, d M Y"|default:"Today" }}</span>
+                    </div>
+                    <hr>
+
+                    {% if attendance %}
+                    <!-- Status Badge -->
+                    <div class="attendance-status-row">
+                        {% if attendance.status == 'Present' %}
+                        <span class="att-badge att-badge-present"><i class="fa fa-check-circle"></i> Present</span>
+                        {% elif attendance.status == 'Late' %}
+                        <span class="att-badge att-badge-late"><i class="fa fa-exclamation-circle"></i> Late</span>
+                        {% elif attendance.status == 'Absent' %}
+                        <span class="att-badge att-badge-absent"><i class="fa fa-times-circle"></i> Absent</span>
+                        {% elif attendance.status == 'Half Day' %}
+                        <span class="att-badge att-badge-late"><i class="fa fa-adjust"></i> Half Day</span>
+                        {% else %}
+                        <span class="att-badge att-badge-present">{{ attendance.status }}</span>
+                        {% endif %}
+
+                        {% if attendance.check_out_time %}
+                        <span class="att-badge att-badge-checkout" style="margin-left: 8px;"><i
+                                class="fa fa-sign-out"></i> Checked Out</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Info Grid -->
+                    <div class="attendance-info-grid">
+                        {% if shift %}
+                        <div class="att-info-item">
+                            <span class="att-info-label"><i class="fa fa-briefcase"></i> Shift</span>
+                            <span class="att-info-value">{{shift.name}} ({{shift.start_time|time:"H:i"}} – {{shift.end_time|time:"H:i" }})</span>
+                        </div>
+                        {% endif %}
+                        <div class="att-info-item">
+                            <span class="att-info-label"><i class="fa fa-sign-in"></i> Check In</span>
+                            <span class="att-info-value">
+                                {% if attendance.check_in_time %}
+                                {{attendance.check_in_time|time:"H:i" }}
+                                {% else %}
+                                –
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="att-info-item">
+                            <span class="att-info-label"><i class="fa fa-sign-out"></i> Check Out</span>
+                            <span class="att-info-value">
+                                {% if attendance.check_out_time %}
+                                {{attendance.check_out_time|time:"H:i" }}
+                                {% else %}
+                                –
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="att-info-item">
+                            <span class="att-info-label"><i class="fa fa-hourglass-half"></i> Working Hours</span>
+                            <span class="att-info-value">{{ working_hours_display|default:"–" }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Status Message -->
+                    <div class="att-message-row">
+                        {% if attendance.check_out_time %}
+                        <p class="att-msg att-msg-blue"><i class="fa fa-info-circle"></i> Checked out at {{attendance.check_out_time|time:"H:i" }}</p>
+                        {% elif attendance.check_in_time %}
+                        <p class="att-msg att-msg-green"><i class="fa fa-info-circle"></i> Checked in at {{attendance.check_in_time|time:"H:i" }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Action Button -->
+                    <div class="att-action-row">
+                        {% if not attendance.check_out_time %}
+                        <form method="post" action="{% url 'staff_check_out' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn att-btn att-btn-checkout">
+                                <i class="fa fa-sign-out"></i> Check Out
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="att-completed"><i class="fa fa-check-circle"></i> Attendance completed for
+                            today</span>
+                        {% endif %}
+                    </div>
+
+                    {% else %}
+                    <!-- No attendance yet -->
+                    {% if shift %}
+                    <div class="attendance-info-grid" style="margin-bottom: 18px;">
+                        <div class="att-info-item">
+                            <span class="att-info-label"><i class="fa fa-briefcase"></i> Shift</span>
+                            <span class="att-info-value">{{ shift.name }} ({{ shift.start_time|time:"H:i" }} –{{ shift.end_time|time:"H:i" }})</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <p class="att-no-checkin"><i class="fa fa-info-circle"></i> You have not checked in today.</p>
+                    <div class="att-action-row">
+                        {% if can_check_in %}
+                        <form method="post" action="{% url 'staff_check_in' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn att-btn att-btn-checkin">
+                                <i class="fa fa-sign-in"></i> Check In
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="att-completed"><i class="fa fa-clock-o"></i> Check-in is only available during your
+                            assigned shift.</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <style>
+                    /* ── Attendance Panel Scoped Styles ── */
+                    .attendance-panel {
+                        border-radius: 14px;
+                        overflow: hidden;
+                    }
+
+                    .attendance-panel-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                    }
+
+                    .attendance-panel-header h4 {
+                        margin: 0;
+                        font-weight: 700;
+                        font-size: 1.15rem;
+                    }
+
+                    .attendance-panel-header h4 i {
+                        margin-right: 6px;
+                        opacity: 0.7;
+                    }
+
+                    .attendance-date {
+                        font-size: 0.85rem;
+                        opacity: 0.65;
+                        font-weight: 500;
+                    }
+
+                    /* Status Badges */
+                    .attendance-status-row {
+                        margin-bottom: 18px;
+                    }
+
+                    .att-badge {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        padding: 6px 16px;
+                        border-radius: 20px;
+                        font-size: 0.85rem;
+                        font-weight: 600;
+                        letter-spacing: 0.3px;
+                    }
+
+                    .att-badge-present {
+                        background: rgba(34, 197, 94, 0.14);
+                        color: #16a34a;
+                        border: 1px solid rgba(34, 197, 94, 0.25);
+                    }
+
+                    .att-badge-late {
+                        background: rgba(245, 158, 11, 0.14);
+                        color: #d97706;
+                        border: 1px solid rgba(245, 158, 11, 0.25);
+                    }
+
+                    .att-badge-absent {
+                        background: rgba(239, 68, 68, 0.14);
+                        color: #dc2626;
+                        border: 1px solid rgba(239, 68, 68, 0.25);
+                    }
+
+                    .att-badge-checkout {
+                        background: rgba(59, 130, 246, 0.14);
+                        color: #2563eb;
+                        border: 1px solid rgba(59, 130, 246, 0.25);
+                    }
+
+                    [data-theme="dark"] .att-badge-present {
+                        background: rgba(34, 197, 94, 0.18);
+                        color: #4ade80;
+                    }
+
+                    [data-theme="dark"] .att-badge-late {
+                        background: rgba(245, 158, 11, 0.18);
+                        color: #fbbf24;
+                    }
+
+                    [data-theme="dark"] .att-badge-absent {
+                        background: rgba(239, 68, 68, 0.18);
+                        color: #f87171;
+                    }
+
+                    [data-theme="dark"] .att-badge-checkout {
+                        background: rgba(59, 130, 246, 0.18);
+                        color: #60a5fa;
+                    }
+
+                    /* Info Grid */
+                    .attendance-info-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                        gap: 14px;
+                        margin-bottom: 18px;
+                    }
+
+                    .att-info-item {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        padding: 12px 16px;
+                        border-radius: 10px;
+                        background: rgba(0, 0, 0, 0.03);
+                        border: 1px solid rgba(0, 0, 0, 0.06);
+                    }
+
+                    [data-theme="dark"] .att-info-item {
+                        background: rgba(255, 255, 255, 0.04);
+                        border: 1px solid rgba(255, 255, 255, 0.07);
+                    }
+
+                    .att-info-label {
+                        font-size: 0.75rem;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        opacity: 0.55;
+                        font-weight: 600;
+                    }
+
+                    .att-info-label i {
+                        margin-right: 4px;
+                    }
+
+                    .att-info-value {
+                        font-size: 0.95rem;
+                        font-weight: 600;
+                    }
+
+                    /* Messages */
+                    .att-message-row {
+                        margin-bottom: 16px;
+                    }
+
+                    .att-msg {
+                        font-size: 0.88rem;
+                        padding: 10px 14px;
+                        border-radius: 8px;
+                        margin: 0;
+                        font-weight: 500;
+                    }
+
+                    .att-msg i {
+                        margin-right: 6px;
+                    }
+
+                    .att-msg-green {
+                        background: rgba(34, 197, 94, 0.08);
+                        color: #16a34a;
+                        border: 1px solid rgba(34, 197, 94, 0.15);
+                    }
+
+                    .att-msg-blue {
+                        background: rgba(59, 130, 246, 0.08);
+                        color: #2563eb;
+                        border: 1px solid rgba(59, 130, 246, 0.15);
+                    }
+
+                    [data-theme="dark"] .att-msg-green {
+                        background: rgba(34, 197, 94, 0.1);
+                        color: #4ade80;
+                    }
+
+                    [data-theme="dark"] .att-msg-blue {
+                        background: rgba(59, 130, 246, 0.1);
+                        color: #60a5fa;
+                    }
+
+                    .att-no-checkin {
+                        opacity: 0.6;
+                        font-size: 0.9rem;
+                        margin-bottom: 14px;
+                    }
+
+                    .att-no-checkin i {
+                        margin-right: 5px;
+                    }
+
+                    /* Buttons */
+                    .att-action-row {
+                        margin-top: 4px;
+                    }
+
+                    .att-btn {
+                        padding: 10px 28px;
+                        border-radius: 10px;
+                        font-weight: 600;
+                        font-size: 0.9rem;
+                        border: none;
+                        cursor: pointer;
+                        transition: all 0.25s ease;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        letter-spacing: 0.2px;
+                    }
+
+                    .att-btn-checkin {
+                        background: linear-gradient(135deg, #22c55e, #16a34a);
+                        color: #fff;
+                        box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+                    }
+
+                    .att-btn-checkin:hover {
+                        background: linear-gradient(135deg, #16a34a, #15803d);
+                        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.45);
+                        transform: translateY(-1px);
+                        color: #fff;
+                    }
+
+                    .att-btn-checkout {
+                        background: linear-gradient(135deg, #f59e0b, #d97706);
+                        color: #fff;
+                        box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+                    }
+
+                    .att-btn-checkout:hover {
+                        background: linear-gradient(135deg, #d97706, #b45309);
+                        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+                        transform: translateY(-1px);
+                        color: #fff;
+                    }
+
+                    .att-completed {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        font-weight: 600;
+                        font-size: 0.9rem;
+                        color: #2563eb;
+                        padding: 10px 18px;
+                        border-radius: 10px;
+                        background: rgba(59, 130, 246, 0.08);
+                        border: 1px solid rgba(59, 130, 246, 0.15);
+                    }
+
+                    [data-theme="dark"] .att-completed {
+                        color: #60a5fa;
+                        background: rgba(59, 130, 246, 0.1);
+                    }
+                </style>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

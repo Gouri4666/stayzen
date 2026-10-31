@@ -1,0 +1,412 @@
+{% extends 'guest/base.html' %}
+{% load static %}
+
+{% block title %}StayZen - About Us{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'guest/css/event.css' %}">
+
+<style>
+    /* ==========================================
+       MINIMALIST ZEN ABOUT PAGE STYLES
+    ============================================= */
+    :root {
+        --zen-green: #687a62;
+        --zen-dark: #2a3327;
+        --zen-sand: #f7f5f0;
+        --zen-text: #666a64;
+        --zen-radius: 8px;
+        --font-main: 'Jost', sans-serif;
+    }
+
+    body {
+        font-family: var(--font-main);
+    }
+
+    .spacer-100 { height: 100px; width: 100%; display: block; }
+    
+    /* 1. Zen Floating Hero */
+    .zen-hero-wrapper {
+        position: relative;
+        padding: 40px 20px 0;
+        max-width: 1400px;
+        margin: 0 auto 80px;
+    }
+    .zen-hero-image {
+        width: 100%;
+        height: 65vh;
+        min-height: 500px;
+        border-radius: var(--zen-radius);
+        overflow: hidden;
+        position: relative;
+    }
+    .zen-hero-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .zen-hero-card {
+        background: #ffffff;
+        padding: 50px;
+        border-radius: var(--zen-radius);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+        max-width: 600px;
+        position: relative;
+        margin: -150px auto 0; /* Floats over the image */
+        z-index: 10;
+        text-align: center;
+    }
+    .zen-subtitle {
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        font-size: 0.85rem;
+        color: var(--zen-green);
+        display: block;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    .zen-title {
+        font-size: 2.8rem;
+        color: var(--zen-dark);
+        margin-bottom: 0;
+        font-weight: 300;
+        line-height: 1.3;
+    }
+
+    /* 2. Breathable About Section */
+    .zen-about-section {
+        padding: 80px 0 100px;
+    }
+    .zen-about-grid {
+        display: grid;
+        grid-template-columns: 5fr 7fr;
+        gap: 80px;
+        align-items: center;
+    }
+    .zen-about-image {
+        position: relative;
+    }
+    .zen-about-image::before {
+        content: '';
+        position: absolute;
+        top: -30px; left: -30px; right: 30px; bottom: 30px;
+        background-color: var(--zen-sand);
+        border-radius: var(--zen-radius);
+        z-index: -1;
+    }
+    .zen-about-image img {
+        width: 100%;
+        border-radius: var(--zen-radius);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    .zen-about-text h2 {
+        font-size: 2.4rem;
+        color: var(--zen-dark);
+        margin-bottom: 25px;
+        font-weight: 400;
+    }
+    .zen-about-text p {
+        color: var(--zen-text);
+        line-height: 1.8;
+        font-size: 1.1rem;
+        margin-bottom: 20px;
+        font-weight: 300;
+    }
+
+    /* 3. Soft Pillars (Services) */
+    .zen-pillars-section {
+        background-color: var(--zen-sand);
+        padding: 100px 0;
+    }
+    .zen-section-header {
+        text-align: center;
+        margin-bottom: 70px;
+    }
+    .zen-section-header h2 {
+        font-size: 2.5rem;
+        color: var(--zen-dark);
+        font-weight: 300;
+    }
+    .zen-pillar-card {
+        background: #ffffff;
+        padding: 50px 40px;
+        border-radius: var(--zen-radius);
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+    }
+    .zen-pillar-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.06);
+    }
+    .zen-icon-wrapper {
+        width: 70px;
+        height: 70px;
+        background-color: var(--zen-sand);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 25px;
+        color: var(--zen-green);
+        font-size: 30px;
+    }
+    .zen-pillar-card h4 {
+        font-size: 1.3rem;
+        color: var(--zen-dark);
+        margin-bottom: 15px;
+        font-weight: 500;
+    }
+    .zen-pillar-card p {
+        color: var(--zen-text);
+        font-size: 0.95rem;
+        line-height: 1.7;
+        margin: 0;
+        font-weight: 300;
+    }
+
+    /* 4. Asymmetric Gallery Grid */
+    .zen-gallery-section {
+        padding: 120px 0;
+        background-color: #ffffff;
+    }
+    .zen-gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        align-items: center; /* Creates the staggered effect */
+    }
+    .zen-gallery-item {
+        border-radius: var(--zen-radius);
+        overflow: hidden;
+        position: relative;
+    }
+    /* Stagger the middle column down */
+    .zen-gallery-item:nth-child(2) {
+        transform: translateY(40px);
+    }
+    .zen-gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        aspect-ratio: 3/4;
+        transition: transform 0.6s ease;
+    }
+    .zen-gallery-item:hover img {
+        transform: scale(1.05);
+    }
+    .zen-gallery-caption {
+        position: absolute;
+        bottom: 20px; left: 20px;
+        background: #ffffff;
+        padding: 10px 20px;
+        border-radius: 30px;
+        font-size: 0.9rem;
+        color: var(--zen-dark);
+        font-weight: 500;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 991px) {
+        .zen-about-grid { grid-template-columns: 1fr; gap: 50px; }
+        .zen-gallery-grid { grid-template-columns: repeat(2, 1fr); }
+        .zen-gallery-item:nth-child(2) { transform: none; }
+        .zen-hero-card { margin: -80px 20px 0; padding: 30px; }
+        .zen-title { font-size: 2.2rem; }
+    }
+    @media (max-width: 768px) {
+        .zen-gallery-grid { grid-template-columns: 1fr; }
+        .zen-hero-image { height: 50vh; }
+    }
+
+    /* Testimonial Stars (Zen Theme) */
+    .star-rating-display { font-size: 20px; margin-bottom: 15px; }
+    .star-rating-display .star { font-size: 20px; display: inline-block; margin-right: 2px; }
+    .star-rating-display .star.filled { color: var(--zen-green) !important; }
+    .star-rating-display .star.empty { color: #e0e0e0 !important; }
+</style>
+
+    <div class="spacer-100"></div>
+
+    <!-- 1. ZEN FLOATING HERO -->
+    <div class="zen-hero-wrapper wow fadeIn">
+        <div class="zen-hero-image">
+            {% if settings.about_image %}
+                <img src="{{ settings.about_image.url }}" alt="StayZen Resort">
+            {% else %}
+                <img src="{% static 'guest/images/banner/1.webp' %}" alt="StayZen Resort">
+            {% endif %}
+        </div>
+        <div class="zen-hero-card wow fadeInUp" data-wow-delay="0.3s">
+            <span class="zen-subtitle">The StayZen Spirit</span>
+            <h1 class="zen-title">{{ settings.about_heading|default:"A Sanctuary for the Senses" }}</h1>
+        </div>
+    </div>
+
+    <!-- 2. BREATHABLE ABOUT SECTION -->
+    <div class="zen-about-section">
+        <div class="container">
+            <div class="zen-about-grid">
+                <div class="zen-about-image wow fadeInLeft" data-wow-delay="0.2s">
+                    <img src="{% if settings.about_image %}{{ settings.about_image.url }}{% else %}{% static 'guest/images/pages/rest.png' %}{% endif %}" alt="StayZen Ambience">
+                </div>
+                <div class="zen-about-text wow fadeInRight" data-wow-delay="0.4s">
+                    <span class="zen-subtitle">Our Philosophy</span>
+                    <h2>Harmonizing Nature & Hospitality</h2>
+                    {% if settings.about_text %}
+                        <p>{{ settings.about_text|linebreaksbr }}</p>
+                    {% else %}
+                        <p>At StayZen, we believe that true luxury is found in peace of mind. For over two decades, we have cultivated an environment where minimalist design and impeccable service converge, offering our guests a retreat that breathes and restores.</p>
+                        <p>Every element of our resort is inspired by the natural world. From sunlit suites to organic culinary experiences, we invite you to slow down, reconnect, and experience hospitality in its purest form.</p>
+                    {% endif %}
+                    
+                    <div class="mt-4 pt-3">
+                        <a href="{% url 'contact' %}" style="color: var(--zen-green); font-weight: 500; text-decoration: none; border-bottom: 1px solid var(--zen-green); padding-bottom: 2px;">Reach out to our team &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. SOFT PILLARS (SERVICES) -->
+    <div class="zen-pillars-section">
+        <div class="container">
+            <div class="zen-section-header wow fadeInUp">
+                <span class="zen-subtitle">The StayZen Experience</span>
+                <h2>Curated for Tranquility</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="zen-pillar-card">
+                        <div class="zen-icon-wrapper"><i class="flaticon-bed"></i></div>
+                        <h4>{{ settings.about_pillar1_title|default:"Serene Suites" }}</h4>
+                        <p>{{ settings.about_pillar1_text|default:"Unwind in light-filled rooms featuring organic textures, premium linens, and views that ground you." }}</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.2s">
+                    <div class="zen-pillar-card">
+                        <div class="zen-icon-wrapper"><i class="flaticon-dish"></i></div>
+                        <h4>{{ settings.about_pillar2_title|default:"Conscious Dining" }}</h4>
+                        <p>{{ settings.about_pillar2_text|default:"Nourish your body with farm-to-table cuisine prepared with mindfulness and local ingredients." }}</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+                    <div class="zen-pillar-card">
+                        <div class="zen-icon-wrapper"><i class="flaticon-spa"></i></div>
+                        <h4>{{ settings.about_pillar3_title|default:"Holistic Spa" }}</h4>
+                        <p>{{ settings.about_pillar3_text|default:"Restore your balance with botanical therapies designed to soothe both physical and mental tension." }}</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.4s">
+                    <div class="zen-pillar-card">
+                        <div class="zen-icon-wrapper"><i class="flaticon-cheers"></i></div>
+                        <h4>{{ settings.about_pillar4_title|default:"Mindful Events" }}</h4>
+                        <p>{{ settings.about_pillar4_text|default:"Host meaningful gatherings in adaptable spaces that encourage focus, connection, and joy." }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. ASYMMETRIC GALLERY GRID -->
+    <div class="zen-gallery-section">
+        <div class="container">
+            <div class="zen-section-header wow fadeInUp">
+                <span class="zen-subtitle">{{ settings.about_gallery_subtitle|default:"Visual Journey" }}</span>
+                <h2>{{ settings.about_gallery_title|default:"Spaces to Breathe" }}</h2>
+            </div>
+            <div class="zen-gallery-grid">
+                <div class="zen-gallery-item wow fadeInUp" data-wow-delay="0.1s">
+                    {% if settings.about_gallery_img1 %}
+                        <img src="{{ settings.about_gallery_img1.url }}" alt="{{ settings.about_gallery_caption1|default:'Luxury Rooms' }}">
+                    {% else %}
+                        <img src="{% static 'guest/images/banner/1.webp' %}" alt="Luxury Rooms">
+                    {% endif %}
+                    <div class="zen-gallery-caption">{{ settings.about_gallery_caption1|default:"Minimalist Suites" }}</div>
+                </div>
+                <div class="zen-gallery-item wow fadeInUp" data-wow-delay="0.3s">
+                    {% if settings.about_gallery_img2 %}
+                        <img src="{{ settings.about_gallery_img2.url }}" alt="{{ settings.about_gallery_caption2|default:'Fine Dining' }}">
+                    {% else %}
+                        <img src="{% static 'guest/images/pages/rest.png' %}" alt="Fine Dining">
+                    {% endif %}
+                    <div class="zen-gallery-caption">{{ settings.about_gallery_caption2|default:"Organic Dining" }}</div>
+                </div>
+                <div class="zen-gallery-item wow fadeInUp" data-wow-delay="0.5s">
+                    {% if settings.about_gallery_img3 %}
+                        <img src="{{ settings.about_gallery_img3.url }}" alt="{{ settings.about_gallery_caption3|default:'Event Halls' }}">
+                    {% else %}
+                        <img src="{% static 'guest/images/banner/banner-3.webp' %}" alt="Event Halls">
+                    {% endif %}
+                    <div class="zen-gallery-caption">{{ settings.about_gallery_caption3|default:"Open-Air Venues" }}</div>
+                </div>
+            </div>
+            <div class="text-center mt-5 pt-5 wow fadeInUp">
+                <a href="{% url 'rooms' %}" class="theme-btn btn-style fill no-border" style="background-color: var(--zen-green); color: #fff; border-radius: 30px; padding: 12px 35px;">View Accommodations</a>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 5. CLIENT TESTIMONIAL (Zen Theme Adaptation) -->
+    <div class="rts__section pb-120 pt-100" style="background-color: #ffffff;">
+        <div class="container">
+            <div class="row mb-50">
+                <div class="d-flex align-items-center justify-content-between position-relative">
+                    <div class="section__content__left">
+                        <span class="zen-subtitle wow fadeInUp">Guest Reflections</span>
+                        <h2 class="content__title h2 lh-1" style="color: var(--zen-dark); font-weight: 300;">Shared Experiences</h2>
+                    </div>
+                    <div class="slider__navigation d-flex gap-3">
+                        <div class="nav__btn button-prev" style="background: var(--zen-sand); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                            <img src="{% static 'guest/images/icon/arrow-left-short.svg' %}" alt="Prev">
+                        </div>
+                        <div class="nav__btn button-next" style="background: var(--zen-sand); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                            <img src="{% static 'guest/images/icon/arrow-right-short.svg' %}" alt="Next">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="testimonial__slider overflow-hidden">
+                        <div class="swiper-wrapper">
+
+                            {% for feedback in feedbacks %}
+                            <div class="swiper-slide">
+                                <div class="testimonial__item__content" style="background: var(--zen-sand); border-radius: var(--zen-radius); padding: 50px 40px; text-align: center;">
+                                    
+                                    <div class="slider__rating star-rating-display justify-content-center">
+                                        {% for char, is_filled in feedback.star_display %}
+                                            <span class="star {% if is_filled %}filled{% else %}empty{% endif %}">{{ char }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <p style="font-size: 1.15rem; line-height: 1.8; color: var(--zen-text); font-weight: 300; margin-bottom: 30px;">"{{ feedback.message }}"</p>
+                                    
+                                    <div class="slider__author__info justify-content-center align-items-center flex-column">
+                                        <h6 class="mb-1" style="color: var(--zen-dark); font-weight: 500;">{{ feedback.name }}</h6>
+                                        {% if feedback.created_at %}
+                                        <span style="font-size: 13px; color: #999; font-weight: 300;">{{ feedback.created_at|date:"F d, Y" }}</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="swiper-slide">
+                                <div class="testimonial__item__content" style="background: var(--zen-sand); border-radius: var(--zen-radius); padding: 50px 40px; text-align: center;">
+                                    <p style="font-size: 1.15rem; color: var(--zen-text); font-weight: 300;">No reflections in our guest book yet.</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- client testimonial end -->
+{% endblock %}

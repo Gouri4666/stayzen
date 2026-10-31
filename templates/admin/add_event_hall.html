@@ -1,0 +1,223 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    /* --- Live Validation Styles --- */
+    .is-invalid-input {
+        border-color: #ef4444 !important;
+        color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+    
+    .is-invalid-label {
+        color: #ef4444 !important;
+        transition: color 0.2s;
+    }
+
+    .validation-message {
+        display: none;
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+        font-weight: 500;
+    }
+    
+    .is-invalid-input ~ .validation-message {
+        display: block;
+    }
+</style>
+
+<div class="container-fluid" style="margin-top:45px;">
+    <div class="card border-0 shadow-lg">
+
+        <div class="card-header bg-gradient bg-primary text-white">
+            <h4 class="mb-0">
+                {% if form.instance.pk %}
+                    🏛️ Edit Event Hall
+                {% else %}
+                    🏛️ Add New Event Hall
+                {% endif %}
+            </h4>
+        </div>
+
+        <div class="card-body p-4">
+
+            <form method="POST" enctype="multipart/form-data" id="hallForm">
+                {% csrf_token %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Hall Name</label>
+                        {{ form.hall_name }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Hall Type</label>
+                        {{ form.hall_type }}
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Description</label>
+                        {{ form.hall_description }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Capacity</label>
+                        {{ form.hall_capacity }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Price</label>
+                        {{ form.hall_price }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Hall Image 1 *</label>
+                        {{ form.hall_image }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Hall Image 2</label>
+                        {{ form.hall_image2 }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Hall Image 3</label>
+                        {{ form.hall_image3 }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Status</label>
+                        {{ form.hall_status }}
+                    </div>
+
+                </div>
+
+                <div class="mt-4 text-end">
+                    <a href="{% url 'hall_list' %}" class="btn btn-secondary me-2">
+                        Back
+                    </a>
+
+                    <button type="submit" class="btn btn-lg btn-success px-4">
+                        {% if form.instance.pk %}
+                            Update Hall
+                        {% else %}
+                            Save Hall
+                        {% endif %}
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    
+    // --- Live Validation Rules ---
+    const validationRules = {
+        'id_hall_name': {
+            // Allows letters, numbers, spaces, hyphens, and ampersands (min 3 chars)
+            regex: /^[a-zA-Z0-9\s\-_'&]{3,}$/, 
+            errorMessage: 'Hall name must be at least 3 characters.'
+        },
+        'id_hall_capacity': {
+            // Must be a whole positive number starting from 1
+            regex: /^[1-9]\d*$/, 
+            errorMessage: 'Enter a valid positive number for capacity.'
+        },
+        'id_hall_price': {
+            // Numbers with optional up to 2 decimal places
+            regex: /^\d+(\.\d{1,2})?$/, 
+            errorMessage: 'Enter a valid price.'
+        }
+    };
+
+    Object.keys(validationRules).forEach(inputId => {
+        const inputField = document.getElementById(inputId);
+        
+        if (inputField) {
+            // Find the closest Bootstrap column div to locate the label
+            const parentDiv = inputField.closest('[class^="col-"]');
+            const label = parentDiv ? parentDiv.querySelector('.form-label') : null;
+
+            // Create the error message element below the input
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'validation-message';
+            errorMsg.innerText = validationRules[inputId].errorMessage;
+            inputField.parentNode.insertBefore(errorMsg, inputField.nextSibling);
+
+            // Listen for user typing
+            inputField.addEventListener('input', function() {
+                const value = this.value.trim();
+
+                // Reset on empty (removes red styling if user clears the field)
+                if (value === '') {
+                    this.classList.remove('is-invalid-input');
+                    if (label) label.classList.remove('is-invalid-label');
+                } 
+                // Mark Invalid
+                else if (!validationRules[inputId].regex.test(value)) {
+                    this.classList.add('is-invalid-input');
+                    if (label) label.classList.add('is-invalid-label');
+                } 
+                // Mark Valid
+                else {
+                    this.classList.remove('is-invalid-input');
+                    if (label) label.classList.remove('is-invalid-label');
+                }
+            });
+        }
+    });
+
+    // --- Prevent Form Submission on Error ---
+    const form = document.getElementById('hallForm');
+    
+    if (form) {
+        form.addEventListener('submit', function (event) {
+            let formIsValid = true;
+
+            // Loop through all rules to check current values
+            Object.keys(validationRules).forEach(inputId => {
+                const inputField = document.getElementById(inputId);
+                
+                if (inputField) {
+                    const value = inputField.value.trim();
+                    const rule = validationRules[inputId].regex;
+
+                    // If the field isn't empty but fails the regex validation
+                    if (value !== '' && !rule.test(value)) {
+                        formIsValid = false;
+
+                        // Force the red invalid styling to appear so the user sees the issue
+                        inputField.classList.add('is-invalid-input');
+                        const parentDiv = inputField.closest('[class^="col-"]');
+                        if (parentDiv) {
+                            const label = parentDiv.querySelector('.form-label');
+                            if (label) label.classList.add('is-invalid-label');
+                        }
+                    }
+                }
+            });
+
+            // If any field failed, stop the form from submitting
+            if (!formIsValid) {
+                event.preventDefault();
+                
+                // Optional: Scroll to the top of the form so the user sees the errors
+                window.scrollTo({ top: form.offsetTop - 50, behavior: 'smooth' });
+            }
+        });
+    }
+});
+</script>
+<script src="{% static 'guest/js/unique_validation.js' %}"></script>
+
+{% endblock %}

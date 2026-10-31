@@ -1,0 +1,97 @@
+.resturant__menu__bg{
+    background-color: var(--rts-gray);
+    &.section__padding{
+        padding-bottom: 100px;
+    }
+}
+
+.resturant__menu__list{
+    margin-bottom: 50px;
+    .nav-tabs{
+        border: none;
+        display: flex;
+        justify-content: space-between;
+        @include mq($lg){
+            gap: 15px;
+            justify-content: flex-start;
+        }
+        .nav-link{
+            padding: 14px 24px;
+            line-height: 100%;
+            border: 1px solid var(--rts-border);
+            border-radius: 6px;
+            color: var(--rts-para);
+            transition: var(--transition);
+            &.active{
+                background-color: var(--heading-color);
+                color: var(--rts-white);
+            }
+        }
+    }
+}
+.single__menu__item__list{
+    border-bottom: 1px solid var(--rts-border);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    @include mq($lg){
+        gap: 30px;
+    }
+    @include mq($md){
+        flex-wrap: wrap;
+    }
+    @include mq($xs){
+        border-bottom: none;
+        margin-bottom: 0;
+        gap: 0;
+    }
+    &:last-child{
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    .single__menu__item{
+        display: flex;
+        gap: 50px;
+        align-items: center;
+        margin-bottom: 20px;
+        @include mq($lg){
+            gap: 15px;
+        }
+        @include mq($md){
+            width: 100%;
+        }
+        @include mq($xs){
+            flex-wrap: wrap;
+
+        }
+        .menu__thumb{
+            img{
+                border-radius: 6px;
+            }
+        }
+        .menu__meta{
+            display: flex;
+            flex-direction: column;
+            @include mq($md){
+                width: 100%;
+            }
+            .menu__link__price{
+                display: flex;
+                gap: 80px;
+                @include mq($md){
+                    justify-content: space-between;
+                }
+                @include mq($xs){
+                    gap: 30px;
+                }
+            }
+        }
+    }
+}
+
+// resturant gallery
+.resturant__gallery__item{
+    img{
+        width: 100%;
+    }
+}

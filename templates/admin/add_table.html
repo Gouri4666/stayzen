@@ -1,0 +1,217 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* --- Live Validation Styles --- */
+    .is-invalid-input {
+        border-color: #ef4444 !important;
+        color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+    
+    .is-invalid-label {
+        color: #ef4444 !important;
+        transition: color 0.2s;
+    }
+
+    .validation-message {
+        display: none;
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+        font-weight: 500;
+    }
+    
+    .is-invalid-input ~ .validation-message {
+        display: block;
+    }
+</style>
+
+<div class="container-fluid" style="margin-top:45px;">
+
+    <div class="card border-0 shadow-lg">
+
+        <!-- Header -->
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                {% if form.instance.pk %}
+                    🍽️ Edit Restaurant Table
+                {% else %}
+                    🍽️ Add New Restaurant Table
+                {% endif %}
+            </h4>
+        </div>
+
+        <div class="card-body p-4">
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert">
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="row g-3">
+
+                    <!-- Table Number -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Table Number
+                        </label>
+                        {{ form.table_number }}
+                    </div>
+
+                    <!-- Seating Capacity -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Seating Capacity
+                        </label>
+                        {{ form.table_capacity }}
+                    </div>
+
+                    <!-- Location -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Location
+                        </label>
+                        {{ form.location }}
+                    </div>
+
+                    <!-- Status -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Status
+                        </label>
+                        {{ form.status }}
+                    </div>
+
+                    <!-- Price -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Table Price (INR)
+                        </label>
+                        {{ form.price }}
+                    </div>
+
+                    <!-- Current Image -->
+                    {% if form.instance.table_image %}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Current Image
+                        </label>
+                        <br>
+                        <img src="{{ form.instance.table_image.url }}"
+                             class="img-thumbnail"
+                             style="width:180px;height:120px;object-fit:cover;">
+                    </div>
+                    {% endif %}
+
+                    <!-- Upload Image -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Table Image
+                        </label>
+                        {{ form.table_image }}
+                    </div>
+
+                    <!-- Description -->
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">
+                            Description
+                        </label>
+                        {{ form.description }}
+                    </div>
+
+                </div>
+
+                <div class="mt-4 text-end">
+
+                    <a href="{% url 'table_list' %}"
+                       class="btn btn-secondary me-2">
+                        Back
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-success px-4">
+
+                        {% if form.instance.pk %}
+                            Update Table
+                        {% else %}
+                            Save Table
+                        {% endif %}
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // --- Live Validation Rules ---
+    const validationRules = {
+        'id_table_capacity': {
+            regex: /^[0-9]{1,2}$/, // 1 to 2 digits only
+            errorMessage: 'Enter a valid seating capacity (max 2 digits).'
+        }
+    };
+
+    Object.keys(validationRules).forEach(inputId => {
+        const inputField = document.getElementById(inputId);
+        
+        if (inputField) {
+            // Find the closest Bootstrap column div to locate the label
+            const parentDiv = inputField.closest('[class^="col-"]');
+            const label = parentDiv ? parentDiv.querySelector('.form-label') : null;
+
+            // Create the error message element below the input
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'validation-message';
+            errorMsg.innerText = validationRules[inputId].errorMessage;
+            inputField.parentNode.insertBefore(errorMsg, inputField.nextSibling);
+
+            // Listen for user typing
+            inputField.addEventListener('input', function() {
+                const value = this.value.trim();
+
+                // Reset on empty
+                if (value === '') {
+                    this.classList.remove('is-invalid-input');
+                    if (label) label.classList.remove('is-invalid-label');
+                } 
+                // Mark Invalid
+                else if (!validationRules[inputId].regex.test(value)) {
+                    this.classList.add('is-invalid-input');
+                    if (label) label.classList.add('is-invalid-label');
+                } 
+                // Mark Valid
+                else {
+                    this.classList.remove('is-invalid-input');
+                    if (label) label.classList.remove('is-invalid-label');
+                }
+            });
+        }
+    });
+});
+</script>
+<script src="{% static 'guest/js/unique_validation.js' %}"></script>
+
+{% endblock %}

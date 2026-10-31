@@ -1,0 +1,73 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+<style>
+    .sz-dashboard { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f8fafc; padding: 32px; color: #0f172a; min-height: 100vh; }
+    .sz-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .sz-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    .sz-table th, .sz-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    .sz-table th { font-weight: 600; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+    .badge { padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; }
+    .badge-primary { background: #e0e7ff; color: #3730a3; }
+</style>
+
+<div class="sz-dashboard">
+    <div style="display:flex; justify-content:space-between; margin-bottom: 32px;">
+        <div>
+            <h1 style="margin:0; font-size:2rem; font-weight:700;">Business Intelligence</h1>
+            <p style="margin:4px 0 0; color:#64748b;">Predictive analytics and operational forecasts.</p>
+        </div>
+        <a href="{% url 'reports_overall' %}" style="padding:10px 20px; background:#e2e8f0; color:#0f172a; text-decoration:none; border-radius:8px; font-weight:600; height: fit-content;">&larr; Back to Dashboard</a>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:24px; margin-bottom:32px;">
+        <div class="sz-card" style="border-top: 4px solid #f59e0b;">
+            <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Projected Revenue (30 Days)</div>
+            <div style="font-size:2.5rem; font-weight:800; color:#f59e0b; margin-top:8px;">₹8,50,000</div>
+        </div>
+        <div class="sz-card" style="border-top: 4px solid #3b82f6;">
+            <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Occupancy Forecast</div>
+            <div style="font-size:2.5rem; font-weight:800; color:#3b82f6; margin-top:8px;">78%</div>
+        </div>
+        <div class="sz-card" style="border-top: 4px solid #ef4444;">
+            <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Peak Season Alert</div>
+            <div style="font-size:2.5rem; font-weight:800; color:#ef4444; margin-top:8px;">Jul - Aug</div>
+        </div>
+    </div>
+
+    <div class="sz-card">
+        <h2 style="margin:0 0 16px; font-size:1.25rem; font-weight:700;">Forecast Trajectory</h2>
+        <div style="height: 350px;">
+            <canvas id="biForecastChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    Chart.defaults.font.family = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    
+    new Chart(document.getElementById('biForecastChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['May (Actual)', 'Jun (Current)', 'Jul (Proj)', 'Aug (Proj)', 'Sep (Proj)', 'Oct (Proj)'],
+            datasets: [{
+                label: 'Revenue Trajectory',
+                data: [185000, 240000, 290000, 310000, 270000, 220000],
+                backgroundColor: ['#e2e8f0', '#94a3b8', '#f59e0b', '#f59e0b', '#f59e0b', '#f59e0b'],
+                borderRadius: 6
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, border: { display: false }, grid: { color: '#f1f5f9' } },
+                x: { border: { display: false }, grid: { display: false } }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

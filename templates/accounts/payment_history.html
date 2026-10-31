@@ -1,0 +1,620 @@
+{% extends 'accounts/dashboard_base.html' %}
+
+{% block title %}Payment History - StayZen{% endblock %}
+
+{% block content %}
+<style>
+    /* ---------- Payment History — page-scoped design ---------- */
+    .ph-header {
+        margin-bottom: 28px;
+    }
+    .ph-header h2 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 28px;
+        color: var(--text-primary);
+        letter-spacing: -0.5px;
+    }
+    .ph-header p {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin-top: 6px;
+    }
+
+    /* ---------- Hero summary card ---------- */
+    .ph-hero {
+        position: relative;
+        border-radius: 26px;
+        padding: 30px 32px;
+        margin-bottom: 28px;
+        background: linear-gradient(135deg, #6A4FB8 0%, #523B94 55%, #3C2C72 100%);
+        box-shadow: 0 18px 40px rgba(82, 59, 148, 0.28);
+        overflow: hidden;
+        color: #fff;
+    }
+    .ph-hero::before {
+        content: "";
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 220px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(255,255,255,0.14), transparent 70%);
+        border-radius: 50%;
+    }
+    .ph-hero::after {
+        content: "";
+        position: absolute;
+        bottom: -80px;
+        left: -40px;
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle, rgba(255,176,58,0.18), transparent 70%);
+        border-radius: 50%;
+    }
+    .ph-hero-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        position: relative;
+        z-index: 1;
+    }
+    .ph-hero-label {
+        font-size: 12.5px;
+        font-weight: 600;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.65);
+    }
+    .ph-hero-amount {
+        font-size: 34px;
+        font-weight: 700;
+        margin-top: 8px;
+        letter-spacing: -0.5px;
+    }
+    .ph-hero-badge {
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 12px;
+        padding: 7px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+        backdrop-filter: blur(4px);
+        white-space: nowrap;
+    }
+    .ph-hero-stats {
+        display: flex;
+        gap: 28px;
+        margin-top: 24px;
+        position: relative;
+        z-index: 1;
+        flex-wrap: wrap;
+    }
+    .ph-hero-stat-label {
+        font-size: 11.5px;
+        color: rgba(255,255,255,0.6);
+        font-weight: 500;
+    }
+    .ph-hero-stat-value {
+        font-size: 16px;
+        font-weight: 700;
+        color: #FFB03A;
+        margin-top: 4px;
+    }
+
+    /* ---------- Month filter tabs ---------- */
+    .ph-month-bar {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        padding: 0 4px 14px;
+        margin-bottom: 22px;
+        border-bottom: 1px solid var(--border-color);
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .ph-month-bar::-webkit-scrollbar { display: none; }
+    .ph-month-tab {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        font-size: 14.5px;
+        font-weight: 600;
+        color: var(--text-muted);
+        padding: 4px 2px 12px;
+        position: relative;
+        white-space: nowrap;
+        transition: color 0.2s ease;
+    }
+    .ph-month-tab:hover {
+        color: var(--text-primary);
+    }
+    .ph-month-tab.active {
+        color: var(--text-primary);
+    }
+    .ph-month-tab.active::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        border-radius: 3px;
+        background: linear-gradient(135deg, #523B94, #8C76D2);
+    }
+
+    /* ---------- Section group (Rooms / Events / Food / Tables) ---------- */
+    .ph-section {
+        margin-bottom: 8px;
+    }
+    .ph-section-title {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--text-primary);
+        margin: 28px 4px 12px;
+    }
+    .ph-section:first-of-type .ph-section-title {
+        margin-top: 4px;
+    }
+
+    .ph-list {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--card-radius);
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    .ph-row {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 17px 24px;
+        border-bottom: 1px solid var(--border-color);
+        transition: background-color 0.2s ease;
+    }
+    .ph-row:last-child {
+        border-bottom: none;
+    }
+    .ph-row:hover {
+        background-color: var(--card-hover-bg);
+    }
+
+    .ph-row-date {
+        flex-shrink: 0;
+        width: 46px;
+        text-align: center;
+    }
+    .ph-row-date .day-name {
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+    .ph-row-date .day-num {
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-top: 2px;
+    }
+
+    .ph-row-main {
+        flex: 1;
+        min-width: 0;
+        border-left: 1px solid var(--border-color);
+        padding-left: 18px;
+    }
+    .ph-row-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .ph-row-sub {
+        font-size: 12.5px;
+        color: var(--text-muted);
+        margin-top: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ph-row-amount-wrap {
+        text-align: right;
+        flex-shrink: 0;
+    }
+    .ph-row-amount {
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--text-highlight);
+        white-space: nowrap;
+    }
+    .ph-row-status {
+        display: block;
+        margin-top: 4px;
+        font-size: 10.5px;
+        font-weight: 600;
+        color: var(--text-muted);
+        letter-spacing: 0.3px;
+    }
+    .ph-row-status.is-success { color: #16a34a; }
+    .ph-row-status.is-info { color: #2563eb; }
+    [data-theme="dark"] .ph-row-status.is-success { color: #4ade80; }
+    [data-theme="dark"] .ph-row-status.is-info { color: #60a5fa; }
+
+    .ph-toggle-row {
+        padding: 14px 24px;
+    }
+    .ph-toggle-btn {
+        background: none;
+        border: none;
+        color: var(--text-highlight);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+        font-family: 'Inter', sans-serif;
+    }
+    .ph-toggle-btn:hover {
+        text-decoration: underline;
+    }
+
+    .ph-empty-month {
+        text-align: center;
+        padding: 36px 20px;
+        color: var(--text-muted);
+        font-size: 13.5px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--card-radius);
+        box-shadow: var(--card-shadow);
+    }
+
+    .ph-empty {
+        padding: 70px 40px;
+        text-align: center;
+        border-radius: var(--card-radius);
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+    }
+    .ph-empty .ph-empty-icon {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 18px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        background: linear-gradient(135deg, #523B94, #8C76D2);
+    }
+    .ph-empty p {
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+    .ph-empty a {
+        display: inline-block;
+        margin-top: 18px;
+        padding: 11px 26px;
+        background: linear-gradient(135deg, #523B94, #8C76D2);
+        color: #fff;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 13.5px;
+        font-weight: 600;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .ph-empty a:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(82,59,148,0.25);
+    }
+
+    @media (max-width: 560px) {
+        .ph-hero { padding: 24px 20px; }
+        .ph-hero-amount { font-size: 28px; }
+        .ph-row { padding: 14px 16px; gap: 12px; }
+        .ph-row-main { padding-left: 12px; }
+        .ph-row-amount { font-size: 15px; }
+    }
+</style>
+
+
+{% if room_bookings or event_bookings or food_orders or table_reservations %}
+
+    <div class="ph-hero">
+        <div class="ph-hero-top">
+            <div>
+                <div class="ph-hero-label">Total Paid</div>
+                <div class="ph-hero-amount" id="phHeroTotal">₹0</div>
+            </div>
+            <div class="ph-hero-badge">StayZen Account</div>
+        </div>
+        <div class="ph-hero-stats">
+            <div>
+                <div class="ph-hero-stat-label">Transactions</div>
+                <div class="ph-hero-stat-value" id="phHeroCount">0</div>
+            </div>
+            <div>
+                <div class="ph-hero-stat-label">This Month</div>
+                <div class="ph-hero-stat-value" id="phHeroMonthTotal">₹0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ph-month-bar" id="phMonthBar"></div>
+
+    <div id="phListRoot">
+        {% if room_bookings %}
+        <div class="ph-section" data-section="rooms">
+            <div class="ph-section-title">Room Bookings</div>
+            <div class="ph-list booking-group">
+                {% for b in room_bookings %}
+                <div class="ph-row booking-item" data-month="{{ b.check_in|date:'Y-m' }}" {% if forloop.counter > 2 %}style="display:none;"{% endif %}>
+                    <div class="ph-row-date">
+                        <div class="day-name">{{ b.check_in|date:"M" }}</div>
+                        <div class="day-num">{{ b.check_in|date:"d" }}</div>
+                    </div>
+                    <div class="ph-row-main">
+                        <div class="ph-row-title">Room {{ b.room.room_number }} — {{ b.room.room_type }}</div>
+                        <div class="ph-row-sub">{{ b.check_in|date:"d M Y" }} → {{ b.check_out|date:"d M Y" }} · Booking #{{ b.id }}</div>
+                    </div>
+                    <div class="ph-row-amount-wrap">
+                        <div class="ph-row-amount">₹{{ b.final_amount }}</div>
+                        <span class="ph-row-status is-success">{{ b.payment_status }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if room_bookings|length > 2 %}
+                <div class="ph-toggle-row">
+                    <button class="ph-toggle-btn toggle-btn" onclick="toggleView(this)">View More ▾</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if event_bookings %}
+        <div class="ph-section" data-section="events">
+            <div class="ph-section-title">Event Bookings</div>
+            <div class="ph-list booking-group">
+                {% for b in event_bookings %}
+                <div class="ph-row booking-item" data-month="{{ b.start_date|date:'Y-m' }}" {% if forloop.counter > 2 %}style="display:none;"{% endif %}>
+                    <div class="ph-row-date">
+                        <div class="day-name">{{ b.start_date|date:"M" }}</div>
+                        <div class="day-num">{{ b.start_date|date:"d" }}</div>
+                    </div>
+                    <div class="ph-row-main">
+                        <div class="ph-row-title">{{ b.event_name }} — {{ b.hall.hall_name }}</div>
+                        <div class="ph-row-sub">{{ b.start_date|date:"d M Y" }} · Booking #{{ b.id }}</div>
+                    </div>
+                    <div class="ph-row-amount-wrap">
+                        <div class="ph-row-amount">₹{{ b.final_amount }}</div>
+                        <span class="ph-row-status is-success">{{ b.payment_status }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if event_bookings|length > 2 %}
+                <div class="ph-toggle-row">
+                    <button class="ph-toggle-btn toggle-btn" onclick="toggleView(this)">View More ▾</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if food_orders %}
+        <div class="ph-section" data-section="food">
+            <div class="ph-section-title">Food Orders</div>
+            <div class="ph-list booking-group">
+                {% for o in food_orders %}
+                <div class="ph-row booking-item" data-month="{{ o.order_date|date:'Y-m' }}" {% if forloop.counter > 2 %}style="display:none;"{% endif %}>
+                    <div class="ph-row-date">
+                        <div class="day-name">{{ o.order_date|date:"M" }}</div>
+                        <div class="day-num">{{ o.order_date|date:"d" }}</div>
+                    </div>
+                    <div class="ph-row-main">
+                        <div class="ph-row-title">Order #{{ o.id }} — {{ o.order_type }}</div>
+                        <div class="ph-row-sub">{{ o.order_date|date:"d M Y, h:i A" }}</div>
+                    </div>
+                    <div class="ph-row-amount-wrap">
+                        <div class="ph-row-amount">₹{{ o.total_amount }}</div>
+                        <span class="ph-row-status is-info">{{ o.status }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if food_orders|length > 2 %}
+                <div class="ph-toggle-row">
+                    <button class="ph-toggle-btn toggle-btn" onclick="toggleView(this)">View More ▾</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if table_reservations %}
+        <div class="ph-section" data-section="tables">
+            <div class="ph-section-title">Table Reservations</div>
+            <div class="ph-list booking-group">
+                {% for t in table_reservations %}
+                <div class="ph-row booking-item" data-month="{{ t.reservation_date|date:'Y-m' }}" {% if forloop.counter > 2 %}style="display:none;"{% endif %}>
+                    <div class="ph-row-date">
+                        <div class="day-name">{{ t.reservation_date|date:"M" }}</div>
+                        <div class="day-num">{{ t.reservation_date|date:"d" }}</div>
+                    </div>
+                    <div class="ph-row-main">
+                        <div class="ph-row-title">Table {{ t.table.table_number }} — {{ t.table.location }}</div>
+                        <div class="ph-row-sub">{{ t.reservation_date|date:"d M Y" }} @ {{ t.reservation_time }} · Reservation #{{ t.id }}</div>
+                    </div>
+                    <div class="ph-row-amount-wrap">
+                        <div class="ph-row-amount">₹{{ t.advance_amount }}</div>
+                        <span class="ph-row-status is-success">{{ t.payment_status }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if table_reservations|length > 2 %}
+                <div class="ph-toggle-row">
+                    <button class="ph-toggle-btn toggle-btn" onclick="toggleView(this)">View More ▾</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+{% else %}
+    <div class="ph-empty">
+        <div class="ph-empty-icon">🧾</div>
+        <p>No payment history found. Complete a booking to see your records here.</p>
+        <a href="{% url 'rooms' %}">Browse Rooms</a>
+    </div>
+{% endif %}
+
+<script>
+    function toggleView(btn) {
+        const group = btn.closest('.booking-group');
+        const hiddenItems = group.querySelectorAll('.booking-item');
+        const isHidden = hiddenItems[2] && hiddenItems[2].style.display === 'none';
+
+        hiddenItems.forEach((item, index) => {
+            if (index >= 2) {
+                item.style.display = isHidden ? 'flex' : 'none';
+            }
+        });
+
+        btn.innerHTML = isHidden ? 'Show Less ▴' : 'View More ▾';
+    }
+
+    (function () {
+        const listRoot = document.getElementById('phListRoot');
+        const monthBar = document.getElementById('phMonthBar');
+        if (!listRoot || !monthBar) return;
+
+        const rows = Array.from(listRoot.querySelectorAll('.ph-row'));
+        if (rows.length === 0) return;
+
+        // Collect unique months present in the data, newest first
+        const monthSet = new Set(rows.map(r => r.dataset.month).filter(Boolean));
+        const months = Array.from(monthSet).sort().reverse();
+
+        const monthLabel = (ym) => {
+            const [y, m] = ym.split('-').map(Number);
+            const d = new Date(y, m - 1, 1);
+            return d.toLocaleString('default', { month: 'long' });
+        };
+
+        // Parse amount text like "₹1,234.50" -> 1234.50
+        const parseAmount = (el) => {
+            const txt = el.querySelector('.ph-row-amount')?.textContent || '';
+            const num = parseFloat(txt.replace(/[^0-9.]/g, ''));
+            return isNaN(num) ? 0 : num;
+        };
+
+        function updateHero(filterMonth) {
+            let total = 0, count = 0, monthTotal = 0;
+            const now = new Date();
+            const currentYm = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+
+            rows.forEach(row => {
+                const amt = parseAmount(row);
+                total += amt;
+                count += 1;
+                if (row.dataset.month === currentYm) monthTotal += amt;
+            });
+
+            document.getElementById('phHeroTotal').textContent = '₹' + total.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+            document.getElementById('phHeroCount').textContent = count;
+            document.getElementById('phHeroMonthTotal').textContent = '₹' + monthTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        }
+
+        function applyFilter(selectedMonth) {
+            const sections = listRoot.querySelectorAll('.ph-section');
+
+            sections.forEach(section => {
+                let visibleInSection = 0;
+                const group = section.querySelector('.booking-group');
+                const allItemsInGroup = Array.from(group.querySelectorAll('.ph-row'));
+                const toggleBtn = group.querySelector('.ph-toggle-btn');
+
+                allItemsInGroup.forEach((row, idx) => {
+                    const matches = selectedMonth === 'all' || row.dataset.month === selectedMonth;
+                    row.dataset.matchesFilter = matches ? '1' : '0';
+                    if (matches) visibleInSection++;
+                });
+
+                // Re-apply visible/hidden respecting the "show first 2" collapse rule,
+                // but only counting rows that pass the active filter.
+                let shownCount = 0;
+                const isExpanded = toggleBtn && toggleBtn.textContent.includes('Show Less');
+
+                allItemsInGroup.forEach(row => {
+                    const matches = row.dataset.matchesFilter === '1';
+                    if (!matches) {
+                        row.style.display = 'none';
+                        return;
+                    }
+                    if (isExpanded || shownCount < 2) {
+                        row.style.display = 'flex';
+                        shownCount++;
+                    } else {
+                        row.style.display = 'none';
+                        shownCount++;
+                    }
+                });
+
+                section.style.display = visibleInSection > 0 ? '' : 'none';
+                if (toggleBtn) {
+                    toggleBtn.parentElement.style.display = visibleInSection > 2 ? '' : 'none';
+                }
+            });
+
+            const anyVisible = Array.from(sections).some(s => s.style.display !== 'none');
+            let emptyMsg = listRoot.querySelector('.ph-empty-month');
+            if (!anyVisible) {
+                if (!emptyMsg) {
+                    emptyMsg = document.createElement('div');
+                    emptyMsg.className = 'ph-empty-month';
+                    emptyMsg.textContent = 'No payments found for this month.';
+                    listRoot.appendChild(emptyMsg);
+                }
+            } else if (emptyMsg) {
+                emptyMsg.remove();
+            }
+        }
+
+        // Build month tabs: "All" + each month present
+        const allTab = document.createElement('button');
+        allTab.className = 'ph-month-tab active';
+        allTab.textContent = 'All';
+        allTab.dataset.month = 'all';
+        monthBar.appendChild(allTab);
+
+        months.forEach(ym => {
+            const tab = document.createElement('button');
+            tab.className = 'ph-month-tab';
+            tab.textContent = monthLabel(ym);
+            tab.dataset.month = ym;
+            monthBar.appendChild(tab);
+        });
+
+        monthBar.addEventListener('click', (e) => {
+            const tab = e.target.closest('.ph-month-tab');
+            if (!tab) return;
+            monthBar.querySelectorAll('.ph-month-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            applyFilter(tab.dataset.month);
+        });
+
+        updateHero();
+        applyFilter('all');
+    })();
+</script>
+
+{% endblock %}
+

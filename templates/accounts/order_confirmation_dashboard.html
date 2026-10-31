@@ -1,0 +1,271 @@
+{% extends 'accounts/dashboard_base.html' %}
+
+{% block title %}Order Confirmed - StayZen{% endblock %}
+
+{% block extra_css %}
+
+.page-header{
+    margin-bottom:28px;
+}
+
+.page-header h2{
+    font-size:26px;
+    font-weight:600;
+    color:var(--text-primary);
+    margin-bottom:6px;
+}
+
+.page-header p{
+    color:var(--text-muted);
+    font-size:14px;
+}
+
+.confirm-card{
+    background:var(--card-bg);
+    border:1px solid var(--border-color);
+    border-radius:16px;
+    padding:35px;
+    max-width:800px;
+    box-shadow:var(--card-shadow);
+}
+
+.success-icon{
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    background:rgba(25,135,84,.15);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:40px;
+    margin:0 auto 20px;
+}
+
+.success-title{
+    text-align:center;
+    font-size:30px;
+    font-weight:700;
+    color:#28a745;
+    margin-bottom:10px;
+}
+
+.success-text{
+    text-align:center;
+    color:var(--text-muted);
+    margin-bottom:30px;
+}
+
+.order-info{
+    background:var(--card-hover-bg);
+    border:1px solid var(--border-color);
+    border-radius:12px;
+    padding:20px;
+    margin-bottom:25px;
+}
+
+.info-row{
+    display:flex;
+    justify-content:space-between;
+    padding:12px 0;
+    border-bottom:1px solid var(--border-color);
+}
+
+.info-row:last-child{
+    border-bottom:none;
+}
+
+.info-label{
+    color:var(--text-muted);
+    font-size:14px;
+}
+
+.info-value{
+    color:var(--text-primary);
+    font-weight:600;
+}
+
+.amount{
+    color:var(--text-highlight);
+    font-size:22px;
+    font-weight:700;
+}
+
+.items-box{
+    margin-top:20px;
+}
+
+.items-box h4{
+    margin-bottom:15px;
+    color:var(--text-primary);
+}
+
+.item-row{
+    display:flex;
+    justify-content:space-between;
+    padding:12px 0;
+    border-bottom:1px solid var(--border-color);
+}
+
+.item-row:last-child{
+    border-bottom:none;
+}
+
+.action-buttons{
+    display:flex;
+    gap:15px;
+    margin-top:30px;
+    flex-wrap:wrap;
+}
+
+.btn-primary-custom{
+    padding:12px 20px;
+    background:var(--text-highlight);
+    color:#fff;
+    text-decoration:none;
+    border-radius:8px;
+    font-weight:600;
+}
+
+.btn-primary-custom:hover{
+    opacity:.9;
+}
+
+.btn-outline-custom{
+    padding:12px 20px;
+    border:1px solid var(--border-color);
+    color:var(--text-primary);
+    text-decoration:none;
+    border-radius:8px;
+    font-weight:600;
+}
+
+.btn-outline-custom:hover{
+    border-color:var(--text-highlight);
+    color:var(--text-highlight);
+}
+
+.status-badge{
+    background:#198754;
+    color:#fff;
+    padding:6px 12px;
+    border-radius:30px;
+    font-size:12px;
+    font-weight:600;
+}
+
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2>Order Confirmation</h2>
+    <p>Your food order has been successfully placed.</p>
+</div>
+
+<div class="confirm-card">
+
+    <div class="success-icon">
+        ✓
+    </div>
+
+    <div class="success-title">
+        Order Confirmed
+    </div>
+
+    <div class="success-text">
+        Thank you for choosing StayZen Restaurant.
+        Your order is now being processed.
+    </div>
+
+    <div class="order-info">
+
+        <div class="info-row">
+            <span class="info-label">Order ID</span>
+            <span class="info-value">#{{ order.id }}</span>
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">Order Type</span>
+            <span class="info-value">
+                {{ order.get_order_type_display }}
+            </span>
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">Status</span>
+            <span class="status-badge">
+                {{ order.status }}
+            </span>
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">Total Amount</span>
+            <span class="amount">
+                ₹{{ order.total_amount }}
+            </span>
+        </div>
+
+        {% if order.delivery_address %}
+        <div class="info-row">
+            <span class="info-label">
+                {% if order.order_type == 'DineIn' %}
+                    Table Number
+                {% elif order.order_type == 'RoomService' %}
+                    Room Number
+                {% elif order.order_type == 'Delivery' %}
+                    Delivery Address
+                {% else %}
+                    Details
+                {% endif %}
+            </span>
+
+            <span class="info-value">
+                {{ order.delivery_address }}
+            </span>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <div class="items-box">
+
+        <h4>Items Ordered</h4>
+
+        {% for item in order.items.all %}
+
+        <div class="item-row">
+            <span>
+                {{ item.food.item_name }}
+            </span>
+
+            <span>
+                × {{ item.quantity }}
+            </span>
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    <div class="action-buttons">
+
+        <a href="#"
+           class="btn-primary-custom">
+            View My Orders
+        </a>
+
+        <a href="{% url 'food_menu_dashboard' %}"
+           class="btn-outline-custom">
+            Order More Food
+        </a>
+
+    </div>
+
+</div>
+
+<script>
+    window.onload = function() {
+        alert("Your order is confirmed! Order ID: {{ order.id }}");
+    };
+</script>
+{% endblock %}

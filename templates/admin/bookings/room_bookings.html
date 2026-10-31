@@ -1,0 +1,637 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .booking-admin-table thead th {
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        border-bottom: 1px solid #cbd5e1 !important;
+        font-weight: 700;
+    }
+
+    [data-theme="dark"] .booking-admin-table thead th {
+        background: #1e293b !important;
+        color: #f8fafc !important;
+        border-bottom: 1px solid #334155 !important;
+    }
+
+    /* Loading state overlay for dynamic filtering */
+    #dynamic-results,
+    #freshup-results {
+        transition: opacity 0.2s ease-in-out;
+    }
+
+    .is-loading {
+        opacity: 0.4;
+        pointer-events: none;
+    }
+</style>
+<div class="container-fluid">
+    <div class="card border-0 shadow-lg"
+        style="border-radius: 16px; background: var(--bg-card, #ffffff); overflow: hidden;">
+        <!-- Header -->
+        <div class="card-header d-flex justify-content-between align-items-center py-4"
+            style="background: linear-gradient(135deg, #4f46e5, #6366f1); border: none;">
+            <div>
+                <h3 class="mb-1 text-white font-weight-bold" style="font-family: 'Outfit', sans-serif;">🏨 Room Bookings
+                </h3>
+                <p class="mb-0 text-white-50" style="font-size: 13px;">Manage and monitor all room reservations</p>
+            </div>
+        </div>
+
+        <!-- Filter Form -->
+        <div class="card-body p-4">
+            <form id="filter-form" method="GET" class="row g-3 align-items-end mb-4">
+                <div class="col-md-6 col-lg-4">
+                    <label class="form-label text-muted font-weight-semibold"
+                        style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Search Guest Name or
+                        Phone</label>
+                    <input type="text" name="search" value="{{ search }}" class="form-control"
+                        placeholder="Search by name or phone..."
+                        style="border-radius: 8px; font-size: 14px; padding: 10px 14px;">
+                </div>
+
+                <!-- Room Number -->
+                <div class="col-md-4 col-lg-2">
+                    <label class="form-label text-muted font-weight-semibold"
+                        style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Room No.</label>
+                    <input type="text" name="room_no" value="{{ room_no }}" class="form-control" placeholder="e.g. 101"
+                        style="border-radius: 8px; font-size: 14px; padding: 10px 14px;">
+                </div>
+
+                <!-- Room Type -->
+                <div class="col-md-4 col-lg-2">
+                    <label class="form-label text-muted font-weight-semibold"
+                        style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Room Type</label>
+                    <select name="room_type" class="form-control"
+                        style="border-radius: 8px; font-size: 14px; padding: 10px 14px; height: auto;">
+                        <option value="">All Types</option>
+                        <option value="Single" {% if room_type == 'Single' %}selected{% endif %}>Single</option>
+                        <option value="Double" {% if room_type == 'Double' %}selected{% endif %}>Double</option>
+                        <option value="Suite" {% if room_type == 'Suite' %}selected{% endif %}>Suite</option>
+                        <option value="Deluxe" {% if room_type == 'Deluxe' %}selected{% endif %}>Deluxe</option>
+                    </select>
+                </div>
+
+                <!-- Booking Status -->
+                <div class="col-md-4 col-lg-2">
+                    <label class="form-label text-muted font-weight-semibold"
+                        style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Status</label>
+                    <select name="status" class="form-control"
+                        style="border-radius: 8px; font-size: 14px; padding: 10px 14px; height: auto;">
+                        <option value="">All Statuses</option>
+                        <option value="Pending" {% if status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Confirmed" {% if status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                        <option value="Reserved" {% if status == 'Reserved' %}selected{% endif %}>Reserved</option>
+                        <option value="Checked In" {% if status == 'Checked In' %}selected{% endif %}>Checked In</option>
+                        <option value="Cancelled" {% if status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+
+                <!-- User Type -->
+                <div class="col-md-4 col-lg-2">
+                    <label class="form-label text-muted font-weight-semibold"
+                        style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">User Type</label>
+                    <select name="membership" class="form-control"
+                        style="border-radius: 8px; font-size: 14px; padding: 10px 14px; height: auto;">
+                        <option value="">All</option>
+                        <option value="Registered" {% if membership == 'Registered' %}selected{% endif %}>Registered User
+                        </option>
+                        <option value="Guest" {% if membership == 'Guest' %}selected{% endif %}>Guest (Unregistered)
+                        </option>
+                        <option value="Bronze" {% if membership == 'Bronze' %}selected{% endif %}>Bronze</option>
+                        <option value="Silver" {% if membership == 'Silver' %}selected{% endif %}>Silver</option>
+                        <option value="Gold" {% if membership == 'Gold' %}selected{% endif %}>Gold</option>
+                        <option value="Platinum" {% if membership == 'Platinum' %}selected{% endif %}>Platinum</option>
+                    </select>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="col-12 mt-3 d-flex justify-content-end gap-2">
+                    <a href="{% url 'receptionist_room_bookings' %}" class="btn btn-secondary px-4 py-2"
+                        style="border-radius: 8px; font-weight: 600; background: #6b7280; border: none; transition: all 0.2s; color: #fff;">
+                        Reset
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4 py-2"
+                        style="border-radius: 8px; font-weight: 600; background: #4f46e5; border: none; transition: all 0.2s;">
+                        <i class="fa fa-filter mr-2"></i> Apply Filters
+                    </button>
+                </div>
+            </form>
+
+            <!-- Dynamic Results Container (Room Bookings) -->
+            <div id="dynamic-results">
+                <!-- Bookings Table -->
+                <div class="table-responsive"
+                    style="border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0);">
+                    <table class="table table-hover align-middle mb-0 booking-admin-table" style="font-size: 14px;">
+                        <thead>
+                            <tr class="text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                                <th class="py-3 px-4">Booking Info</th>
+                                <th class="py-3">Who Booked</th>
+                                <th class="py-3">Phone</th>
+                                <th class="py-3">Membership</th>
+                                <th class="py-3">Room</th>
+                                <th class="py-3">Dates</th>
+                                <th class="py-3">Total Amount</th>
+                                <th class="py-3">Paid Amount</th>
+                                <th class="py-3">Pending Amount</th>
+                                <th class="py-3 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in page_obj %}
+                            <tr style="transition: background 0.15s ease;">
+                                <td class="py-3 px-4 font-weight-bold text-dark">{{ b.id }}</td>
+                                <td class="py-3">
+                                    {% if b.customer %}
+                                    <div class="font-weight-semibold text-primary">{{ b.customer.user.get_full_name|default:b.customer.user.username }}</div>
+                                    <span class="badge bg-soft-primary text-primary"
+                                        style="font-size: 10px; font-weight: 600; padding: 3px 6px; border-radius: 4px; background: rgba(59, 130, 246, 0.1);">Registered</span>
+                                    {% else %}
+                                    <div class="font-weight-semibold text-dark">{{ b.guest_name }}</div>
+                                    <span class="badge bg-soft-secondary text-muted"
+                                        style="font-size: 10px; font-weight: 600; padding: 3px 6px; border-radius: 4px; background: rgba(107, 114, 128, 0.1);">Guest</span>
+                                    {% endif %}
+                                    {% if b.id_type %}
+                                    <div class="text-muted mt-1" style="font-size: 11px;">
+                                        🆔 {{ b.id_type }}:
+                                        {% if b.id_number and 'checkin_ids/' in b.id_number %}
+                                        <a href="/media/{{ b.id_number }}" target="_blank"
+                                            class="text-primary font-weight-semibold"><i class="fa fa-eye"></i> View ID
+                                            Document</a>
+                                        {% else %}
+                                        {{ b.id_number }}
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3">
+                                    {% if b.customer %}
+                                    {{ b.customer.phone }}
+                                    {% else %}
+                                    {{ b.guest_phone|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td class="py-3">
+                                    {% if b.customer %}
+                                    {% if b.customer.membership_status == 'Bronze' %}
+                                    <span class="badge bg-bronze text-white"
+                                        style="background: #cd7f32; border-radius: 12px; padding: 4px 10px;">Bronze</span>
+                                    {% elif b.customer.membership_status == 'Silver' %}
+                                    <span class="badge bg-silver text-dark"
+                                        style="background: #c0c0c0; border-radius: 12px; padding: 4px 10px;">Silver</span>
+                                    {% elif b.customer.membership_status == 'Gold' %}
+                                    <span class="badge bg-gold text-dark"
+                                        style="background: #ffd700; border-radius: 12px; padding: 4px 10px;">Gold</span>
+                                    {% elif b.customer.membership_status == 'Platinum' %}
+                                    <span class="badge bg-platinum text-white"
+                                        style="background: #e5e4e2; border-radius: 12px; padding: 4px 10px; color: #333 !important;">Platinum</span>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="text-muted" style="font-size: 13px;">Guest</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3">Room {{ b.room.room_number }} ({{ b.room.room_type }})</td>
+                                <td class="py-3">
+                                    <div class="font-weight-semibold text-dark">{{ b.check_in|date:"M d, Y" }}</div>
+                                    <div class="text-muted" style="font-size: 11px;">to {{ b.check_out|date:"M d, Y" }}
+                                    </div>
+                                </td>
+                                <td class="py-3 font-weight-bold text-dark">₹{{ b.final_amount }}</td>
+                                <td class="py-3 font-weight-semibold text-dark">₹{{ b.advance_amount }}</td>
+                                <td class="py-3 font-weight-semibold text-dark">₹{{ b.pending_payment }}</td>
+                                <td class="py-3 text-center">
+                                    {% if b.status == 'Pending' %}
+                                    <span class="badge bg-warning text-dark"
+                                        style="border-radius: 12px; padding: 5px 12px; font-weight: 500;">Pending</span>
+                                    {% elif b.status == 'Confirmed' or b.status == 'Reserved' %}
+                                    <span class="badge bg-success"
+                                        style="background: #22c55e; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">Confirmed</span>
+                                    {% elif b.status == 'Cancelled' %}
+                                    <span class="badge bg-danger"
+                                        style="background: #ef4444; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">Cancelled</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary"
+                                        style="border-radius: 12px; padding: 5px 12px; font-weight: 500;">{{ b.status}}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center py-5 text-muted">
+                                    <div class="mb-2" style="font-size: 32px;">📭</div>
+                                    No room bookings found matching your search.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <nav class="mt-4 d-flex justify-content-center">
+                    <ul class="pagination" id="pagination-links">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="?page={{ page_obj.previous_page_number }}&search={{ search }}&room_no={{ room_no }}&room_type={{ room_type }}&status={{ status }}&membership={{ membership }}">←
+                                Prev</a>
+                        </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                            <a class="page-link"
+                                href="?page={{ num }}&search={{ search }}&room_no={{ room_no }}&room_type={{ room_type }}&status={{ status }}&membership={{ membership }}">{{
+                                num }}</a>
+                        </li>
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="?page={{ page_obj.next_page_number }}&search={{ search }}&room_no={{ room_no }}&room_type={{ room_type }}&status={{ status }}&membership={{ membership }}">Next
+                                →</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+            <!-- End Dynamic Results Container -->
+        </div>
+
+        <!-- Fresh-Up (Hourly) Bookings Section -->
+        <div class="card-header d-flex justify-content-between align-items-center py-3 mt-2"
+            style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none;">
+            <div>
+                <h5 class="mb-0 text-white font-weight-bold" style="font-family: 'Outfit', sans-serif;">⏱ Fresh-Up
+                    (Hourly) Bookings</h5>
+                <p class="mb-0 text-white-50" style="font-size: 12px;">Short-stay hourly room bookings</p>
+            </div>
+            <a href="{% url 'offline_fresh_up_booking' %}" class="btn btn-light btn-sm text-dark font-weight-bold"
+                style="border-radius: 8px; padding: 6px 14px;">
+                <i class="fa fa-plus mr-1"></i> New Hourly Booking
+            </a>
+        </div>
+        <div class="card-body p-4">
+            <!-- Dynamic Results Container (Fresh-Up Bookings) -->
+            <div id="freshup-results">
+                <div class="table-responsive" style="border-radius: 12px; border: 1px solid #fde68a;">
+                    <table class="table table-hover align-middle mb-0 booking-admin-table" style="font-size: 14px;">
+                        <thead>
+                            <tr class="text-uppercase"
+                                style="font-size: 11px; letter-spacing: 0.5px; background: #fffbeb;">
+                                <th class="py-3 px-4">Booking ID</th>
+                                <th class="py-3">Customer</th>
+                                <th class="py-3">Phone</th>
+                                <th class="py-3">Room</th>
+                                <th class="py-3">Hours</th>
+                                <th class="py-3">Rate / hr</th>
+                                <th class="py-3">Total</th>
+                                <th class="py-3">Payment</th>
+                                <th class="py-3">Booked At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fb in fresh_bookings %}
+                            <tr>
+                                <td class="py-3 px-4 font-weight-bold text-dark">
+                                    <span class="badge"
+                                        style="background: #f59e0b; color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 11px;">FR</span>
+                                    #{{ fb.id }}
+                                </td>
+                                <td class="py-3">
+                                    {% if fb.customer %}
+                                    <div class="font-weight-semibold text-primary">{{ fb.customer.user.get_full_name|default:fb.customer.user.username }}</div>
+                                    <span class="badge"
+                                        style="font-size: 10px; font-weight: 600; padding: 3px 6px; border-radius: 4px; background: rgba(59, 130, 246, 0.1); color: #3b82f6;">Registered</span>
+                                    {% else %}
+                                    <div class="font-weight-semibold text-dark">{{ fb.customer_name }}</div>
+                                    <span class="badge"
+                                        style="font-size: 10px; font-weight: 600; padding: 3px 6px; border-radius: 4px; background: rgba(107, 114, 128, 0.1); color: #6b7280;">Guest</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3">{{ fb.customer_phone }}</td>
+                                <td class="py-3">Room {{ fb.room.room_number }} ({{ fb.room.room_type }})</td>
+                                <td class="py-3 font-weight-semibold">{{ fb.hours_required }} hr{% if fb.hours_required != 1 %}s{% endif %}</td>
+                                <td class="py-3">&#8377;{{ fb.price_per_hour }}</td>
+                                <td class="py-3 font-weight-bold text-dark">&#8377;{{ fb.total_amount }}</td>
+                                <td class="py-3">
+                                    <span class="badge"
+                                        style="background: #22c55e; color: #fff; border-radius: 12px; padding: 4px 10px;">{{fb.payment_status }}</span>
+                                </td>
+                                <td class="py-3 text-muted" style="font-size: 12px;">{{ fb.booking_datetime|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center py-5 text-muted">
+                                    <div class="mb-2" style="font-size: 32px;">⏱</div>
+                                    No hourly fresh-up bookings found.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- End Dynamic Results Container (Fresh-Up Bookings) -->
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Include your existing modals here. They remain entirely unchanged. -->
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // ==========================================
+        // 1. DYNAMIC FILTER & PAGINATION LOGIC
+        // ==========================================
+        const filterForm = document.getElementById('filter-form');
+        const resultsContainer = document.getElementById('dynamic-results');
+        const freshupContainer = document.getElementById('freshup-results');
+        let debounceTimer;
+
+        // Function to fetch and replace HTML seamlessly (updates BOTH sections)
+        const fetchResults = (url) => {
+            if (!resultsContainer) return;
+            resultsContainer.classList.add('is-loading');
+            if (freshupContainer) freshupContainer.classList.add('is-loading');
+
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    const newResults = doc.getElementById('dynamic-results');
+                    if (newResults) {
+                        resultsContainer.innerHTML = newResults.innerHTML;
+                    }
+
+                    const newFreshup = doc.getElementById('freshup-results');
+                    if (newFreshup && freshupContainer) {
+                        freshupContainer.innerHTML = newFreshup.innerHTML;
+                    }
+
+                    attachPaginationListeners();
+                    attachCheckoutListeners(); // Re-attach checkout listeners to newly loaded buttons
+
+                    resultsContainer.classList.remove('is-loading');
+                    if (freshupContainer) freshupContainer.classList.remove('is-loading');
+                })
+                .catch(error => {
+                    console.error('Error fetching filtered results:', error);
+                    resultsContainer.classList.remove('is-loading');
+                    if (freshupContainer) freshupContainer.classList.remove('is-loading');
+                });
+        };
+
+        // Serialize form and trigger fetch
+        const handleFilterChange = () => {
+            if (!filterForm) return;
+            const formData = new FormData(filterForm);
+            const params = new URLSearchParams(formData);
+
+            // Remove empty params to keep URL clean
+            for (const [key, value] of Array.from(params.entries())) {
+                if (!value) params.delete(key);
+            }
+
+            const url = `${window.location.pathname}?${params.toString()}`;
+            history.pushState(null, '', url); // Update URL bar
+            fetchResults(url);
+        };
+
+        // Listen to form inputs dynamically
+        if (filterForm) {
+            filterForm.querySelectorAll('input, select').forEach(element => {
+                if (element.tagName === 'INPUT' && element.type === 'text') {
+                    element.addEventListener('input', () => {
+                        clearTimeout(debounceTimer);
+                        debounceTimer = setTimeout(handleFilterChange, 450); // 450ms debounce
+                    });
+                } else {
+                    element.addEventListener('change', handleFilterChange);
+                }
+            });
+
+            // Handle normal form submit (e.g., hitting Enter or Apply button)
+            filterForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                handleFilterChange();
+            });
+        }
+
+        // Make pagination links work dynamically too (pagination only exists in room bookings section)
+        const attachPaginationListeners = () => {
+            if (!resultsContainer) return;
+            const paginationLinks = resultsContainer.querySelectorAll('.pagination a.page-link');
+            paginationLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const url = link.getAttribute('href');
+                    history.pushState(null, '', url);
+                    fetchResults(url);
+                });
+            });
+        };
+
+        // Handle browser back/forward buttons seamlessly
+        window.addEventListener('popstate', () => {
+            fetchResults(window.location.href);
+        });
+
+        attachPaginationListeners();
+
+
+        // ==========================================
+        // 2. RAZORPAY CHECKOUT LOGIC
+        // ==========================================
+        const handleCheckoutSubmit = function (e) {
+            const form = e.target;
+            const paymentMethodSelect = form.querySelector('select[name="payment_method"]');
+            if (!paymentMethodSelect || paymentMethodSelect.value !== 'Online') {
+                return; // Let standard form submission happen for Cash/Card/UPI
+            }
+
+            e.preventDefault();
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>Processing...';
+
+            const formData = new FormData(form);
+            formData.append('ajax', '1');
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.razorpay) {
+                        const ctx = data.context;
+                        const options = {
+                            key: ctx.razorpay_key,
+                            amount: (function () {
+                                var amt = parseFloat(ctx.amount);
+                                var key = ctx.razorpay_key;
+                                if (key && key.indexOf("rzp_test") === 0 && amt > 50000) {
+                                    return 50000 * 100;
+                                }
+                                return Math.round(amt * 100);
+                            })(),
+                            currency: "INR",
+                            name: "StayZen",
+                            description: "Checkout Balance Settlement #" + ctx.booking_id,
+                            prefill: {
+                                name: ctx.name,
+                                email: ctx.email,
+                                contact: ctx.phone
+                            },
+                            handler: function (response) {
+                                fetch("{% url 'razorpay_callback' %}", {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRFToken": "{{ csrf_token }}"
+                                    },
+                                    body: JSON.stringify({
+                                        booking_id: ctx.booking_id,
+                                        booking_type: ctx.booking_type,
+                                        razorpay_payment_id: response.razorpay_payment_id
+                                    })
+                                })
+                                    .then(res => res.json())
+                                    .then(cbData => {
+                                        if (cbData.success) {
+                                            Swal.fire({
+                                                title: 'Payment Successful',
+                                                text: 'Checkout completed and dues settled successfully!',
+                                                icon: 'success',
+                                                confirmButtonText: 'OK',
+                                                customClass: {
+                                                    popup: 'stayzen-swal-popup',
+                                                    title: 'stayzen-swal-title',
+                                                    confirmButton: 'stayzen-swal-confirm'
+                                                },
+                                                buttonsStyling: false
+                                            }).then(() => {
+                                                window.location.reload();
+                                            });
+                                        } else {
+                                            Swal.fire({
+                                                title: 'Error',
+                                                text: 'Payment confirmation failed: ' + cbData.message,
+                                                icon: 'error',
+                                                confirmButtonText: 'OK',
+                                                customClass: {
+                                                    popup: 'stayzen-swal-popup',
+                                                    title: 'stayzen-swal-title',
+                                                    confirmButton: 'stayzen-swal-confirm'
+                                                },
+                                                buttonsStyling: false
+                                            });
+                                            submitBtn.disabled = false;
+                                            submitBtn.innerHTML = originalText;
+                                        }
+                                    })
+                                    .catch(err => {
+                                        console.error(err);
+                                        Swal.fire({
+                                            title: 'Error',
+                                            text: 'Failed to verify payment with server.',
+                                            icon: 'error',
+                                            confirmButtonText: 'OK',
+                                            customClass: {
+                                                popup: 'stayzen-swal-popup',
+                                                title: 'stayzen-swal-title',
+                                                confirmButton: 'stayzen-swal-confirm'
+                                            },
+                                            buttonsStyling: false
+                                        });
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML = originalText;
+                                    });
+                            },
+                            modal: {
+                                ondismiss: function () {
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = originalText;
+                                }
+                            },
+                            theme: {
+                                color: "#4f46e5"
+                            }
+                        };
+                        const rzp = new Razorpay(options);
+                        rzp.open();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message || 'Something went wrong while initiating payment.',
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                popup: 'stayzen-swal-popup',
+                                title: 'stayzen-swal-title',
+                                confirmButton: 'stayzen-swal-confirm'
+                            },
+                            buttonsStyling: false
+                        });
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'An error occurred during payment initiation.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'stayzen-swal-popup',
+                            title: 'stayzen-swal-title',
+                            confirmButton: 'stayzen-swal-confirm'
+                        },
+                        buttonsStyling: false
+                    });
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                });
+        };
+
+        const attachCheckoutListeners = () => {
+            const forms = document.querySelectorAll('form[action*="checkout"]');
+            forms.forEach(form => {
+                // Remove listener first to prevent duplicates when DOM reloads partially
+                form.removeEventListener('submit', handleCheckoutSubmit);
+                form.addEventListener('submit', handleCheckoutSubmit);
+            });
+        };
+
+        // Initial attachment on page load
+        attachCheckoutListeners();
+
+    });
+</script>
+{% endblock %}

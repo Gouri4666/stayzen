@@ -1,0 +1,428 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StayZen - Access Your Account</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding-right: 8%;
+            background-color: #0f172a;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(135deg,
+                    rgba(15, 23, 42, 0.6),
+                    rgba(30, 58, 138, 0.5)),
+                url('https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(3px);
+            transform: scale(1.05);
+            z-index: -1;
+        }
+
+        /* Glass Card */
+        .auth-card-panel {
+            width: 100%;
+            max-width: 440px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 45px 35px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ==============================
+   Double Running Light Border
+============================== */
+        @property --angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        .auth-card-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            padding: 3px;
+            /* Thickness of the lines */
+
+            /* Double line gradient: Two transparent gaps, two glowing tails */
+            background: conic-gradient(from var(--angle),
+                    transparent 0%,
+                    transparent 35%,
+                    #00f3ff 50%,
+                    /* First Line: Cyan */
+                    transparent 50%,
+                    transparent 85%,
+                    #f800ff 100%
+                    /* Second Line: Magenta/Pink */
+                );
+
+            /* The mask cuts out the center */
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+
+            /* Apply the animation - slightly faster for the double effect */
+            animation: spin-light 3.5s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes spin-light {
+            to {
+                --angle: 360deg;
+            }
+        }
+
+        /* ============================== */
+
+        .exit-gateway {
+            position: absolute;
+            top: 22px;
+            right: 25px;
+            font-size: 22px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: all .2s ease;
+            z-index: 10;
+        }
+
+        .exit-gateway:hover {
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .auth-card-panel h2 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -.5px;
+            margin-bottom: 8px;
+        }
+
+        .auth-subtitle {
+            font-size: 14px;
+            color: #cbd5e1;
+            margin-bottom: 32px;
+        }
+
+        .input-block {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-block label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 6px;
+            padding-left: 4px;
+        }
+
+        .field-container {
+            position: relative;
+        }
+
+        /* ==============================
+   Premium Glass Inputs
+============================== */
+        .field-container input,
+        .field-container select,
+        .field-container textarea {
+            width: 100%;
+            padding: 13px 20px !important;
+
+            background: rgba(15, 23, 42, 0.55) !important;
+            color: #ffffff !important;
+
+            border: 1px solid rgba(255, 255, 255, 0.18) !important;
+            border-radius: 12px !important;
+
+            outline: none !important;
+            box-shadow: none !important;
+
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        /* Placeholder */
+        .field-container input::placeholder,
+        .field-container textarea::placeholder {
+            color: rgba(255, 255, 255, 0.55) !important;
+        }
+
+        /* Focus */
+        .field-container input:focus,
+        .field-container select:focus,
+        .field-container textarea:focus {
+            background: rgba(15, 23, 42, 0.75) !important;
+            color: #ffffff !important;
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18) !important;
+        }
+
+        /* CHROME AUTOFILL FIX */
+        .field-container input:-webkit-autofill,
+        .field-container input:-webkit-autofill:hover,
+        .field-container input:-webkit-autofill:focus,
+        .field-container input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.75) inset !important;
+            -webkit-text-fill-color: #ffffff !important;
+            transition: background-color 9999s ease-in-out 0s;
+        }
+
+        /* File Upload */
+        .field-container input[type="file"] {
+            padding: 10px 15px;
+            color: #ffffff !important;
+        }
+
+        .field-container input[type="file"]::file-selector-button {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.20);
+            color: #ffffff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        /* Eye Icon */
+        .visibility-toggle {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 15px;
+            transition: color .2s ease;
+        }
+
+        .visibility-toggle:hover {
+            color: #ffffff;
+        }
+
+        .password-input {
+            padding-right: 48px !important;
+        }
+
+        /* Remember & Forgot */
+        .remember-forgot-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            font-size: 13.5px;
+        }
+
+        .remember-forgot-row label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #e2e8f0;
+            cursor: pointer;
+        }
+
+        .remember-forgot-row input[type="checkbox"] {
+            accent-color: #3b82f6;
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+        }
+
+        .remember-forgot-row a {
+            text-decoration: none;
+            color: #60a5fa;
+            font-weight: 500;
+            transition: color .2s ease;
+        }
+
+        .remember-forgot-row a:hover {
+            color: #93c5fd;
+            text-decoration: underline;
+        }
+
+        /* Submit Button */
+        .submit-action-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s ease;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, .3);
+        }
+
+        .submit-action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, .4);
+        }
+
+        /* Footer */
+        .navigation-footer {
+            margin-top: 28px;
+            font-size: 14px;
+            color: #cbd5e1;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 20px;
+            text-align: center;
+        }
+
+        .navigation-footer a {
+            text-decoration: none;
+            color: #5d9be6;
+            font-weight: 600;
+        }
+
+        .navigation-footer a:hover {
+            color: #93c5fd;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                justify-content: center;
+                padding-right: 0;
+                padding: 20px;
+                overflow-y: auto;
+            }
+
+            .auth-card-panel {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="auth-card-panel">
+        <a href="{% url 'home' %}" class="exit-gateway">&times;</a>
+
+        <h2>Welcome Back</h2>
+        <p class="auth-subtitle">Sign in to manage your ultimate stay</p>
+
+        {% if error %}
+        <p
+            style="color: #ef4444; text-align: center; margin-bottom: 18px; font-size: 14px; font-weight: 600; background: rgba(239, 68, 68, 0.15); padding: 10px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
+            {{ error }}
+        </p>
+        {% endif %}
+
+        <form method="POST" action="{% url 'login' %}">
+            {% csrf_token %}
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+            <div class="input-block">
+                <label>Email Address</label>
+                <div class="field-container">
+                    <input type="text" name="email" placeholder="name@example.com" required>
+                </div>
+            </div>
+
+            <div class="input-block">
+                <label>Password</label>
+                <div class="field-container">
+                    <input type="password" id="password" name="password" class="password-wrapper password-input"
+                        placeholder="Enter your secret key" required>
+                    <i class="fa-solid fa-eye visibility-toggle eye-icon" onclick="togglePassword()"></i>
+                </div>
+            </div>
+
+            <div class="remember-forgot-row">
+                <label>
+                    <input type="checkbox"> Remember me
+                </label>
+                <a href="{% url 'password_reset' %}">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="submit-action-btn">Sign In</button>
+        </form>
+
+        <div class="navigation-footer">
+            Don't have an account? <a href="{% url 'register' %}">Create account</a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            {% for message in messages %}
+            Swal.fire({
+                icon: "{% if message.tags == 'error' or message.tags == 'danger' %}error{% elif message.tags == 'warning' %}warning{% elif message.tags == 'info' %}info{% else %}success{% endif %}",
+                title: "{{ message|escapejs }}",
+                showConfirmButton: false,
+                timer: 3000,
+                position: 'center',
+                background: 'rgba(15, 23, 42, 0.9)',
+                color: '#ffffff',
+                backdrop: `rgba(0,0,0,0.4)`
+            });
+            {% endfor %}
+        });
+    </script>
+    {% endif %}
+
+    <script>
+        sessionStorage.removeItem('on_dashboard');
+
+        function togglePassword() {
+            const password = document.getElementById("password");
+            const icon = document.querySelector(".eye-icon");
+
+            if (password.type === "password") {
+                password.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                password.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+    </script>
+
+</body>
+
+</html>
+
+
+
+

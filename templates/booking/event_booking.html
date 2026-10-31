@@ -1,0 +1,1051 @@
+{% load static %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<div class="event-booking-container">
+    <style>
+        .event-booking-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+        }
+
+        .eb-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .eb-col {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .eb-col label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1c1d1f !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .eb-col input,
+        .eb-col select,
+        .eb-col textarea {
+            padding: 12px 14px;
+            border: 1.5px solid rgba(197, 168, 128, 0.4) !important;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #ffffff !important;
+            color: #1c1d1f !important;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .eb-col input:focus,
+        .eb-col select:focus,
+        .eb-col textarea:focus {
+            outline: none;
+            border-color: #c5a880 !important;
+            box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.15) !important;
+        }
+
+        .eb-col textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .eb-summary-box {
+            background: rgba(193, 155, 118, 0.08);
+            border: 1px solid rgba(193, 155, 118, 0.3);
+            border-radius: 10px;
+            padding: 18px;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            color: #1c1d1f !important;
+        }
+
+        .eb-summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .eb-summary-row.total-row {
+            border-top: 1px solid rgba(193, 155, 118, 0.2);
+            padding-top: 8px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .eb-summary-row.payment-row {
+            font-weight: 700;
+            color: var(--text-highlight, var(--zen-gold, #c5a880));
+            font-size: 16px;
+        }
+
+        .eb-submit-btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 12px;
+            background: var(--text-highlight, var(--zen-gold, #c5a880));
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+            text-align: center;
+        }
+
+        .eb-submit-btn:hover {
+            background: #a57f5a;
+        }
+
+        .eb-submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Custom disabled date styling for Flatpickr */
+        .flatpickr-day.flatpickr-disabled.date-reserved,
+        .flatpickr-day.flatpickr-disabled.date-not-available {
+            opacity: 0.85;
+            text-decoration: line-through !important;
+            border-radius: 50% !important;
+        }
+
+        .flatpickr-calendar {
+            z-index: 99999 !important;
+            background: #ffffff !important;
+            border: 1px solid #e0e0e0 !important;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2) !important;
+        }
+
+        .flatpickr-month {
+            height: 40px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .flatpickr-calendar .flatpickr-current-month {
+            position: relative !important;
+            left: 0 !important;
+            width: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            height: 34px !important;
+            padding: 0 40px !important;
+            box-sizing: border-box !important;
+        }
+
+        .flatpickr-calendar .flatpickr-monthDropdown-months {
+            padding: 4px 24px 4px 8px !important;
+            height: 30px !important;
+            font-size: 14px !important;
+            color: #1c1d1f !important;
+            background-color: #ffffff !important;
+            border: 1px solid rgba(197, 168, 128, 0.3) !important;
+            border-radius: 6px !important;
+            width: auto !important;
+            display: inline-block !important;
+            cursor: pointer !important;
+        }
+
+        .flatpickr-calendar .numInputWrapper {
+            width: 75px !important;
+            display: inline-block !important;
+            position: relative !important;
+        }
+
+        .flatpickr-calendar .numInputWrapper input.cur-year {
+            padding: 4px 6px !important;
+            height: 30px !important;
+            font-size: 14px !important;
+            color: #1c1d1f !important;
+            background-color: #ffffff !important;
+            width: 100% !important;
+            display: inline-block !important;
+            box-sizing: border-box !important;
+        }
+    </style>
+
+    <form method="POST" action="{% url 'event_booking' %}" class="event-booking-form" id="eventBookingForm">
+        {% csrf_token %}
+
+        <!-- Selected Hall Detail -->
+        {% if selected_hall %}
+        <input type="hidden" name="hall_id" id="hall_id" value="{{ selected_hall.hall_id }}"
+            data-price="{{ selected_hall.hall_price }}"
+            data-capacity="{{ selected_hall.hall_capacity }}"
+            data-available="{% if selected_hall.hall_status == 'maintenance' %}false{% else %}true{% endif %}">
+        <div style="margin-bottom: 8px; padding: 16px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--card-hover-bg);">
+            <h4 style="color: var(--text-highlight, var(--zen-gold, #c5a880)); font-size: 18px; margin-bottom: 6px;">{{ selected_hall.hall_name }}</h4>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 2px 0;">Capacity: {{ selected_hall.hall_capacity }} guests</p>
+            <p style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-top: 6px;">Price: ₹{{ selected_hall.hall_price }} / day</p>
+            {% if selected_hall.hall_status != 'available' %}
+            <p style="font-size: 14px; font-weight: 700; color: {% if selected_hall.hall_status == 'maintenance' %}#ef4444{% else %}#f59e0b{% endif %}; margin-top: 4px; text-transform: uppercase;">
+                Status: {{ selected_hall.get_hall_status_display }} {% if selected_hall.hall_status == 'booked' %}(Select available dates below){% endif %}</p>
+            {% endif %}
+        </div>
+        {% elif hall %}
+        <input type="hidden" name="hall_id" id="hall_id" value="{{ hall.hall_id }}" data-price="{{ hall.hall_price }}"
+            data-capacity="{{ hall.hall_capacity }}"
+            data-available="{% if hall.hall_status == 'maintenance' %}false{% else %}true{% endif %}">
+        <div style="margin-bottom: 8px; padding: 16px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--card-hover-bg);">
+            <h4 style="color: var(--text-highlight, var(--zen-gold, #c5a880)); font-size: 18px; margin-bottom: 6px;">{{ hall.hall_name }}</h4>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 2px 0;">Capacity: {{ hall.hall_capacity }} guests</p>
+            <p style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-top: 6px;">Price: ₹{{ hall.hall_price }} / day</p>
+            {% if hall.hall_status != 'available' %}
+            <p style="font-size: 14px; font-weight: 700; color: {% if hall.hall_status == 'maintenance' %}#ef4444{% else %}#f59e0b{% endif %}; margin-top: 4px; text-transform: uppercase;">
+                Status: {{ hall.get_hall_status_display }} {% if hall.hall_status == 'booked' %}(Select available dates below){% endif %}</p>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="eb-col">
+            <label>Select Event Hall *</label>
+            <select name="hall_id" id="hall_id" required>
+                <option value="" data-price="0" data-capacity="999999">-- Choose Hall --</option>
+                {% for h in halls %}
+                {% if h.hall_status == 'available' or h.hall_status == 'booked' %}
+                <option value="{{ h.hall_id }}" data-price="{{ h.hall_price }}" data-capacity="{{ h.hall_capacity }}">{{ h.hall_name }} (₹{{ h.hall_price }}/day)</option>
+                {% else %}
+                <option value="{{ h.hall_id }}" data-price="{{ h.hall_price }}" data-capacity="{{ h.hall_capacity }}" disabled style="color: #94a3b8;">{{ h.hall_name }} ({{ h.get_hall_status_display }} - ₹{{ h.hall_price }}/day)</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <div class="eb-row">
+            <div class="eb-col">
+                <label>Event Name *</label>
+                <input type="text" name="event_name" placeholder="E.g., Graduation Gala" required>
+            </div>
+            <div class="eb-col">
+                <label>Event Type *</label>
+                <select name="event_type" required>
+                    <option value="Wedding">Wedding</option>
+                    <option value="Corporate">Corporate</option>
+                    <option value="Birthday">Birthday</option>
+                    <option value="Reception">Reception</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="eb-row">
+            <div class="eb-col">
+                <label>Start Date *</label>
+                <input type="date" name="start_date" id="start_date" required>
+            </div>
+            <div class="eb-col">
+                <label>End Date *</label>
+                <input type="date" name="end_date" id="end_date" required>
+            </div>
+        </div>
+
+        <div class="eb-row">
+            <div class="eb-col">
+                <label>Start Time *</label>
+                <input type="time" name="start_time" id="start_time" required>
+            </div>
+            <div class="eb-col">
+                <label>End Time *</label>
+                <input type="time" name="end_time" id="end_time" required>
+            </div>
+        </div>
+
+        <div class="eb-row">
+            <div class="eb-col">
+                <label>Food Preference *</label>
+                <select name="food_preference" required>
+                    <option value="None">None Required</option>
+                    <option value="Vegetarian">Vegetarian</option>
+                    <option value="Non-Vegetarian">Non-Vegetarian</option>
+                    <option value="Both">Both</option>
+                </select>
+            </div>
+            <div class="eb-col">
+                <label>Guest Count *</label>
+                <input type="number" name="guest_count" id="guest_count" min="1" placeholder="Number of guests" required>
+            </div>
+        </div>
+
+        <div class="eb-col">
+            <label>Select Package (Optional)</label>
+            <select name="package" id="package_id">
+                <option value="" data-price="0" data-services="">No Package</option>
+                {% for p in packages %}
+                <option value="{{ p.package_id }}" data-price="{{ p.package_price }}"
+                    data-services="{% for s in p.services.all %}{{ s.service_name }} (₹{{ s.service_price }}){% if not forloop.last %}, {% endif %}{% endfor %}">
+                    {{ p.package_name }} (₹{{ p.package_price }})</option>
+                {% endfor %}
+            </select>
+            <div id="eb_package_services_container" style="display: none; margin-top: 8px; padding: 10px 14px; border: 1px solid rgba(197, 168, 128, 0.3); border-radius: 8px; background: rgba(193, 155, 118, 0.05);">
+                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px; color: #1c1d1f;">Included Services:</span>
+                <div id="eb_package_services_list" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+            </div>
+        </div>
+
+        <!-- Guest/Customer user information fields -->
+        <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 8px;">
+            <h5 style="color: var(--text-highlight, var(--zen-gold, #c5a880)); margin-bottom: 12px; font-size: 14px; text-transform: uppercase;">Contact Details</h5>
+            <div class="eb-row">
+                <div class="eb-col">
+                    <label>Guest Name *</label>
+                    <input type="text" name="guest_name" placeholder="Full name" value="{% if customer %}{{ customer.user.get_full_name|default:customer.user.username }}{% elif request.user.is_authenticated %}{{ request.user.get_full_name|default:request.user.username }}{% endif %}" required>
+                </div>
+                <div class="eb-col">
+                    <label>Guest Phone *</label>
+                    <input type="text" name="guest_phone" placeholder="Phone number" value="{% if customer %}{{ customer.phone }}{% endif %}" required>
+                </div>
+            </div>
+            <div class="eb-col" style="margin-top: 12px;">
+                <label>Guest Email *</label>
+                <input type="email" name="guest_email" placeholder="Email address" value="{% if customer %}{{ customer.user.email }}{% elif request.user.is_authenticated %}{{ request.user.email }}{% endif %}" required>
+            </div>
+        </div>
+
+        <!-- Membership Discount Section (Auto-Applied to match backend) -->
+        {% if customer and customer.membership_status in "Silver,Gold,Platinum" %}
+        <div style="margin-top: 10px; padding: 12px; border: 1.5px dashed rgba(197, 168, 128, 0.4); border-radius: 8px; background: rgba(197, 168, 128, 0.05); color: #1c1d1f !important;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="font-size: 14px; font-weight: 600; color: #1c1d1f !important; margin: 0; text-transform: none; letter-spacing: 0;">
+                        Membership Discount Auto-Applied
+                    </label>
+                </div>
+                <span style="background: #c5a880; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                    {{ customer.membership_status }} Member
+                    {% if customer.membership_status == 'Silver' %}(5% Off)
+                    {% elif customer.membership_status == 'Gold' %}(10% Off)
+                    {% elif customer.membership_status == 'Platinum' %}(15% Off)
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        {% elif customer and customer.membership_status == 'Bronze' %}
+        <div style="margin-top: 10px; padding: 12px; border: 1.5px dashed rgba(197, 168, 128, 0.4); border-radius: 8px; background: rgba(197, 168, 128, 0.05);">
+            <p style="font-size: 13px; font-weight: 600; color: #1c1d1f; margin: 0;">
+                <span style="background: #cd7f32; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px;">Bronze Member</span> Upgrade to Silver or higher to unlock exclusive discounts!
+            </p>
+        </div>
+        {% endif %}
+
+        <div class="eb-col" style="margin-top: 8px;">
+            <label>Special Requests</label>
+            <textarea name="special_request" placeholder="Any special seating, dietary needs, or requirements..."></textarea>
+        </div>
+
+        <!-- Loyalty points redemption for registered users -->
+        {% if customer and customer.loyalty_points > 0 %}
+        <div style="margin-top: 10px; padding: 12px; border: 1.5px dashed rgba(197, 168, 128, 0.4); border-radius: 8px; background: rgba(197, 168, 128, 0.05); color: #1c1d1f !important;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="redeem_points_checkbox" style="width: 18px; height: 18px; cursor: pointer; border: 1.5px solid rgba(197, 168, 128, 0.4) !important;">
+                <label for="redeem_points_checkbox" style="font-size: 14px; font-weight: 600; color: #1c1d1f !important; cursor: pointer; margin: 0; text-transform: none; letter-spacing: 0;">
+                    Redeem available loyalty points (Available: {{ customer.loyalty_points }} points)
+                </label>
+            </div>
+            <div id="points_input_container" style="display: none; margin-top: 8px; align-items: center; gap: 8px;">
+                <label for="redeem_points" style="font-size: 13px; font-weight: 600; color: #1c1d1f !important; margin: 0; text-transform: none;">Points to Redeem:</label>
+                <input type="number" name="redeem_points" id="redeem_points" value="0" min="0" max="{{ customer.loyalty_points }}" style="width: 100px; padding: 6px 10px; border: 1.5px solid rgba(197, 168, 128, 0.4) !important; border-radius: 6px; font-size: 14px; background: #fff !important; color: #1c1d1f !important;">
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Calculated Totals Box -->
+        <div class="eb-summary-box">
+            <div class="eb-summary-row">
+                <span>Duration:</span>
+                <span id="eb_duration">0 days</span>
+            </div>
+            <div class="eb-summary-row">
+                <span>Hall Cost:</span>
+                <span id="eb_hall_cost">₹0.00</span>
+            </div>
+            <div class="eb-summary-row">
+                <span>Package Cost:</span>
+                <span id="eb_package_cost">₹0.00</span>
+            </div>
+            <div class="eb-summary-row total-row">
+                <span>Total Amount:</span>
+                <span id="eb_total_amount">₹0.00</span>
+            </div>
+            <div class="eb-summary-row payment-row">
+                <span>Pending Payment (25%):</span>
+                <span id="eb_pending_payment">₹0.00</span>
+            </div>
+        </div>
+
+        <!-- Hidden read-only input for visual consistency -->
+        <div class="eb-col">
+            <label>Pending Payment Amount (25%):</label>
+            <input type="text" id="pending_payment_field" readonly
+                style="background: rgba(193, 155, 118, 0.08) !important; border-color: #c5a880 !important; color: #a08260 !important; font-weight: bold; text-align: right; font-size: 16px;"
+                value="₹0.00">
+        </div>
+
+        <button type="submit" class="eb-submit-btn">Confirm Booking</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("eventBookingForm");
+        const hallSelect = document.getElementById("hall_id");
+        const packageSelect = document.getElementById("package_id");
+        const startDateInput = document.getElementById("start_date");
+        const endDateInput = document.getElementById("end_date");
+
+        let startPicker = null;
+        let endPicker = null;
+
+        function formatDate(date) {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1);
+            let day = '' + d.getDate();
+            const year = d.getFullYear();
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+            return [year, month, day].join('-');
+        }
+
+        function initPickers(booked, reserved, notAvailable) {
+            const config = {
+                minDate: 'today',
+                disable: booked,
+                dateFormat: 'Y-m-d',
+                monthSelectorType: 'dropdown',
+                onChange: function (selectedDates, dateStr, instance) {
+                    calculateBill();
+                    updateTimeMins(dateStr);
+                },
+                onDayCreate: function (dObj, dStr, fp, dayElem) {
+                    if (!dayElem.dateObj) return;
+                    const dateStr = formatDate(dayElem.dateObj);
+                    if (reserved.includes(dateStr)) {
+                        dayElem.classList.add('date-reserved');
+                    } else if (notAvailable.includes(dateStr)) {
+                        dayElem.classList.add('date-not-available');
+                    }
+                }
+            };
+            if (startPicker) startPicker.destroy();
+            if (endPicker) endPicker.destroy();
+            startPicker = flatpickr('#start_date', {
+                ...config,
+                onChange: function (selectedDates, dateStr, instance) {
+                    calculateBill();
+                    updateTimeMins(dateStr);
+                    if (dateStr && endPicker) {
+                        // Allow same-day event: end_date min = start_date
+                        endPicker.set('minDate', dateStr);
+                        const endVal = document.getElementById('end_date').value;
+                        if (endVal && endVal < dateStr) {
+                            endPicker.setDate(dateStr, true);
+                        }
+                    }
+                }
+            });
+            endPicker = flatpickr('#end_date', config);
+        }
+
+        function updateTimeMins(selectedDate) {
+            const startTimeInput = document.getElementById('start_time');
+            const endTimeInput = document.getElementById('end_time');
+            if (!startTimeInput || !endTimeInput) return;
+
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            if (selectedDate === todayStr) {
+                const now = new Date(Date.now() + 10 * 60 * 1000); // 10-min buffer
+                const hh = String(now.getHours()).padStart(2, '0');
+                const mm = String(now.getMinutes()).padStart(2, '0');
+                const minTime = `${hh}:${mm}`;
+                startTimeInput.setAttribute('min', minTime);
+                endTimeInput.setAttribute('min', minTime);
+            } else {
+                startTimeInput.removeAttribute('min');
+                endTimeInput.removeAttribute('min');
+            }
+        }
+
+        // Enforce end time > start time only on same day
+        const startTimeInput = document.getElementById('start_time');
+        const endTimeInput = document.getElementById('end_time');
+        if (startTimeInput && endTimeInput) {
+            let timeErrorMsg = document.getElementById('timeErrorMsg');
+            if (!timeErrorMsg) {
+                timeErrorMsg = document.createElement('div');
+                timeErrorMsg.id = 'timeErrorMsg';
+                timeErrorMsg.className = 'validation-message';
+                timeErrorMsg.style.color = '#dc3545';
+                timeErrorMsg.style.fontSize = '12px';
+                timeErrorMsg.style.marginTop = '4px';
+                timeErrorMsg.innerText = 'End time must be after start time on the same day.';
+                timeErrorMsg.style.display = 'none';
+                endTimeInput.parentNode.appendChild(timeErrorMsg);
+            }
+
+            function validateTimeLogic() {
+                const sDate = startDateInput ? startDateInput.value : null;
+                const eDate = endDateInput ? endDateInput.value : null;
+                if (sDate && eDate && sDate === eDate) {
+                    if (startTimeInput.value) {
+                        endTimeInput.setAttribute('min', startTimeInput.value);
+                    }
+                    if (startTimeInput.value && endTimeInput.value && endTimeInput.value <= startTimeInput.value) {
+                        endTimeInput.classList.add('is-invalid');
+                        timeErrorMsg.style.display = 'block';
+                        endTimeInput.value = '';
+                    } else {
+                        endTimeInput.classList.remove('is-invalid');
+                        timeErrorMsg.style.display = 'none';
+                    }
+                } else {
+                    endTimeInput.removeAttribute('min');
+                    endTimeInput.classList.remove('is-invalid');
+                    timeErrorMsg.style.display = 'none';
+                }
+            }
+
+            startTimeInput.addEventListener('change', validateTimeLogic);
+            endTimeInput.addEventListener('change', validateTimeLogic);
+            
+            // Need to also validate when dates change
+            if (startDateInput) startDateInput.addEventListener('change', validateTimeLogic);
+            if (endDateInput) endDateInput.addEventListener('change', validateTimeLogic);
+        }
+
+        function loadBookedDates(hallId) {
+            if (!hallId) {
+                initPickers([], [], []);
+                return;
+            }
+            fetch(`/booking/booked-dates/hall/${hallId}/`)
+                .then(r => r.json())
+                .then(data => {
+                    initPickers(data.booked || [], data.reserved || [], data.not_available || []);
+                })
+                .catch(err => {
+                    initPickers([], [], []);
+                });
+        }
+
+        if (hallSelect) {
+            loadBookedDates(hallSelect.value);
+            if (hallSelect.tagName === 'SELECT') {
+                hallSelect.addEventListener('change', function () {
+                    loadBookedDates(this.value);
+                });
+            }
+        }
+
+        // Display elements
+        const durationEl = document.getElementById("eb_duration");
+        const hallCostEl = document.getElementById("eb_hall_cost");
+        const packageCostEl = document.getElementById("eb_package_cost");
+        const totalAmountEl = document.getElementById("eb_total_amount");
+        const pendingPaymentEl = document.getElementById("eb_pending_payment");
+        const pendingPaymentField = document.getElementById("pending_payment_field");
+
+        const redeemCheckbox = document.getElementById("redeem_points_checkbox");
+        const redeemInput = document.getElementById("redeem_points");
+        const pointsContainer = document.getElementById("points_input_container");
+        const availablePoints = parseInt("{{ customer.loyalty_points|default:0 }}") || 0;
+
+        const membershipStatus = "{{ customer.membership_status|default:'' }}";
+
+        function calculateBill() {
+            let hallPrice = 0;
+            if (hallSelect.tagName === "SELECT") {
+                const selectedOption = hallSelect.options[hallSelect.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    hallPrice = parseFloat(selectedOption.getAttribute("data-price")) || 0;
+                }
+            } else if (hallSelect.tagName === "INPUT") {
+                hallPrice = parseFloat(hallSelect.getAttribute("data-price")) || 0;
+            }
+
+            let packagePrice = 0;
+            if (packageSelect) {
+                const selectedOption = packageSelect.options[packageSelect.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    packagePrice = parseFloat(selectedOption.getAttribute("data-price")) || 0;
+                }
+            }
+
+            const startDateVal = startDateInput.value;
+            const endDateVal = endDateInput.value;
+            let days = 1;
+            if (startDateVal && endDateVal) {
+                const d1 = new Date(startDateVal);
+                const d2 = new Date(endDateVal);
+                const diffTime = d2 - d1;
+                days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                if (days < 1) days = 1;
+            }
+
+            const totalHallCost = days * hallPrice;
+            const totalAmount = totalHallCost + packagePrice;
+            
+            // Unconditionally calculate membership discount to match backend logic
+            let membershipDiscountAmount = 0;
+            if (membershipStatus === 'Platinum') membershipDiscountAmount = totalAmount * 0.15;
+            else if (membershipStatus === 'Gold') membershipDiscountAmount = totalAmount * 0.10;
+            else if (membershipStatus === 'Silver') membershipDiscountAmount = totalAmount * 0.05;
+
+            const amountAfterMembership = totalAmount - membershipDiscountAmount;
+
+            let pointsToRedeem = 0;
+            if (redeemCheckbox && redeemCheckbox.checked) {
+                if (pointsContainer) pointsContainer.style.display = "flex";
+                let val = parseInt(redeemInput.value) || 0;
+                if (val < 0) {
+                    val = 0;
+                    redeemInput.value = 0;
+                }
+                const maxAllowed = Math.min(availablePoints, Math.floor(amountAfterMembership));
+                if (val > maxAllowed) {
+                    val = maxAllowed;
+                    redeemInput.value = val;
+                }
+                pointsToRedeem = val;
+            } else {
+                if (pointsContainer) pointsContainer.style.display = "none";
+                if (redeemInput) redeemInput.value = 0;
+            }
+
+            const finalAmount = amountAfterMembership - pointsToRedeem;
+            const pendingPayment = finalAmount * 0.25;
+
+            // Update display
+            durationEl.innerText = days + (days === 1 ? " day" : " days");
+            hallCostEl.innerText = "₹" + totalHallCost.toFixed(2);
+            packageCostEl.innerText = "₹" + packagePrice.toFixed(2);
+            
+            // Manage discount rows dynamically
+            let discountRow = document.getElementById("eb_discount_row");
+            if (!discountRow) {
+                discountRow = document.createElement("div");
+                discountRow.id = "eb_discount_row";
+                discountRow.style.display = "flex";
+                discountRow.style.flexDirection = "column";
+                discountRow.style.gap = "4px";
+                discountRow.style.fontSize = "14px";
+                discountRow.style.color = "#10b981";
+                discountRow.style.fontWeight = "600";
+                totalAmountEl.parentElement.before(discountRow);
+            }
+            
+            discountRow.innerHTML = '';
+            if (membershipDiscountAmount > 0) {
+                discountRow.innerHTML += `<div style="display: flex; justify-content: space-between;"><span>Membership Discount:</span><span>-₹${membershipDiscountAmount.toFixed(2)}</span></div>`;
+            }
+            if (pointsToRedeem > 0) {
+                discountRow.innerHTML += `<div style="display: flex; justify-content: space-between;"><span>Points Redeemed:</span><span>-${pointsToRedeem} pts (-₹${pointsToRedeem.toFixed(2)})</span></div>`;
+            }
+
+            totalAmountEl.innerText = "₹" + finalAmount.toFixed(2);
+            pendingPaymentEl.innerText = "₹" + pendingPayment.toFixed(2);
+            pendingPaymentField.value = "₹" + pendingPayment.toFixed(2);
+
+            return { totalAmount: finalAmount, pendingPayment };
+        }
+
+        function updatePackageServices() {
+            const container = document.getElementById("eb_package_services_container");
+            const listEl = document.getElementById("eb_package_services_list");
+            if (!container || !listEl || !packageSelect) return;
+
+            const selectedOption = packageSelect.options[packageSelect.selectedIndex];
+            if (!selectedOption) return;
+
+            const servicesAttr = selectedOption.getAttribute("data-services") || "";
+            listEl.innerHTML = "";
+            if (servicesAttr.trim()) {
+                const services = servicesAttr.split(", ");
+                services.forEach(service => {
+                    const badge = document.createElement("span");
+                    badge.style.background = "#c5a880";
+                    badge.style.color = "#ffffff";
+                    badge.style.padding = "4px 8px";
+                    badge.style.borderRadius = "4px";
+                    badge.style.fontSize = "12px";
+                    badge.style.fontWeight = "500";
+                    badge.innerText = service;
+                    listEl.appendChild(badge);
+                });
+                container.style.display = "block";
+            } else {
+                container.style.display = "none";
+            }
+        }
+
+        if (hallSelect.tagName === "SELECT") hallSelect.addEventListener("change", calculateBill);
+        if (packageSelect) {
+            packageSelect.addEventListener("change", function () {
+                calculateBill();
+                updatePackageServices();
+            });
+        }
+        startDateInput.addEventListener("change", calculateBill);
+        endDateInput.addEventListener("change", calculateBill);
+        
+        if (redeemCheckbox) {
+            redeemCheckbox.addEventListener("change", function () {
+                if (redeemCheckbox.checked) {
+                    let hallPrice = 0;
+                    if (hallSelect.tagName === "SELECT") {
+                        const selectedOption = hallSelect.options[hallSelect.selectedIndex];
+                        if (selectedOption && selectedOption.value) {
+                            hallPrice = parseFloat(selectedOption.getAttribute("data-price")) || 0;
+                        }
+                    } else if (hallSelect.tagName === "INPUT") {
+                        hallPrice = parseFloat(hallSelect.getAttribute("data-price")) || 0;
+                    }
+                    
+                    let packagePrice = 0;
+                    if (packageSelect) {
+                        const selectedOption = packageSelect.options[packageSelect.selectedIndex];
+                        if (selectedOption && selectedOption.value) {
+                            packagePrice = parseFloat(selectedOption.getAttribute("data-price")) || 0;
+                        }
+                    }
+                    
+                    const startDateVal = startDateInput.value;
+                    const endDateVal = endDateInput.value;
+                    let days = 1;
+                    if (startDateVal && endDateVal) {
+                        const d1 = new Date(startDateVal);
+                        const d2 = new Date(endDateVal);
+                        const diffTime = d2 - d1;
+                        days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                        if (days < 1) days = 1;
+                    }
+                    
+                    const totalAmount = (days * hallPrice) + packagePrice;
+                    let membershipDiscountAmount = 0;
+                    if (membershipStatus === 'Platinum') membershipDiscountAmount = totalAmount * 0.15;
+                    else if (membershipStatus === 'Gold') membershipDiscountAmount = totalAmount * 0.10;
+                    else if (membershipStatus === 'Silver') membershipDiscountAmount = totalAmount * 0.05;
+
+                    let amountAfterMembership = totalAmount - membershipDiscountAmount;
+                    redeemInput.value = Math.min(availablePoints, Math.floor(amountAfterMembership));
+                } else {
+                    redeemInput.value = 0;
+                }
+                calculateBill();
+            });
+        }
+        
+        if (redeemInput) {
+            redeemInput.addEventListener("input", calculateBill);
+            redeemInput.addEventListener("change", calculateBill);
+        }
+
+        // Run calculation initially
+        calculateBill();
+        updatePackageServices();
+
+        form.addEventListener("submit", function (e) {
+            // Validate capacity before allowing submission
+            const hallSelect = document.getElementById("hall_id");
+            const guestCount = document.getElementById("guest_count");
+
+            // ---- DATE & TIME VALIDATION ----
+            const todayStr = new Date().toISOString().split('T')[0];
+            const startDateVal = startDateInput.value;
+            const endDateVal = endDateInput.value;
+            const startTimeVal = document.getElementById('start_time') ? document.getElementById('start_time').value : '';
+
+            if (!startDateVal || !endDateVal) {
+                e.preventDefault();
+                alert("Please select both start and end dates.");
+                return;
+            }
+            if (startDateVal < todayStr) {
+                e.preventDefault();
+                alert("Start date cannot be in the past.");
+                return;
+            }
+            if (startDateVal > endDateVal) {
+                e.preventDefault();
+                alert("Start date cannot be after end date.");
+                return;
+            }
+            if (startDateVal === todayStr && startTimeVal) {
+                const now = new Date();
+                const [hh, mm] = startTimeVal.split(':').map(Number);
+                const selectedMinutes = hh * 60 + mm;
+                const nowMinutes = now.getHours() * 60 + now.getMinutes();
+                if (selectedMinutes < nowMinutes) {
+                    e.preventDefault();
+                    alert("Invalid Time.");
+                    return;
+                }
+            }
+            // ---- END DATE & TIME VALIDATION ----
+            
+            let capacity = 999999;
+            if (hallSelect) {
+                if (hallSelect.tagName === "SELECT") {
+                    const selectedOption = hallSelect.options[hallSelect.selectedIndex];
+                    if (selectedOption && selectedOption.value) {
+                        capacity = parseInt(selectedOption.getAttribute("data-capacity")) || 999999;
+                    }
+                } else if (hallSelect.tagName === "INPUT") {
+                    capacity = parseInt(hallSelect.getAttribute("data-capacity")) || 999999;
+                }
+            }
+            
+            const val = parseInt(guestCount.value) || 0;
+            if (val > capacity) {
+                e.preventDefault();
+                alert(`Booking cannot be completed. Guest count (${val}) exceeds the maximum hall capacity of ${capacity}.`);
+                return;
+            }
+            if (val < 1) {
+                e.preventDefault();
+                alert("Booking cannot be completed. Guest count must be at least 1.");
+                return;
+            }
+
+            const bill = calculateBill();
+            
+            // Clean the phone number to exactly 10 digits before sending
+            // This prevents backend crashes from invalid formats like +91 
+            const phoneInput = form.querySelector('input[name="guest_phone"]');
+            if (phoneInput && phoneInput.value) {
+                phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(-10);
+            }
+            
+            {% if not request.user.is_authenticated %}
+            // Show alert for guest users
+            alert("You have to pay 25% of booking.\nTotal Amount: ₹" + bill.totalAmount.toFixed(2) + "\nPending Payment (25%): ₹" + bill.pendingPayment.toFixed(2));
+            {% endif %}
+            
+            // No e.preventDefault() -> Form submits natively to Django 
+            // -> The backend correctly renders razorpay_payment.html!
+        });
+    });
+
+    // Live validation logic
+    document.addEventListener('DOMContentLoaded', function() {
+        const guestName = document.querySelector('input[name="guest_name"]');
+        const guestPhone = document.querySelector('input[name="guest_phone"]');
+        const guestEmail = document.querySelector('input[name="guest_email"]');
+        const guestCount = document.getElementById("guest_count");
+        const hallSelect = document.getElementById("hall_id");
+
+        function toggleError(input, condition) {
+            const container = input.closest('.mb-3, .form-group, .col-md-6, .col-md-4, .col-lg-6, .zen-form-group');
+            const label = container ? container.querySelector('label') : null;
+            if (condition) {
+                input.classList.add('is-invalid');
+                input.style.borderColor = 'red';
+                input.style.color = 'red';
+                if (label) label.style.color = 'red';
+            } else {
+                input.classList.remove('is-invalid');
+                input.style.borderColor = '';
+                input.style.color = '';
+                if (label) label.style.color = '';
+            }
+        }
+
+        function getHallCapacity() {
+            let capacity = 999999;
+            if (hallSelect) {
+                if (hallSelect.tagName === "SELECT") {
+                    const selectedOption = hallSelect.options[hallSelect.selectedIndex];
+                    if (selectedOption && selectedOption.value) {
+                        capacity = parseInt(selectedOption.getAttribute("data-capacity")) || 999999;
+                    }
+                } else if (hallSelect.tagName === "INPUT") {
+                    capacity = parseInt(hallSelect.getAttribute("data-capacity")) || 999999;
+                }
+            }
+            return capacity;
+        }
+
+        function validateGuestCapacity() {
+            if (!guestCount) return;
+            const capacity = getHallCapacity();
+            const val = parseInt(guestCount.value) || 0;
+            
+            // Remove previous custom invalid-feedback if it exists
+            let feedback = document.getElementById("guest_count_feedback");
+            if (feedback) feedback.remove();
+
+            const isExceeded = val > capacity;
+            toggleError(guestCount, isExceeded || val < 1);
+            
+            if (isExceeded) {
+                let errDiv = document.createElement("div");
+                errDiv.id = "guest_count_feedback";
+                errDiv.className = "invalid-feedback";
+                errDiv.style.color = "red";
+                errDiv.style.fontSize = "12px";
+                errDiv.style.marginTop = "4px";
+                errDiv.innerText = `Guest count cannot exceed hall capacity of ${capacity}.`;
+                guestCount.after(errDiv);
+            }
+        }
+
+        if (guestName) {
+            guestName.addEventListener('input', function() {
+                toggleError(this, this.value.trim() === '');
+            });
+        }
+
+        if (guestPhone) {
+            const phoneFeedback = document.createElement("small");
+            phoneFeedback.style.color = "red";
+            phoneFeedback.style.display = "none";
+            phoneFeedback.style.marginTop = "4px";
+            guestPhone.parentNode.appendChild(phoneFeedback);
+
+            guestPhone.addEventListener('input', function() {
+                toggleError(this, !this.value.replace(/\D/g, '').match(/^\d{10}$/));
+            });
+            
+            {% if not request.user.is_authenticated %}
+            guestPhone.addEventListener('blur', function() {
+                const val = this.value.trim();
+                if (val && val.replace(/\D/g, '').match(/^\d{10}$/)) {
+                    fetch("{% url 'api_check_phone' %}?phone=" + encodeURIComponent(val))
+                        .then(response => response.json())
+                        .then(data => {
+                            const submitBtn = document.querySelector(".eb-submit-btn");
+                            if (data.exists) {
+                                phoneFeedback.textContent = "please login for booking in guest side";
+                                phoneFeedback.style.display = "block";
+                                guestPhone.classList.add("is-invalid");
+                                if(submitBtn) submitBtn.disabled = true;
+                            } else {
+                                phoneFeedback.style.display = "none";
+                                guestPhone.classList.remove("is-invalid");
+                                if(submitBtn) submitBtn.disabled = false;
+                            }
+                        });
+                } else {
+                    phoneFeedback.style.display = "none";
+                    guestPhone.classList.remove("is-invalid");
+                    const submitBtn = document.querySelector(".eb-submit-btn");
+                    if(submitBtn) submitBtn.disabled = false;
+                }
+            });
+            {% endif %}
+        }
+
+        if (guestEmail) {
+            const emailFeedback = document.createElement("small");
+            emailFeedback.style.color = "red";
+            emailFeedback.style.display = "none";
+            emailFeedback.style.marginTop = "4px";
+            guestEmail.parentNode.appendChild(emailFeedback);
+
+            guestEmail.addEventListener('input', function() {
+                toggleError(this, this.value.trim() !== '' && !this.value.includes('@'));
+            });
+
+            {% if not request.user.is_authenticated %}
+            guestEmail.addEventListener('blur', function() {
+                const val = this.value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (val && emailRegex.test(val)) {
+                    fetch("{% url 'api_check_email' %}?email=" + encodeURIComponent(val))
+                        .then(response => response.json())
+                        .then(data => {
+                            const submitBtn = document.querySelector(".eb-submit-btn");
+                            if (data.exists) {
+                                emailFeedback.textContent = "please login for booking in guest side";
+                                emailFeedback.style.display = "block";
+                                guestEmail.classList.add("is-invalid");
+                                if(submitBtn) submitBtn.disabled = true;
+                            } else {
+                                emailFeedback.style.display = "none";
+                                guestEmail.classList.remove("is-invalid");
+                                if(submitBtn) submitBtn.disabled = false;
+                            }
+                        });
+                } else {
+                    emailFeedback.style.display = "none";
+                    guestEmail.classList.remove("is-invalid");
+                    const submitBtn = document.querySelector(".eb-submit-btn");
+                    if(submitBtn) submitBtn.disabled = false;
+                }
+            });
+            {% endif %}
+        }
+
+        if (guestCount) {
+            guestCount.addEventListener('input', validateGuestCapacity);
+        }
+        if (hallSelect && hallSelect.tagName === "SELECT") {
+            hallSelect.addEventListener('change', validateGuestCapacity);
+        }
+    });
+
+    // Form persistence using sessionStorage
+    document.addEventListener("DOMContentLoaded", function() {
+        const form = document.getElementById("eventBookingForm");
+        if (!form) return;
+        
+        const storageKey = "stayzen_eventBookingForm";
+        const storedData = sessionStorage.getItem(storageKey);
+        
+        if (storedData) {
+            try {
+                const data = JSON.parse(storedData);
+                for (const key in data) {
+                    const field = form.elements[key];
+                    if (field) {
+                        if (field.type === 'checkbox' || field.type === 'radio') {
+                            field.checked = data[key] === 'on' || data[key] === true;
+                        } else {
+                            if (!field.value || field.value === '') {
+                                field.value = data[key];
+                            }
+                        }
+                        field.dispatchEvent(new Event('change', { bubbles: true }));
+                        field.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+            } catch (e) {
+                console.error("Error restoring form data", e);
+            }
+        }
+        
+        function saveFormData() {
+            const data = {};
+            const formData = new FormData(form);
+            for (let [key, val] of formData.entries()) {
+                if (key !== 'csrfmiddlewaretoken') {
+                    const field = form.elements[key];
+                    if (field && field.type === 'checkbox') {
+                        data[key] = field.checked;
+                    } else {
+                        data[key] = val;
+                    }
+                }
+            }
+            sessionStorage.setItem(storageKey, JSON.stringify(data));
+        }
+        
+        form.addEventListener("input", saveFormData);
+        form.addEventListener("change", saveFormData);
+        form.addEventListener("submit", saveFormData);
+    });
+</script>

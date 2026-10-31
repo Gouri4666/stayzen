@@ -1,0 +1,92 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+
+<section id="main-content">
+
+    <div class="container-fluid">
+
+        <div class="card p-4 mt-5">
+
+            <h2>SubMenu List</h2>
+
+            <hr>
+
+            <a href="{% url 'add_submenu' %}"
+               class="btn btn-primary mb-3">
+                Add SubMenu
+            </a>
+
+            <!-- SUCCESS MESSAGE -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <table class="table table-bordered mt-4">
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Menu</th>
+                        <th>Sub Menu</th>
+                        <th>URL Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for submenu in submenus %}
+
+                    <tr>
+
+                        <td>{{ submenu.id }}</td>
+
+                        <td>{{ submenu.menu.name }}</td>
+
+                        <td>{{ submenu.name }}</td>
+
+                        <td>{{ submenu.url_name }}</td>
+
+                        <td>
+                            {% if request.user.is_superuser %}
+                            <div class="d-flex gap-2">
+                                <form method="POST"
+                                      action="{% url 'delete_submenu' submenu.id %}"
+                                      style="display:inline;">
+                                    {% csrf_token %}
+                                    <button class="btn btn-sm btn-danger btn-action-icon"
+                                            title="Delete"
+                                            onclick="return confirm('Delete this submenu?')">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            No SubMenus Found
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

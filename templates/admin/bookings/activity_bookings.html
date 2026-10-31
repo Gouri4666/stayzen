@@ -1,0 +1,224 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .booking-admin-table thead th {
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        border-bottom: 1px solid #cbd5e1 !important;
+        font-weight: 700;
+    }
+    #dynamic-results { transition: opacity 0.2s ease-in-out; }
+    .is-loading { opacity: 0.4; pointer-events: none; }
+</style>
+
+<div class="container-fluid">
+    <div class="card border-0 shadow-lg" style="border-radius: 16px; background: #ffffff; overflow: hidden;">
+        <div class="card-header d-flex justify-content-between align-items-center py-4" style="background: linear-gradient(135deg, #0f766e, #14b8a6); border: none;">
+            <div>
+                <h3 class="mb-1 text-white font-weight-bold" style="font-family: 'Outfit', sans-serif;">Activity Bookings</h3>
+                <p class="mb-0 text-white-50" style="font-size: 13px;">Track guest activity sessions linked to room stays</p>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <!-- Filter Form -->
+            <!-- <form id="filter-form" method="GET" class="row g-3 align-items-end mb-4">
+                <div class="col-md-3">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase;">Search Guest</label>
+                    <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Name or Phone..." style="border-radius: 8px;">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase;">Booking ID</label>
+                    <input type="text" name="room_booking_id" value="{{ room_booking_id }}" class="form-control" placeholder="e.g. 101" style="border-radius: 8px;">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase;">Activity</label>
+                    <input type="text" name="activity_name" value="{{ activity_name }}" class="form-control" placeholder="Yoga, Spa..." style="border-radius: 8px;">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase;">User Type</label>
+                    <select name="membership" class="form-control" style="border-radius: 8px;">
+                        <option value="">All</option>
+                        <option value="Registered" {% if membership == 'Registered' %}selected{% endif %}>Registered User</option>
+                        <option value="Guest" {% if membership == 'Guest' %}selected{% endif %}>Guest</option>
+                        <option value="Bronze" {% if membership == 'Bronze' %}selected{% endif %}>Bronze</option>
+                        <option value="Silver" {% if membership == 'Silver' %}selected{% endif %}>Silver</option>
+                        <option value="Gold" {% if membership == 'Gold' %}selected{% endif %}>Gold</option>
+                        <option value="Platinum" {% if membership == 'Platinum' %}selected{% endif %}>Platinum</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <a href="{% url 'receptionist_activity_bookings' %}" class="btn btn-secondary flex-fill" style="border-radius: 8px; font-weight: 600;">Reset</a>
+                    <button type="submit" class="btn btn-primary flex-fill" style="border-radius: 8px; font-weight: 600; background: #0f766e; border: none;">
+                        <i class="fa fa-filter mr-1"></i> Apply Filters
+                    </button>
+                </div>
+            </form> -->
+
+            <form id="filter-form" method="GET" class="row g-3 align-items-end mb-4">
+                <!-- Row 1: Inputs -->
+                <div class="col-md-3">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase;">Search Guest</label>
+                    <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Name or Phone..." style="border-radius: 8px;">
+                </div>
+                <!-- <div class="col-md-2">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase;">Booking ID</label>
+                    <input type="text" name="room_booking_id" value="{{ room_booking_id }}" class="form-control" placeholder="e.g. 101" style="border-radius: 8px;">
+                </div> -->
+                <!-- <div class="col-md-2">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase;">Room No.</label>
+                    <input type="text" name="room_no" value="{{ room_no }}" class="form-control" placeholder="e.g. 101" style="border-radius: 8px;">
+                </div> -->
+                <div class="col-md-2">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase;">Activity</label>
+                    <input type="text" name="activity_name" value="{{ activity_name }}" class="form-control" placeholder="Yoga, Spa..." style="border-radius: 8px;">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase;">Activity Type</label>
+                    <select name="activity_type" class="form-control">
+                        <option value="">All Types</option>
+                        <option value="Yoga" {% if activity_type == 'Yoga' %}selected{% endif %}>Yoga</option>
+                        <option value="Swimming" {% if activity_type == 'Swimming' %}selected{% endif %}>Swimming</option>
+                        <option value="Zumba" {% if activity_type == 'Zumba' %}selected{% endif %}>Zumba</option>
+                        <option value="Indoor games" {% if activity_type == 'Indoor games' %}selected{% endif %}>Indoor games</option>
+                        <option value="Spa" {% if activity_type == 'Spa' %}selected{% endif %}>Spa</option>
+                        <option value="Fitness" {% if activity_type == 'Fitness' %}selected{% endif %}>Fitness</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase;">Status</label>
+                    <select name="status" class="form-control" style="border-radius: 8px;">
+                        <option value="">All Statuses</option>
+                        <option value="Booked" {% if status == 'Booked' %}selected{% endif %}>Booked</option>
+                        <option value="Cancelled" {% if status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase;">User Type</label>
+                    <select name="membership" class="form-control" style="border-radius: 8px;">
+                        <option value="">All</option>
+                        <option value="Registered" {% if membership == 'Registered' %}selected{% endif %}>Registered User</option>
+                        <option value="Guest" {% if membership == 'Guest' %}selected{% endif %}>Guest</option>
+                        <option value="Bronze" {% if membership == 'Bronze' %}selected{% endif %}>Bronze</option>
+                        <option value="Silver" {% if membership == 'Silver' %}selected{% endif %}>Silver</option>
+                        <option value="Gold" {% if membership == 'Gold' %}selected{% endif %}>Gold</option>
+                        <option value="Platinum" {% if membership == 'Platinum' %}selected{% endif %}>Platinum</option>
+                    </select>
+                </div>
+                
+                <!-- Row 2: Buttons (Placed below fields) -->
+                <div class="col-12 d-flex justify-content-end gap-2 mt-3">
+                    <a href="{% url 'receptionist_activity_bookings' %}" class="btn btn-secondary px-4" style="border-radius: 8px; font-weight: 600;">Reset</a>
+                    <button type="submit" class="btn btn-primary px-4" style="border-radius: 8px; font-weight: 600; background: #0f766e; border: none;">
+                        <i class="fa fa-filter mr-1"></i> Apply Filters
+                    </button>
+                </div>
+            </form>
+            <div id="dynamic-results">
+                <div class="table-responsive" style="border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <table class="table table-hover align-middle mb-0 booking-admin-table" style="font-size: 14px;">
+                        <thead>
+                            <tr class="text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                                <th class="py-3 px-4">Booking Info</th>
+                                <th class="py-3">Who Booked</th>
+                                <th class="py-3">Phone</th>
+                                <th class="py-3">Membership</th>
+                                <th class="py-3">Activity</th>
+                                <th class="py-3">Time</th>
+                                <th class="py-3 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in page_obj %}
+                            <tr>
+                                <td class="py-3 px-4 font-weight-bold text-dark">{{ b.id }}</td>
+                                <td class="py-3">
+                                    <div class="font-weight-semibold" style="color:#0f766e;">{{ b.room_booking.customer.user.get_full_name|default:b.room_booking.guest_name }}</div>
+                                </td>
+                                <td class="py-3">{{ b.room_booking.customer.phone|default:b.room_booking.guest_phone|default:"-" }}</td>
+                                <td class="py-3">
+                                    {% with tier=b.room_booking.customer.membership_status %}
+                                    {% if tier %}
+                                        <span class="badge" style="background: {% if tier == 'Bronze' %}#cd7f32{% elif tier == 'Silver' %}#c0c0c0{% elif tier == 'Gold' %}#ffd700{% else %}#e5e4e2{% endif %}; color: {% if tier == 'Gold' %}#000{% else %}#fff{% endif %}; border-radius: 12px; padding: 4px 10px;">{{ tier }}</span>
+                                    {% else %}
+                                        <span class="text-muted" style="font-size: 13px;">Guest</span>
+                                    {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td class="py-3">{{ b.activity.activity_name }}</td>
+                                <td class="py-3">{{ b.session.start_time|time:"H:i" }} - {{ b.session.end_time|time:"H:i" }}</td>
+                                <td class="py-3 text-center"><span class="badge {% if b.status == 'Booked' %}bg-success{% else %}bg-danger{% endif %}">{{ b.status }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('filter-form');
+    const resultsContainer = document.getElementById('dynamic-results');
+    let debounceTimer;
+
+    const fetchResults = (url) => {
+        resultsContainer.classList.add('is-loading');
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(res => res.text())
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const newResults = doc.getElementById('dynamic-results');
+                if (newResults) {
+                    resultsContainer.innerHTML = newResults.innerHTML;
+                }
+                resultsContainer.classList.remove('is-loading');
+                attachPaginationListeners();
+                window.history.replaceState(null, '', url);
+            })
+            .catch(err => {
+                console.error('Filter fetch failed:', err);
+                resultsContainer.classList.remove('is-loading');
+            });
+    };
+
+    filterForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const params = new URLSearchParams(new FormData(filterForm));
+        fetchResults(`${window.location.pathname}?${params.toString()}`);
+    });
+
+    // Live-filter as the user types/selects, debounced — no need to click Filter every time
+    const debouncedSubmit = () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            const params = new URLSearchParams(new FormData(filterForm));
+            fetchResults(`${window.location.pathname}?${params.toString()}`);
+        }, 400);
+    };
+
+    filterForm.querySelectorAll('input[type="text"]').forEach(input => {
+        input.addEventListener('input', debouncedSubmit);
+    });
+    filterForm.querySelectorAll('select').forEach(select => {
+        select.addEventListener('change', debouncedSubmit);
+    });
+
+    const attachPaginationListeners = () => {
+        resultsContainer.querySelectorAll('.pagination a.page-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                fetchResults(link.getAttribute('href'));
+            });
+        });
+    };
+    attachPaginationListeners();
+});
+</script>
+{% endblock %}

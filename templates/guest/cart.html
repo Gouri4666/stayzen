@@ -1,0 +1,456 @@
+{% extends 'guest/base.html' %}
+{% load static %}
+{% load cart_tags %}
+{% block content %}
+
+<style>
+    /* =========================
+       Typography & Background
+    ========================= */
+    body {
+        background-color: #f8f9fa;
+    }
+    .serif-font {
+        font-family: 'Gilda Display', 'Playfair Display', serif;
+    }
+
+    /* =========================
+       Card & Layout Adjustments
+    ========================= */
+    .cart-item-row {
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
+        transition: all 0.3s ease;
+    }
+    
+    .cart-item-row:hover {
+        box-shadow: 0 6px 20px rgba(0,0,0,0.06) !important;
+    }
+
+    .bill-card {
+        border-radius: 12px;
+        position: sticky;
+        top: 100px; /* Sticks the bill overview panel when scrolling on laptop desktops */
+    }
+
+    /* Input & Interactive Select Forms styling */
+    .form-select, .form-control {
+        height: 48px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+    .form-select:focus, .form-control:focus {
+        border-color: #00a884;
+        box-shadow: 0 0 0 0.2rem rgba(0, 168, 132, 0.15);
+    }
+
+    /* Custom buttons targeting standard UI components */
+    .btn-qty-control {
+        background-color: #f8f9fa;
+        border: none;
+        font-weight: bold;
+        transition: background 0.2s;
+    }
+    .btn-qty-control:hover:not(:disabled) {
+        background-color: #e9ecef;
+    }
+
+    /* =========================
+       Cross-Gadget Adaptations
+    ========================= */
+    @media(max-width: 767px) {
+        .container {
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+        
+        /* Adjust heading scale targets on small viewports */
+        h2 { font-size: 1.8rem !important; }
+        h4 { font-size: 1.4rem !important; }
+        h5 { font-size: 1.1rem !important; }
+
+        /* Cap image dimensions on compact phone frames */
+        .mobile-cart-img {
+            height: 90px !important;
+            border-radius: 8px;
+        }
+
+        /* Re-align actions panel items uniformly across bottom rows */
+        .mobile-action-align {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: left !important;
+            border-top: 1px dashed #f1f3f5;
+            padding-top: 15px;
+            margin-top: 10px;
+        }
+
+        .mobile-action-align .d-inline-flex {
+            margin-bottom: 0 !important;
+        }
+        
+        .mobile-action-align .mt-3 {
+            margin-top: 0 !important;
+            text-align: right;
+        }
+    }
+</style>
+
+<div class="container py-5 mt-5 pt-4">
+
+    <h2 class="fw-bold mb-4 serif-font">My Cart</h2>
+
+    <div id="cart-container-wrapper">
+        {% if cart_items %}
+        <div class="row g-4">
+
+            <div class="col-lg-8" id="cart-items-list">
+                {% for item in cart_items %}
+                <div class="card border-0 shadow-sm mb-3 cart-item-row" 
+                     id="item-row-{{ item.food.id }}" 
+                     data-price="{{ item.food.price }}" 
+                     data-food-id="{{ item.food.id }}" 
+                     data-max-quantity="{{ item.food.quantity }}">
+                    
+                    <div class="card-body p-3 p-md-4">
+                        <div class="row align-items-center">
+
+                            <div class="col-4 col-md-3 mb-2 mb-md-0">
+                                <img src="{{ item.food.image.url }}"
+                                     class="img-fluid rounded mobile-cart-img"
+                                     style="height:110px; width:100%; object-fit:cover;"
+                                     alt="{{ item.food.item_name }}">
+                            </div>
+
+                            <div class="col-8 col-md-6 mb-2 mb-md-0">
+                                <h5 class="fw-bold text-dark mb-1">{{ item.food.item_name }}</h5>
+                                <p class="text-muted small mb-2 d-none d-sm-block">
+                                    {{ item.food.description|truncatewords:12 }}
+                                </p>
+                                <h6 class="text-success fw-bold mb-0">₹{{ item.food.price }}</h6>
+                            </div>
+
+                            <div class="col-12 col-md-3 text-center mobile-action-align">
+                                
+                                <div>
+                                    <div class="d-inline-flex align-items-center border rounded overflow-hidden bg-white shadow-sm">
+                                        <button type="button" 
+                                                class="btn btn-qty-control px-3 py-1 btn-qty-ajax border-0" 
+                                                data-action="decrease" 
+                                                data-food-id="{{ item.food.id }}">-</button>
+                                        
+                                        <span class="px-2 fw-bold quantity-val small" id="qty-count-{{ item.food.id }}">
+                                            {{ item.quantity }}
+                                        </span>
+                                        
+                                        <button type="button" 
+                                                class="btn btn-qty-control px-3 py-1 btn-qty-ajax border-0" 
+                                                data-action="increase" 
+                                                data-food-id="{{ item.food.id }}"
+                                                {% if item.quantity >= item.food.quantity %}disabled{% endif %}>+</button>
+                                    </div>
+                                    <small class="text-muted d-block mt-1 x-small d-none d-md-block">
+                                        Available: {{ item.food.quantity }}
+                                    </small>
+                                </div>
+
+                                <div class="mt-md-3">
+                                    <h6 class="fw-bold item-subtotal-display mb-1 text-dark" id="subtotal-display-{{ item.food.id }}">
+                                        ₹{{ item.subtotal }}
+                                    </h6>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-link text-danger text-decoration-none p-0 btn-remove-ajax"
+                                            data-food-id="{{ item.food.id }}">
+                                        <i class="fas fa-trash-alt small me-1"></i> Remove
+                                    </button>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm bill-card">
+                    <div class="card-body p-4">
+                        <h4 class="fw-bold mb-4 text-dark border-bottom pb-2">Bill Details</h4>
+
+                        <div class="d-flex justify-content-between mb-3 text-muted">
+                            <span>Item Total</span>
+                            <span class="fw-bold text-dark" id="bill-summary-total">₹{{ total }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-3 text-muted">
+                            <span>Delivery Fee</span>
+                            <span class="text-dark">₹40</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-3 text-muted">
+                            <span>GST (5%)</span>
+                            <span class="text-dark" id="bill-summary-gst">₹{{ gst }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-3 text-success d-none" id="discount-row">
+                            <span>Membership Discount</span>
+                            <span id="bill-summary-discount">-₹0.00</span>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <div class="d-flex justify-content-between fw-bold fs-5 mb-4">
+                            <span class="text-dark">To Pay</span>
+                            <span class="text-success" id="bill-summary-grand-total">₹{{ grand_total }}</span>
+                        </div>
+
+                        <form method="POST" action="{% url 'food_order' %}">
+                            {% csrf_token %}
+
+                            {% if customer and customer.membership_status in "Silver,Gold,Platinum" %}
+                            <div class="mb-3 p-3 bg-light rounded border border-warning" style="border-style: dashed !important;">
+                                <div class="form-check d-flex justify-content-between align-items-center mb-0 px-0">
+                                    <div class="d-flex align-items-center">
+                                        <input class="form-check-input ms-0 me-2" type="checkbox" name="apply_discount" id="apply_discount_checkbox" style="width: 18px; height: 18px; cursor: pointer;">
+                                        <label class="form-check-label fw-bold" for="apply_discount_checkbox" style="cursor: pointer; color: #1c1d1f !important;">
+                                            Apply Membership Discount
+                                        </label>
+                                    </div>
+                                    <span class="badge bg-warning text-dark px-2 py-1">
+                                        {{ customer.membership_status }}
+                                        {% if customer.membership_status == 'Silver' %}(5% Off)
+                                        {% elif customer.membership_status == 'Gold' %}(10% Off)
+                                        {% elif customer.membership_status == 'Platinum' %}(15% Off)
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            {% elif customer and customer.membership_status == 'Bronze' %}
+                            <div class="mb-3 p-2 bg-light rounded border border-secondary" style="border-style: dashed !important;">
+                                <p class="small mb-0 fw-bold"><span class="badge bg-secondary">Bronze</span> Upgrade to unlock exclusive discounts!</p>
+                            </div>
+                            {% endif %}
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">Order Type</label>
+                                <select name="order_type" class="form-select" id="orderType">
+                                    <option value="DineIn">Dine In</option>
+                                    <option value="RoomService">Room Service</option>
+                                    <option value="Delivery">Home Delivery</option>
+                                    <option value="Takeaway">Takeaway</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3" id="extraField">
+                                <label class="form-label text-muted small fw-bold" id="extraLabel">Home Address</label>
+                                <textarea name="delivery_address" id="extraInput" class="form-control" rows="3"></textarea>
+                            </div>
+
+                            <div class="mb-3" id="phoneSection">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small fw-bold">Customer Name</label>
+                                    <input type="text" name="customer_name" class="form-control" placeholder="Enter your name" value="{% if customer %}{{ customer.user.get_full_name|default:customer.user.username }}{% elif request.user.is_authenticated %}{{ request.user.get_full_name|default:request.user.username }}{% endif %}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small fw-bold">Phone Number</label>
+                                    <input type="text" name="phone" class="form-control" placeholder="Enter phone number" value="{% if customer %}{{ customer.phone }}{% endif %}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small fw-bold">Email Address</label>
+                                    <input type="email" name="email" class="form-control" placeholder="Enter your email" value="{% if request.user.is_authenticated %}{{ request.user.email }}{% endif %}" required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100 py-2.5 fw-bold shadow-sm">Confirm Order</button>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        {% else %}
+        <div class="alert alert-info py-5 text-center shadow-sm rounded">
+            <i class="fas fa-shopping-basket fa-3x mb-3 d-block text-muted"></i>
+            <h5 class="fw-bold text-secondary">Your cart is currently empty.</h5>
+            <p class="text-muted small mb-0">Head back to our menu to discover our fine selection of dishes.</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Unified Cart Empty Checker & Redirect Function
+    function checkCartEmptyAndRedirect() {
+        const remainingItems = document.querySelectorAll('.cart-item-row');
+        if (remainingItems.length === 0) {
+            window.location.href = "{% url 'food_menu' %}";
+        } else {
+            recalculateCalculatedSummaryBillBreakdown();
+        }
+    }
+
+    // Intercept Explicit Line Item Removal Actions Asynchronously
+    document.querySelectorAll('.btn-remove-ajax').forEach(button => {
+        button.addEventListener('click', function() {
+            const foodId = this.dataset.foodId;
+            const rowElement = document.getElementById(`item-row-${foodId}`);
+            
+            fetch(`/remove-from-cart/${foodId}/`, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(() => {
+                rowElement.remove();
+                checkCartEmptyAndRedirect();
+            });
+        });
+    });
+    
+    // Attach asynchronous actions to quantity adjustments buttons
+    document.querySelectorAll('.btn-qty-ajax').forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const foodId = this.dataset.foodId;
+            const rowElement = document.getElementById(`item-row-${foodId}`);
+            const countTextSpan = document.getElementById(`qty-count-${foodId}`);
+            const subtotalDisplay = document.getElementById(`subtotal-display-${foodId}`);
+            
+            const itemUnitPrice = parseFloat(rowElement.dataset.price);
+            const maximumAllowedQuantity = parseInt(rowElement.dataset.maxQuantity) || 0;
+            let currentQuantityValue = parseInt(countTextSpan.textContent) || 0;
+
+            if (action === 'increase' && currentQuantityValue >= maximumAllowedQuantity) return;
+
+            let operationEndpointUrl = action === 'increase' ? `/increase-cart/${foodId}/` : `/decrease-cart/${foodId}/`;
+
+            fetch(operationEndpointUrl, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(() => {
+                if (action === 'increase') {
+                    currentQuantityValue++;
+                } else {
+                    currentQuantityValue--;
+                }
+
+                if (currentQuantityValue <= 0) {
+                    rowElement.remove();
+                    checkCartEmptyAndRedirect();
+                } else {
+                    countTextSpan.textContent = currentQuantityValue;
+                    subtotalDisplay.textContent = `₹${(itemUnitPrice * currentQuantityValue).toFixed(2)}`;
+
+                    const increaseBtn = rowElement.querySelector('[data-action="increase"]');
+                    if (increaseBtn) {
+                        increaseBtn.disabled = (currentQuantityValue >= maximumAllowedQuantity);
+                    }
+                    
+                    recalculateCalculatedSummaryBillBreakdown();
+                }
+            });
+        });
+    });
+
+    function recalculateCalculatedSummaryBillBreakdown() {
+        let structuralCalculatedItemTotalAccumulator = 0;
+
+        document.querySelectorAll('.cart-item-row').forEach(row => {
+            const activeId = row.dataset.foodId;
+            const liveQtyVal = parseInt(document.getElementById(`qty-count-${activeId}`).textContent) || 0;
+            const livePriceVal = parseFloat(row.dataset.price) || 0;
+            structuralCalculatedItemTotalAccumulator += (livePriceVal * liveQtyVal);
+        });
+
+        const flatBaseDeliveryFee = 40;
+        
+        let discountCheckbox = document.getElementById("apply_discount_checkbox");
+        let membershipStatus = "{{ customer.membership_status|default:'' }}";
+        let discountAmount = 0;
+
+        if (discountCheckbox && discountCheckbox.checked) {
+            if (membershipStatus === 'Platinum') {
+                discountAmount = structuralCalculatedItemTotalAccumulator * 0.15;
+            } else if (membershipStatus === 'Gold') {
+                discountAmount = structuralCalculatedItemTotalAccumulator * 0.10;
+            } else if (membershipStatus === 'Silver') {
+                discountAmount = structuralCalculatedItemTotalAccumulator * 0.05;
+            }
+        }
+        
+        const discountedTotal = structuralCalculatedItemTotalAccumulator - discountAmount;
+        const relativeTaxValueGst = discountedTotal * 0.05;
+        const completeAbsoluteGrandTotalSum = discountedTotal + flatBaseDeliveryFee + relativeTaxValueGst;
+
+        const totalSummaryEl = document.getElementById('bill-summary-total');
+        const gstSummaryEl = document.getElementById('bill-summary-gst');
+        const grandTotalSummaryEl = document.getElementById('bill-summary-grand-total');
+        const discountRowEl = document.getElementById('discount-row');
+        const discountSummaryEl = document.getElementById('bill-summary-discount');
+
+        if (totalSummaryEl) totalSummaryEl.textContent = `₹${structuralCalculatedItemTotalAccumulator.toFixed(2)}`;
+        if (gstSummaryEl) gstSummaryEl.textContent = `₹${relativeTaxValueGst.toFixed(2)}`;
+        if (grandTotalSummaryEl) grandTotalSummaryEl.textContent = `₹${completeAbsoluteGrandTotalSum.toFixed(2)}`;
+        
+        if (discountRowEl && discountSummaryEl) {
+            if (discountAmount > 0) {
+                discountRowEl.classList.remove('d-none');
+                discountSummaryEl.textContent = `-₹${discountAmount.toFixed(2)}`;
+            } else {
+                discountRowEl.classList.add('d-none');
+            }
+        }
+    }
+
+    let discountCheckbox = document.getElementById("apply_discount_checkbox");
+    if (discountCheckbox) {
+        discountCheckbox.addEventListener("change", recalculateCalculatedSummaryBillBreakdown);
+    }
+
+    // Interactive Order Delivery Type Custom Field Display Toggles Block
+    const orderType = document.getElementById("orderType");
+    const extraField = document.getElementById("extraField");
+    const extraLabel = document.getElementById("extraLabel");
+    const extraInput = document.getElementById("extraInput");
+    const phoneSection = document.getElementById("phoneSection");
+
+    function toggleFields() {
+        if (!orderType) return;
+        let value = orderType.value;
+        const isReadonly = phoneSection ? phoneSection.querySelector('input[readonly]') : null;
+
+        if (value === "Delivery") {
+            if (extraField) extraField.style.display = "block";
+            if (phoneSection) phoneSection.style.display = "block";
+            if (extraLabel) extraLabel.innerText = "Home Address";
+            if (extraInput) { extraInput.placeholder = "Enter delivery address"; extraInput.rows = 3; }
+        } else if (value === "RoomService") {
+            if (extraField) extraField.style.display = "block";
+            if (phoneSection) phoneSection.style.display = isReadonly ? "none" : "block";
+            if (extraLabel) extraLabel.innerText = "Room Number";
+            if (extraInput) { extraInput.placeholder = "Enter room number"; extraInput.rows = 1; }
+        } else if (value === "DineIn") {
+            if (extraField) extraField.style.display = "block";
+            if (phoneSection) phoneSection.style.display = isReadonly ? "none" : "block";
+            if (extraLabel) extraLabel.innerText = "Table Number";
+            if (extraInput) { extraInput.placeholder = "Enter table number"; extraInput.rows = 1; }
+        } else if (value === "Takeaway") {
+            if (extraField) extraField.style.display = "none";
+            if (phoneSection) phoneSection.style.display = isReadonly ? "none" : "block";
+            if (extraInput) extraInput.value = "";
+        }
+    }
+
+    if (orderType) {
+        toggleFields();
+        orderType.addEventListener("change", toggleFields);
+    }
+});
+</script>
+
+{% endblock %}

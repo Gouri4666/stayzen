@@ -1,0 +1,611 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+
+.inbox-wrapper{
+
+    background:#fff;
+
+    padding:30px;
+
+    border-radius:28px;
+
+    box-shadow:
+    0 8px 35px rgba(0,0,0,.05);
+
+}
+
+
+/* HEADER */
+
+.inbox-header{
+
+    margin-bottom:30px;
+
+}
+
+.inbox-title{
+
+    font-size:36px;
+
+    font-weight:700;
+
+    color:#0f172a;
+
+}
+
+.inbox-sub{
+
+    font-size:15px;
+
+    color:#64748b;
+
+}
+
+
+
+/* STATS */
+
+.stats-card{
+
+    background:#fff;
+
+    padding:25px;
+
+    border-radius:20px;
+
+    border:1px solid #eef2f7;
+
+    box-shadow:
+
+    0 5px 20px rgba(0,0,0,.04);
+
+    transition:.3s;
+
+    height:100%;
+
+}
+
+.stats-card:hover{
+
+    transform:translateY(-5px);
+
+}
+
+.stats-card h5{
+
+    font-size:16px;
+
+    color:#64748b;
+
+    font-weight:600;
+
+}
+
+.stats-number{
+
+    font-size:32px;
+
+    font-weight:700;
+
+    margin-top:10px;
+
+}
+
+.blue{
+
+    color:#2563eb;
+
+}
+
+.orange{
+
+    color:#f59e0b;
+
+}
+
+.green{
+
+    color:#22c55e;
+
+}
+
+
+
+/* SEARCH */
+
+.search-card{
+
+    margin-top:30px;
+
+    background:#fff;
+
+    padding:20px;
+
+    border-radius:18px;
+
+    border:1px solid #edf2f7;
+
+}
+
+.search-input{
+
+    height:55px;
+
+    border-radius:14px;
+
+    border:1px solid #e2e8f0;
+
+    padding-left:20px;
+
+    font-size:15px;
+
+}
+
+
+
+/* NOTIFICATION CARD */
+
+.notification-card{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:22px;
+
+    background:#fff;
+
+    padding:18px 22px;
+
+    margin-top:15px;
+
+    border-radius:16px;
+
+    border:1px solid #edf2f7;
+
+    box-shadow:
+
+    0 4px 18px rgba(0,0,0,.04);
+
+    transition:.3s;
+
+}
+
+.notification-card:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:
+
+    0 12px 30px rgba(0,0,0,.08);
+
+}
+
+
+
+/* STATUS DOT */
+
+.status-dot{
+
+    width:10px;
+
+    height:10px;
+
+    border-radius:50%;
+
+}
+
+.unread{
+
+    background:#22c55e;
+
+}
+
+
+
+/* AVATAR */
+
+.avatar{
+
+    width:48px;
+
+    height:48px;
+
+    background:#f1f5f9;
+
+    border-radius:50%;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:22px;
+
+    font-weight:700;
+
+    color:#64748b;
+
+}
+
+
+
+/* TEXT */
+
+.sender{
+
+    font-weight:700;
+
+    font-size:18px;
+
+    color:#0f172a;
+
+    min-width:130px;
+
+}
+
+.msg-title{
+
+    font-weight:600;
+
+    font-size:18px;
+
+    color:#1e293b;
+
+    min-width:250px;
+
+}
+
+.msg-date{
+
+    color:#94a3b8;
+
+    font-size:15px;
+
+    min-width:170px;
+
+}
+
+
+
+/* VIEW BUTTON */
+
+.view-btn{
+
+    background:linear-gradient(
+
+    135deg,
+
+    #2563eb,
+
+    #3b82f6);
+
+    color:white;
+
+    padding:10px 22px;
+
+    border-radius:12px;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    text-decoration:none;
+
+    box-shadow:
+
+    0 5px 15px rgba(37,99,235,.25);
+
+    transition:.3s;
+
+}
+
+.view-btn:hover{
+
+    transform:translateY(-2px);
+
+    color:white;
+
+    text-decoration:none;
+
+}
+
+
+
+/* DARK MODE */
+
+[data-theme="dark"] .inbox-wrapper,
+
+[data-theme="dark"] .stats-card,
+
+[data-theme="dark"] .search-card,
+
+[data-theme="dark"] .notification-card{
+
+    background:#1e293b;
+
+    border-color:#334155;
+
+}
+
+[data-theme="dark"] .inbox-title,
+
+[data-theme="dark"] .sender,
+
+[data-theme="dark"] .msg-title{
+
+    color:#f8fafc;
+
+}
+
+[data-theme="dark"] .inbox-sub,
+
+[data-theme="dark"] .msg-date,
+
+[data-theme="dark"] .stats-card h5{
+
+    color:#94a3b8;
+
+}
+
+[data-theme="dark"] .avatar{
+
+    background:#334155;
+
+}
+
+[data-theme="dark"] .search-input{
+
+    background:#0f172a;
+
+    color:#fff;
+
+    border-color:#334155;
+
+}
+
+</style>
+
+
+
+<section id="main-content">
+
+<div class="container-fluid">
+
+<div class="inbox-wrapper">
+
+
+
+<div class="inbox-header">
+
+<h1 class="inbox-title">
+
+Your Inbox
+
+</h1>
+
+<p class="inbox-sub">
+
+Manage all notifications sent by administrators and staff.
+
+</p>
+
+</div>
+
+
+
+<div class="row">
+
+<div class="col-md-4">
+
+<div class="stats-card">
+
+<h5>Total Messages</h5>
+
+<div class="stats-number blue">
+
+{{ total_messages }}
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="col-md-4">
+
+<div class="stats-card">
+
+<h5>Unread Messages</h5>
+
+<div class="stats-number orange">
+
+{{ unread_messages }}
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="col-md-4">
+
+<div class="stats-card">
+
+<h5>Read Messages</h5>
+
+<div class="stats-number green">
+
+{{ read_messages }}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="search-card">
+
+<form method="GET">
+
+<div class="row">
+
+<div class="col-md-9">
+
+<input
+
+type="text"
+
+name="q"
+
+value="{{ search_query }}"
+
+class="form-control search-input"
+
+placeholder="Search by notification title..."
+
+>
+
+</div>
+
+
+
+<div class="col-md-3 d-flex">
+
+<button
+
+class="btn btn-primary flex-grow-1"
+
+style="height:55px;border-radius:14px;">
+
+Search
+
+</button>
+
+
+
+<a
+
+href="{% url 'inbox' %}"
+
+class="btn btn-light ml-3"
+
+style="height:55px;width:55px;border-radius:14px;">
+
+<i class="fa fa-refresh"></i>
+
+</a>
+
+</div>
+
+</div>
+
+</form>
+
+</div>
+
+
+
+
+{% for item in notifications %}
+
+<div class="notification-card">
+
+
+{% if not item.is_read %}
+
+<div class="status-dot unread"></div>
+
+{% endif %}
+
+
+<div class="avatar">
+
+{{ item.broadcast.sender.username|slice:":1"|upper }}
+
+</div>
+
+
+
+<div class="sender">
+
+{{ item.broadcast.sender.first_name|default:item.broadcast.sender.username|default:"System" }}
+
+</div>
+
+
+
+<div class="msg-title">
+
+{{ item.broadcast.title }}
+
+</div>
+
+
+
+<div class="msg-date">
+
+<i class="fa fa-calendar mr-2"></i>
+
+{{ item.broadcast.created_at|date:"M d, H:i" }}
+
+</div>
+
+
+
+<div class="ml-auto">
+
+<a
+
+href="{% url 'view_notification' item.id %}"
+
+class="view-btn">
+
+View Message
+
+</a>
+
+</div>
+
+</div>
+
+{% empty %}
+
+
+
+<div class="text-center py-5">
+
+<i class="fa fa-inbox fa-4x text-muted"></i>
+
+<h4 class="mt-4">
+
+No notifications found
+
+</h4>
+
+</div>
+
+{% endfor %}
+
+
+
+</div>
+
+</div>
+
+</section>
+
+{% endblock %}

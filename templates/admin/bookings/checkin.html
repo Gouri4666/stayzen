@@ -1,0 +1,470 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .booking-admin-table thead th {
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        border-bottom: 1px solid #cbd5e1 !important;
+        font-weight: 700;
+    }
+    [data-theme="dark"] .booking-admin-table thead th {
+        background: #1e293b !important;
+        color: #f8fafc !important;
+        border-bottom: 1px solid #334155 !important;
+    }
+    .metric-card {
+        border-radius: 16px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+    }
+    .metric-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    }
+    .nav-pills .nav-link {
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
+        color: #64748b;
+        transition: all 0.2s ease;
+    }
+    .nav-pills .nav-link.active {
+        background: #3b82f6 !important;
+        color: #fff !important;
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1 font-weight-bold text-dark" style="font-family: 'Outfit', sans-serif;">🔑 Guest Check-in Dashboard</h2>
+            <p class="text-muted mb-0">Select a reservation, record guest identification, and complete the check-in process.</p>
+        </div>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3 mb-md-0">
+            <div class="card metric-card shadow-sm" style="background: #ffffff; border-left: 5px solid #10b981;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-uppercase font-weight-bold" style="font-size: 11px; letter-spacing: 0.5px; color: #6b7280;">Pending Room Check-ins</span>
+                            <h2 class="display-5 font-weight-extrabold mb-1 text-dark" style="font-family: 'Outfit', sans-serif;">{{ total_room_count }}</h2>
+                            <p class="mb-0 text-muted" style="font-size: 13px;">Confirmed Room Bookings awaiting arrival.</p>
+                        </div>
+                        <div style="font-size: 48px; opacity: 0.3;">🏨</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card metric-card shadow-sm" style="background: #ffffff; border-left: 5px solid #f59e0b;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-uppercase font-weight-bold" style="font-size: 11px; letter-spacing: 0.5px; color: #6b7280;">Pending Hall Check-ins</span>
+                            <h2 class="display-5 font-weight-extrabold mb-1 text-dark" style="font-family: 'Outfit', sans-serif;">{{ total_event_count }}</h2>
+                            <p class="mb-0 text-muted" style="font-size: 13px;">Confirmed Event Bookings awaiting arrival.</p>
+                        </div>
+                        <div style="font-size: 48px; opacity: 0.3;">🏛️</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation Tabs -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; background: var(--bg-card, #ffffff);">
+        <div class="card-header bg-transparent border-bottom py-3">
+            <ul class="nav nav-pills card-header-pills" id="checkinTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="rooms-tab" data-toggle="pill" href="#rooms" role="tab" aria-controls="rooms" aria-selected="true">
+                        🏨 Guest Rooms ({{ total_room_count }})
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="events-tab" data-toggle="pill" href="#events" role="tab" aria-controls="events" aria-selected="false">
+                        🏛️ Event Halls ({{ total_event_count }})
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="tab-content" id="checkinTabsContent">
+                <!-- Rooms Tab Panel -->
+                <div class="tab-pane fade show active" id="rooms" role="tabpanel" aria-labelledby="rooms-tab">
+                    <div class="table-responsive" style="border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0);">
+                        <table class="table table-hover align-middle mb-0 booking-admin-table" style="font-size: 14px;">
+                            <thead>
+                                <tr class="text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                                    <th class="py-3 px-4">Booking Info</th>
+                                    <th class="py-3">Guest</th>
+                                    <th class="py-3">Phone</th>
+                                    <th class="py-3">Room</th>
+                                    <th class="py-3">Dates</th>
+                                    <th class="py-3">Status</th>
+                                    <th class="py-3 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for b in room_bookings %}
+                                <tr>
+                                    <td class="py-3 px-4 font-weight-bold text-dark">{{ b.id }}</td>
+                                    <td class="py-3">
+                                        <div class="font-weight-semibold text-primary">
+                                            {% if b.customer %}
+                                                {{ b.customer.user.get_full_name|default:b.customer.user.username }}
+                                            {% else %}
+                                                {{ b.guest_name }}
+                                            {% endif %}
+                                        </div>
+                                        <span class="badge bg-soft-primary" style="font-size: 10px; font-weight: 600; padding: 3px 6px; border-radius: 4px; background: rgba(59, 130, 246, 0.1); color: #2563eb;">
+                                            {% if b.customer %}Registered{% else %}Guest{% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="py-3">{% if b.customer %}{{ b.customer.phone }}{% else %}{{ b.guest_phone|default:"-" }}{% endif %}</td>
+                                    <td class="py-3">Room {{ b.room.room_number }} ({{ b.room.room_type }})</td>
+                                    <td class="py-3">
+                                        <div class="font-weight-semibold text-dark">{{ b.check_in|date:"M d, Y" }}</div>
+                                        <div class="text-muted" style="font-size: 11px;">to {{ b.check_out|date:"M d, Y" }}</div>
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="badge bg-success" style="background: #22c55e; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">{{ b.status }}</span>
+                                    </td>
+                                    <td class="py-3 text-center">
+                                        {% if request.user.is_superuser or permissions.receptionist_checkin.edit %}
+                                        <button class="btn btn-sm btn-primary px-3" style="border-radius: 8px; font-weight: 600; background: #3b82f6; border: none; color: #fff;" data-toggle="modal" data-target="#checkinModalRoom{{ b.id }}">
+                                            Check-in
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <div class="mb-2" style="font-size: 32px;">📭</div>
+                                        No room reservations pending check-in.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination for Rooms -->
+                    {% if room_bookings.has_other_pages %}
+                    <nav class="mt-4 d-flex justify-content-center"><ul class="pagination">
+                        {% if room_bookings.has_previous %}<li class="page-item"><a class="page-link" href="?room_page={{ room_bookings.previous_page_number }}&event_page={{ event_bookings.number }}">← Prev</a></li>{% endif %}
+                        {% for num in room_bookings.paginator.page_range %}
+                        <li class="page-item {% if room_bookings.number == num %}active{% endif %}"><a class="page-link" href="?room_page={{ num }}&event_page={{ event_bookings.number }}">{{ num }}</a></li>
+                        {% endfor %}
+                        {% if room_bookings.has_next %}<li class="page-item"><a class="page-link" href="?room_page={{ room_bookings.next_page_number }}&event_page={{ event_bookings.number }}">Next →</a></li>{% endif %}
+                    </ul></nav>
+                    {% endif %}
+                </div>
+
+                <!-- Events Tab Panel -->
+                <div class="tab-pane fade" id="events" role="tabpanel" aria-labelledby="events-tab">
+                    <div class="table-responsive" style="border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0);">
+                        <table class="table table-hover align-middle mb-0 booking-admin-table" style="font-size: 14px;">
+                            <thead>
+                                <tr class="text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                                    <th class="py-3 px-4">Booking Info</th>
+                                    <th class="py-3">Host/Guest</th>
+                                    <th class="py-3">Phone</th>
+                                    <th class="py-3">Hall</th>
+                                    <th class="py-3">Dates</th>
+                                    <th class="py-3">Status</th>
+                                    <th class="py-3 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for b in event_bookings %}
+                                <tr>
+                                    <td class="py-3 px-4 font-weight-bold text-dark">{{ b.id }}</td>
+                                    <td class="py-3">
+                                        <div class="font-weight-semibold text-primary">
+                                            {% if b.customer %}
+                                                {{ b.customer.user.get_full_name|default:b.customer.user.username }}
+                                            {% else %}
+                                                {{ b.guest_name }}
+                                            {% endif %}
+                                        </div>
+                                        <span class="badge" style="font-size: 10px; font-weight: 600; padding: 3px 6px; border-radius: 4px; background: rgba(59, 130, 246, 0.1); color: #2563eb;">
+                                            {% if b.customer %}Registered{% else %}Guest{% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="py-3">{% if b.customer %}{{ b.customer.phone }}{% else %}{{ b.guest_phone|default:"-" }}{% endif %}</td>
+                                    <td class="py-3">{{ b.hall.hall_name }}</td>
+                                    <td class="py-3">
+                                        <div class="font-weight-semibold text-dark">{{ b.start_date|date:"M d, Y" }}</div>
+                                        <div class="text-muted" style="font-size: 11px;">to {{ b.end_date|date:"M d, Y" }}</div>
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="badge" style="background: #3b82f6; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">{{ b.status }}</span>
+                                    </td>
+                                    <td class="py-3 text-center">
+                                        {% if request.user.is_superuser or permissions.receptionist_checkin.edit %}
+                                        <button class="btn btn-sm btn-primary px-3" style="border-radius: 8px; font-weight: 600; background: #3b82f6; border: none; color: #fff;" data-toggle="modal" data-target="#checkinModalEvent{{ b.id }}">
+                                            Check-in
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <div class="mb-2" style="font-size: 32px;">📭</div>
+                                        No event reservations pending check-in.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination for Events -->
+                    {% if event_bookings.has_other_pages %}
+                    <nav class="mt-4 d-flex justify-content-center"><ul class="pagination">
+                        {% if event_bookings.has_previous %}<li class="page-item"><a class="page-link" href="?room_page={{ room_bookings.number }}&event_page={{ event_bookings.previous_page_number }}">← Prev</a></li>{% endif %}
+                        {% for num in event_bookings.paginator.page_range %}
+                        <li class="page-item {% if event_bookings.number == num %}active{% endif %}"><a class="page-link" href="?room_page={{ room_bookings.number }}&event_page={{ num }}">{{ num }}</a></li>
+                        {% endfor %}
+                        {% if event_bookings.has_next %}<li class="page-item"><a class="page-link" href="?room_page={{ room_bookings.number }}&event_page={{ event_bookings.next_page_number }}">Next →</a></li>{% endif %}
+                    </ul></nav>
+                    {% endif %}
+                </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Room Check-in Modals -->
+{% for b in room_bookings %}
+<div class="modal fade" id="checkinModalRoom{{ b.id }}" tabindex="-1" role="dialog" aria-labelledby="checkinModalRoomLabel{{ b.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; background: var(--bg-card, #ffffff); overflow: hidden;">
+            <div class="modal-header border-0 py-4" style="background: linear-gradient(135deg, #10b981, #059669); border-top-left-radius: 16px; border-top-right-radius: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: none;">
+                <h5 class="modal-title text-white font-weight-bold" id="checkinModalRoomLabel{{ b.id }}" style="font-family: 'Outfit', sans-serif; margin-bottom: 0;">🔑 Room Check-in #{{ b.id }}</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.8; font-size: 28px; background: none; border: none; padding: 0;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{% url 'process_room_checkin' b.id %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body p-4" style="text-align: left;">
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span class="text-muted font-weight-semibold">Guest Name:</span>
+                            <span class="text-dark font-weight-bold" style="font-size: 15px;">
+                                {% if b.customer %}
+                                    {{ b.customer.user.get_full_name|default:b.customer.user.username }}
+                                {% else %}
+                                    {{ b.guest_name }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span class="text-muted font-weight-semibold">Room Assigned:</span>
+                            <span class="text-dark font-weight-bold" style="font-size: 15px;">Room {{ b.room.room_number }} ({{ b.room.room_type }})</span>
+                        </div>
+                        {% if b.customer and b.customer.verification_status %}
+                        <div class="alert alert-success py-2 px-3 mb-3" style="border-radius:8px;">
+                            <strong>✅ Verified Returning Guest</strong><br>
+                            Existing ID Type: <strong>{{ b.customer.id_type }}</strong><br>
+                            <small class="text-muted">
+                                ID document is already available. Upload a new document only if it has changed.
+                            </small>
+                        </div>
+                        {% endif %}
+                        <div class="mt-3">
+                            <label class="form-label text-muted font-weight-semibold mb-2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Identification Type
+                                {% if not b.customer or not b.customer.verification_status %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+                            <select name="id_type" class="form-control" style="border-radius: 8px; padding: 10px 14px; height: auto;" {% if not b.customer or not b.customer.verification_status %}required{% endif %}>
+                                {% if b.customer and b.customer.verification_status %}
+                                    <option value="">Keep existing ({{ b.customer.id_type }})</option>
+                                {% else %}
+                                    <option value="" disabled selected>Select identification type...</option>
+                                {% endif %}
+                                <option value="Aadhaar Card" {% if b.customer.id_type == "Aadhaar Card" %}selected{% endif %}>Aadhaar Card</option>
+                                <option value="Passport" {% if b.customer.id_type == "Passport" %}selected{% endif %}>Passport</option>
+                                <option value="Driving License" {% if b.customer.id_type == "Driving License" %}selected{% endif %}>Driving License</option>
+                                <option value="Voter ID" {% if b.customer.id_type == "Voter ID" %}selected{% endif %}>Voter ID</option>
+                                <option value="National ID" {% if b.customer.id_type == "National ID" %}selected{% endif %}>National ID Card</option>
+                            </select>
+                        </div>
+                        <div class="mt-2">
+                            <label class="form-label text-muted font-weight-semibold mb-2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Upload ID Document
+                                {% if not b.customer or not b.customer.verification_status %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+                            <input type="file" name="id_document" class="form-control" style="border-radius: 8px; padding: 6px 12px; height: auto;" {% if not b.customer or not b.customer.verification_status %}required{% endif %}>
+                            {% if b.customer and b.customer.verification_status and b.customer.id_document %}
+                                <small class="text-muted d-block mt-1">
+                                    📁 Existing document found. <a href="/media/{{ b.customer.id_document }}" target="_blank">View ID</a><br>
+                                    Upload only if the customer wants to replace it.
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 d-flex gap-2 justify-content-end" style="border-top: none;">
+                    <button type="button" class="btn btn-secondary px-4 py-2" data-dismiss="modal" style="border-radius: 8px; font-weight: 600; background: #6b7280; border: none; color: #fff;">Cancel</button>
+                    <button type="submit" class="btn btn-success px-4 py-2" style="border-radius: 8px; font-weight: 600; background: #10b981; border: none; color: #fff;">Complete Check-in</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Event Check-in Modals -->
+{% for b in event_bookings %}
+<div class="modal fade" id="checkinModalEvent{{ b.id }}" tabindex="-1" role="dialog" aria-labelledby="checkinModalEventLabel{{ b.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; background: var(--bg-card, #ffffff); overflow: hidden;">
+            <div class="modal-header border-0 py-4" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-top-left-radius: 16px; border-top-right-radius: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: none;">
+                <h5 class="modal-title text-white font-weight-bold" id="checkinModalEventLabel{{ b.id }}" style="font-family: 'Outfit', sans-serif; margin-bottom: 0;">🔑 Event Check-in #{{ b.id }}</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.8; font-size: 28px; background: none; border: none; padding: 0;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{% url 'process_event_checkin' b.id %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body p-4" style="text-align: left;">
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span class="text-muted font-weight-semibold">Guest Name:</span>
+                            <span class="text-dark font-weight-bold" style="font-size: 15px;">
+                                {% if b.customer %}
+                                    {{ b.customer.user.get_full_name|default:b.customer.user.username }}
+                                {% else %}
+                                    {{ b.guest_name }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span class="text-muted font-weight-semibold">Hall Assigned:</span>
+                            <span class="text-dark font-weight-bold" style="font-size: 15px;">{{ b.hall.hall_name }}</span>
+                        </div>
+                        {% if b.customer and b.customer.verification_status %}
+<div class="alert alert-success py-2 px-3 mb-3" style="border-radius:8px;">
+    <strong>✅ Verified Returning Guest</strong><br>
+    Existing ID Type:
+    <strong>{{ b.customer.id_type }}</strong><br>
+
+    <small class="text-muted">
+        ID document is already available.
+        Upload a new document only if it has changed.
+    </small>
+</div>
+{% endif %}
+
+        <div class="mt-3">
+            <label class="form-label text-muted font-weight-semibold mb-2"
+                style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;">
+                Identification Type
+                {% if not b.customer or not b.customer.verification_status %}
+                    <span class="text-danger">*</span>
+                {% endif %}
+            </label>
+
+            <select
+                name="id_type"
+                class="form-control"
+                {% if not b.customer or not b.customer.verification_status %}
+                    required
+                {% endif %}
+            >
+
+                {% if b.customer and b.customer.verification_status %}
+                    <option value="">
+                        Keep existing ({{ b.customer.id_type }})
+                    </option>
+                {% else %}
+                    <option value="" disabled selected>
+                        Select identification type...
+                    </option>
+                {% endif %}
+
+                <option value="Aadhaar Card"
+                    {% if b.customer.id_type == "Aadhaar Card" %}selected{% endif %}>
+                    Aadhaar Card
+                </option>
+
+                <option value="Passport"
+                    {% if b.customer.id_type == "Passport" %}selected{% endif %}>
+                    Passport
+                </option>
+
+                <option value="Driving License"
+                    {% if b.customer.id_type == "Driving License" %}selected{% endif %}>
+                    Driving License
+                </option>
+
+                <option value="Voter ID"
+                    {% if b.customer.id_type == "Voter ID" %}selected{% endif %}>
+                    Voter ID
+                </option>
+
+                <option value="National ID"
+                    {% if b.customer.id_type == "National ID" %}selected{% endif %}>
+                    National ID Card
+                </option>
+
+            </select>
+        </div>
+
+        <div class="mt-2">
+            <label class="form-label text-muted font-weight-semibold mb-2"
+                style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;">
+                Upload ID Document
+                {% if not b.customer or not b.customer.verification_status %}
+                    <span class="text-danger">*</span>
+                {% endif %}
+            </label>
+
+            <input
+                type="file"
+                name="id_document"
+                class="form-control"
+                {% if not b.customer or not b.customer.verification_status %}
+                    required
+                {% endif %}
+            >
+
+            {% if b.customer and b.customer.verification_status and b.customer.id_document %}
+                <small class="text-muted d-block mt-1">
+                    📁 Existing document found. <a href="/media/{{ b.customer.id_document }}" target="_blank">View ID</a><br>
+                    Upload only if the customer wants to replace it.
+                </small>
+            {% elif b.customer and b.customer.verification_status %}
+                <small class="text-muted d-block mt-1">
+                    📁 Existing document found.<br>
+                    Upload only if the customer wants to replace it.
+                </small>
+            {% endif %}
+        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 d-flex gap-2 justify-content-end" style="border-top: none;">
+                    <button type="button" class="btn btn-secondary px-4 py-2" data-dismiss="modal" style="border-radius: 8px; font-weight: 600; background: #6b7280; border: none; color: #fff;">Cancel</button>
+                    <button type="submit" class="btn btn-success px-4 py-2" style="border-radius: 8px; font-weight: 600; background: #22c55e; border: none; color: #fff;">Complete Check-in</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+

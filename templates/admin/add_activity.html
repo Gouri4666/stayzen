@@ -1,0 +1,219 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <div class="card shadow-lg border-0">
+
+        <div class="card-header bg-success text-white py-3">
+            <h3 class="mb-0">
+                🎯 Add Activity & Session
+            </h3>
+        </div>
+
+        <div class="card-body">
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+
+
+                <!-- Activity Details -->
+                <div class="card border-0 shadow-sm mb-4">
+
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            Activity Information
+                        </h5>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    Activity Name
+                                </label>
+                                {{ activity_form.activity_name }}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    Activity Type
+                                </label>
+                                {{ activity_form.activity_type }}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    Price
+                                </label>
+                                {{ activity_form.price }}
+                            </div>
+
+                            
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    Status
+                                </label>
+                                {{ activity_form.status }}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    Activity Image
+                                </label>
+                                {{ activity_form.activity_image }}
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-bold">
+                                    Description
+                                </label>
+                                {{ activity_form.description }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Session Details -->
+
+                <!-- Session Details -->
+
+                <div class="card border-0 shadow-sm mb-4">
+
+                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+
+                        <h5 class="mb-0">
+                            Session Information
+                        </h5>
+
+                        <button type="button"
+                                class="btn btn-light btn-sm"
+                                onclick="addSession()">
+                            + Add Session
+                        </button>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div id="sessionContainer"></div>
+
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-between">
+
+                    <a href="{% url 'activity_list' %}"
+                       class="btn btn-secondary">
+                        ← Back
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-success px-5">
+                        Save Activity
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let sessionValues = [];
+let sessionCount = 0;
+
+function addSession(data = {}) {
+    sessionCount++;
+
+    const container = document.getElementById('sessionContainer');
+    const startTime = data.start_time || '';
+    const endTime = data.end_time || '';
+    const capacity = data.capacity || '';
+    const status = data.status || 'Available';
+
+    const html = `
+    <div class="card border mb-3 session-card" id="session_${sessionCount}">
+        <div class="card-header bg-light d-flex justify-content-between">
+            <strong>
+                Session ${sessionCount}
+            </strong>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeSession(${sessionCount})">
+                Remove
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Start Time</label>
+                    <input type="time" name="start_time[]" class="form-control" value="${startTime}" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">End Time</label>
+                    <input type="time" name="end_time[]" class="form-control" value="${endTime}" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Capacity</label>
+                    <input type="number" name="capacity[]" class="form-control" min="1" value="${capacity}" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Status</label>
+                    <select name="session_status[]" class="form-control">
+                        <option value="Available" ${status === 'Available' ? 'selected' : ''}>Available</option>
+                        <option value="Full" ${status === 'Full' ? 'selected' : ''}>Full</option>
+                        <option value="Cancelled" ${status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    container.insertAdjacentHTML('beforeend', html);
+}
+
+function removeSession(id) {
+    const sessionEl = document.getElementById('session_' + id);
+    if (sessionEl) {
+        sessionEl.remove();
+    }
+}
+
+window.onload = function() {
+    const sessionValuesElement = document.getElementById('sessionValues');
+    if (sessionValuesElement) {
+        try {
+            sessionValues = JSON.parse(sessionValuesElement.textContent || '[]');
+        } catch (error) {
+            sessionValues = [];
+        }
+    }
+
+    if (sessionValues.length > 0) {
+        sessionValues.forEach(function(value) {
+            addSession(value);
+        });
+    } else {
+        addSession();
+    }
+};
+
+</script>
+
+{{ session_values|json_script:"sessionValues" }}
+{% endblock %}

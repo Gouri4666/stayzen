@@ -1,0 +1,1419 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .offline-booking-card {
+        border-radius: 16px;
+        background: var(--bg-card, #ffffff);
+        border: none;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="dark"] .offline-booking-card {
+        background: #1e293b;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .gradient-header {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #ffffff;
+        padding: 24px 30px;
+    }
+
+    .form-section-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        font-size: 16px;
+        color: #d97706;
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 8px;
+        margin-bottom: 20px;
+    }
+
+    [data-theme="dark"] .form-section-title {
+        color: #fbbf24;
+        border-bottom-color: #334155;
+    }
+
+    .billing-summary-box {
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px dashed #cbd5e1;
+        padding: 20px;
+    }
+
+    [data-theme="dark"] .billing-summary-box {
+        background: #0f172a;
+        border-color: #334155;
+    }
+
+    .btn-toggle-custom {
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 8px 20px;
+        transition: all 0.2s;
+    }
+
+    .food-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 12px;
+        background: var(--bg-card, #ffffff);
+        transition: all 0.2s;
+    }
+
+    [data-theme="dark"] .food-card {
+        border-color: #334155;
+        background: #1e293b;
+    }
+
+    .food-card:hover {
+        border-color: #f59e0b;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.08);
+    }
+
+    .qty-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        font-size: 16px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.1s;
+    }
+
+    [data-theme="dark"] .qty-btn {
+        background: #334155;
+        border-color: #475569;
+        color: #fff;
+    }
+
+    .qty-btn:hover {
+        background: #f59e0b;
+        color: #fff;
+        border-color: #f59e0b;
+    }
+
+    .badge-membership {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 12px;
+    }
+
+    /* --- Live Validation Styles --- */
+    .is-invalid-input {
+        border-color: #ef4444 !important;
+        color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+    
+    .is-invalid-label {
+        color: #ef4444 !important;
+        transition: color 0.2s;
+    }
+
+    .validation-message {
+        display: none;
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+        font-weight: 500;
+    }
+    
+    .is-invalid-input ~ .validation-message {
+        display: block;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="offline-booking-card">
+        <!-- Header -->
+        <div class="gradient-header d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="mb-1 font-weight-bold" style="font-family: 'Outfit', sans-serif;"> New Restaurant & Table
+                    Booking</h3>
+                <p class="mb-0 text-white-50" style="font-size: 13px;">Reserve restaurant tables and place food orders
+                    for guest or registered clients</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'receptionist_table_reservations' %}"
+                    class="btn btn-light btn-sm text-warning font-weight-semibold"
+                    style="border-radius: 8px; padding: 8px 16px;">
+                    View Reservations
+                </a>
+                <a href="{% url 'receptionist_restaurant_orders' %}"
+                    class="btn btn-light btn-sm text-warning font-weight-semibold"
+                    style="border-radius: 8px; padding: 8px 16px;">
+                    View Orders
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <form id="offlineRestTableForm" method="POST" action="{% url 'offline_restaurant_table' %}">
+                {% csrf_token %}
+
+                <input type="hidden" name="customer_id" id="customerId">
+
+                <div class="row">
+                    <!-- Left Form Section -->
+                    <div class="col-lg-12">
+
+                        <!-- CUSTOMER SELECTION -->
+                        <div class="mb-4">
+                            <h5 class="form-section-title"><i class="fa fa-user-circle mr-2"></i>Customer Information
+                            </h5>
+
+                            <div class="d-flex gap-3 mb-4">
+                                <button type="button" id="btnGuestType" class="btn btn-warning btn-toggle-custom"
+                                    style="color: #fff;" onclick="setCustomerType('guest')">
+                                    Guest Customer
+                                </button>
+                                <button type="button" id="btnRegisteredType"
+                                    class="btn btn-outline-secondary btn-toggle-custom"
+                                    onclick="setCustomerType('registered')">
+                                    Registered Customer
+                                </button>
+                                <input type="hidden" name="customer_type" id="customerType" value="guest">
+                            </div>
+
+                            <!-- Registered Customer Sub-form -->
+                            <div id="registeredCustomerSection" style="display: none;">
+                                <div class="row align-items-end mb-3">
+                                    <div class="col-md-8">
+                                        <label class="form-label font-weight-bold">Search Registered Phone
+                                            Number</label>
+                                        <div class="input-group">
+                                            <span class="input-group-addon"><i class="fa fa-phone"></i></span>
+                                            <input type="text" id="searchPhone" class="form-control"
+                                                placeholder="Enter customer phone..." style="height: 42px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-info w-100" onclick="searchCustomer()"
+                                            style="height: 42px; font-weight: 600; background: #06b6d4; border: none; color: #fff;">
+                                            <i class="fa fa-search mr-2"></i> Search Customer
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="customerDetailsCard" class="card p-3 mb-3"
+                                    style="display: none; border: 1px solid #f59e0b; background: rgba(245, 158, 11, 0.05); border-radius: 10px;">
+                                    <h6 class="text-warning font-weight-bold mb-3"><i
+                                            class="fa fa-check-circle mr-1"></i> Customer Profile Verified</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted small d-block">Full Name</span>
+                                            <strong id="custName" class="text-dark">-</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted small d-block">Email Address</span>
+                                            <strong id="custEmail" class="text-dark">-</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted small d-block">Membership Status</span>
+                                            <span id="custMembership"
+                                                class="badge-membership bg-primary text-white">-</span>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted small d-block">Loyalty Points Available</span>
+                                            <strong id="custPoints" class="text-warning">-</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3" id="pointsRedeemWrapper">
+                                        <label class="form-label font-weight-semibold">Redeem Loyalty Points (For Food
+                                            Order Discount)</label>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <input type="number" name="redeem_points" id="redeemPoints"
+                                                    class="form-control" min="0" value="0"
+                                                    oninput="updateBillingSummary()">
+                                            </div>
+                                            <div class="col-md-6 align-self-center">
+                                                <span class="text-muted small">Max redeemable: <strong
+                                                        id="maxRedeemText">0</strong> points</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="customerSearchError" class="alert alert-danger"
+                                    style="display: none; border-radius: 8px;">
+                                    Customer not found. Verify the number.
+                                </div>
+                            </div>
+
+                            <!-- Guest Customer Sub-form -->
+                            <div id="guestCustomerSection">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Guest Name <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" name="guest_name" id="guestName" class="form-control"
+                                            placeholder="John Doe">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Guest Phone <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" name="guest_phone" id="guestPhone" class="form-control"
+                                            placeholder="1234567890">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Guest Email</label>
+                                        <input type="email" name="guest_email" id="guestEmail" class="form-control"
+                                            placeholder="john@example.com">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Guest Address</label>
+                                        <input type="text" name="guest_address" id="guestAddress" class="form-control"
+                                            placeholder="City, Country">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SERVICES SELECTOR -->
+                        <div class="mb-4">
+                            <h5 class="form-section-title"><i class="fa fa-cogs mr-2"></i>Services Selection</h5>
+                            <div class="d-flex gap-4">
+                                <label class="d-flex align-items-center gap-2 cursor-pointer font-weight-semibold"
+                                    style="font-size: 15px;">
+                                    <input type="checkbox" name="book_table" id="chkBookTable"
+                                        onchange="toggleFormSection('tableSection', this.checked)" checked>
+                                    Reserve Restaurant Table
+                                </label>
+                                <label class="d-flex align-items-center gap-2 cursor-pointer font-weight-semibold"
+                                    style="font-size: 15px;">
+                                    <input type="checkbox" name="place_order" id="chkPlaceOrder"
+                                        onchange="toggleFormSection('orderSection', this.checked)">
+                                    Order Food Items
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- TABLE RESERVATION SECTION -->
+                        <div class="mb-4" id="tableSection">
+                            <h5 class="form-section-title" style="color: #4b5563; border-bottom-color: #e5e7eb;"><i
+                                    class="fa fa-table mr-2"></i>Table Reservation Details</h5>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label font-weight-semibold">Reservation Date <span
+                                            class="text-danger">*</span></label>
+                                    <input type="date" name="reservation_date" id="resDate" class="form-control"
+                                        onchange="checkTableAvailability(); updateBillingSummary();">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label font-weight-semibold">Start Time <span
+                                            class="text-danger">*</span></label>
+                                    <input type="time" name="reservation_time" id="resTime" class="form-control"
+                                        onchange="checkTableAvailability(); updateBillingSummary();">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label font-weight-semibold">End Time <span
+                                            class="text-danger">*</span></label>
+                                    <input type="time" name="end_time" id="resEndTime" class="form-control"
+                                        onchange="checkTableAvailability(); updateBillingSummary();">
+                                    <div id="endTimeError" class="validation-message">End Time must be after Start Time.</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label font-weight-semibold">Number of Guests</label>
+                                    <input type="number" name="guests" class="form-control" min="1" value="2">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label font-weight-semibold">Special Request Notes</label>
+                                    <input type="text" name="table_special_request" class="form-control"
+                                        placeholder="Quiet corner / birthday setup...">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label font-weight-bold">Select Available Table <span
+                                        class="text-danger">*</span></label>
+                                <select name="table_id" id="tableId" class="form-control"
+                                    style="height: auto; padding: 10px;" disabled onchange="updateBillingSummary()">
+                                    <option value="">-- Please select date & time first --</option>
+                                </select>
+                                <div id="tableLoader" class="mt-2 text-warning" style="display: none; font-size: 13px;">
+                                    <i class="fa fa-spinner fa-spin mr-1"></i> Checking table availability...
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label font-weight-semibold">Table Advance Paid ($)</label>
+                                    <input type="number" name="table_advance_amount" id="tableAdvance"
+                                        class="form-control" min="0" step="0.01" value="0.00" readonly>
+                                </div>
+                                <!-- Hidden fields removed, now visible in Checkout Summary -->
+                            </div>
+                        </div>
+
+                        <!-- FOOD ORDER SECTION -->
+                        <div class="mb-4" id="orderSection" style="display: none;">
+                            <h5 class="form-section-title" style="color: #4b5563; border-bottom-color: #e5e7eb;"><i
+                                    class="fa fa-cutlery mr-2"></i>Food Menu & Ordering</h5>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label font-weight-semibold">Service Type</label>
+                                    <select name="order_type" id="orderType" class="form-control"
+                                        onchange="updateBillingSummary()">
+                                        <option value="DineIn">Dine In</option>
+                                        <option value="RoomService">Room Service</option>
+                                        <option value="Takeaway">Takeaway</option>
+                                        <option value="Delivery">Delivery</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label font-weight-semibold">Delivery Address / Room
+                                        Number</label>
+                                    <input type="text" name="delivery_address" class="form-control"
+                                        placeholder="Room 203 / Street 14...">
+                                </div>
+                            </div>
+
+                            <!-- Food items list -->
+                            <label class="form-label font-weight-bold mb-3">Food Items Menu</label>
+
+                            <!-- Food Filters -->
+                            <div class="row mb-4">
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label font-weight-semibold" style="font-size: 13px;">Search
+                                        Dish</label>
+                                    <input type="text" id="foodSearchInput" class="form-control"
+                                        placeholder="Search dish name..." oninput="filterFoodItems()">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label font-weight-semibold"
+                                        style="font-size: 13px;">Category</label>
+                                    <select id="foodCategoryFilter" class="form-control" onchange="filterFoodItems()">
+                                        <option value="">All Categories</option>
+                                        {% for cat in categories %}
+                                        <option value="{{ cat }}">{{ cat }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label font-weight-semibold"
+                                        style="font-size: 13px;">Cuisine</label>
+                                    <select id="foodCuisineFilter" class="form-control" onchange="filterFoodItems()">
+                                        <option value="">All Cuisines</option>
+                                        {% for cui in cuisines %}
+                                        <option value="{{ cui }}">{{ cui }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row" id="foodItemsContainer">
+                                {% for food in food_items %}
+                                <div class="col-md-6 food-item-col" data-name="{{ food.item_name|lower }}"
+                                    data-category="{{ food.category }}" data-cuisine="{{ food.cuisine }}">
+                                    <div class="food-card d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <div class="font-weight-bold text-dark">{{ food.item_name }}</div>
+                                            <div class="text-muted small">{{ food.category }} ({{ food.cuisine }})</div>
+                                            <div class="font-weight-semibold text-primary">${{ food.price }}</div>
+                                            <div class="text-muted small">Stock: <strong class="text-success">{{food.quantity }}</strong></div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <button type="button" class="qty-btn"
+                                                onclick="adjustFoodQty({{ food.id }}, -1)">-</button>
+                                            <input type="number" name="food_qty_{{ food.id }}"
+                                                id="food_qty_{{ food.id }}" data-price="{{ food.price }}"
+                                                data-stock="{{ food.quantity }}"
+                                                class="form-control text-center food-qty-input" value="0" min="0"
+                                                max="{{ food.quantity }}"
+                                                style="width: 54px; padding: 4px; font-weight: bold;"
+                                                oninput="onQtyInput({{ food.id }})">
+                                            <button type="button" class="qty-btn"
+                                                onclick="adjustFoodQty({{ food.id }}, 1)">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="col-12 text-muted">No food items available.</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Live Billing & Checkout Card -->
+                        <div class="card p-4 mt-4 shadow-sm"
+                            style="border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0); background: var(--bg-card, #ffffff);">
+                            <h5 class="form-section-title mb-3" style="color: #d97706; border-bottom-color: #f1f5f9;"><i
+                                    class="fa fa-credit-card mr-2"></i>Booking & Payment Summary</h5>
+
+                            <!-- Hidden Status Settings -->
+                            <input type="hidden" name="table_status" value="Pending">
+                            <input type="hidden" name="order_status" value="Pending">
+                            <input type="hidden" name="table_payment_status" value="Pending">
+                            <input type="hidden" name="table_advance_amount" id="advanceAmount" value="0.00">
+
+                            <div class="mb-3">
+                                <label class="form-label font-weight-semibold">Mode of Payment</label>
+                                <select name="table_payment_method" id="paymentMethod" class="form-control"
+                                    onchange="updateBillingSummary()">
+                                    <option value="Cash" selected>Cash at Reception</option>
+                                    <option value="Razorpay">Online Payment (Razorpay)</option>
+                                </select>
+                            </div>
+
+                            <!-- Billing Calculation -->
+                            <div class="billing-summary-box mb-4">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Table Deposit / Advance:</span>
+                                    <span id="summaryTableAdvance" class="font-weight-semibold text-dark">$0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Food Subtotal:</span>
+                                    <span id="summaryFoodSubtotal" class="font-weight-semibold text-dark">$0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">GST (5%):</span>
+                                    <span id="summaryGST" class="font-weight-semibold text-dark">$0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Delivery/Service Fee:</span>
+                                    <span id="summaryDeliveryFee" class="font-weight-semibold text-dark">$0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-danger" id="summaryRedeemRow"
+                                    style="display: none !important;">
+                                    <span>Points Discount:</span>
+                                    <span id="summaryRedeemPrice">-$0.00</span>
+                                </div>
+                                <hr style="border-top: 1px solid #cbd5e1; margin: 10px 0;">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="font-weight-bold text-dark">Grand Total:</span>
+                                    <span id="summaryTotalPrice" class="font-weight-bold text-dark"
+                                        style="font-size: 16px;">$0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-success">
+                                    <span class="font-weight-semibold">Paid Advance (Full Amount):</span>
+                                    <span id="summaryPaidAdvance" class="font-weight-semibold">$0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between pt-2 border-top border-dark"
+                                    style="border-top-width: 2px !important;">
+                                    <span class="font-weight-bold text-primary">Pending Balance:</span>
+                                    <span id="summaryPendingPrice" class="font-weight-bold text-primary"
+                                        style="font-size: 18px;">$0.00</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-warning btn-lg w-100 font-weight-bold"
+                                style="border-radius: 8px; background: #f59e0b; border: none; padding: 14px; color: #fff;">
+                                <i class="fa fa-credit-card mr-2"></i> Book Now
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    let activeCustomerType = 'guest';
+    let loadedTables = [];
+
+    function setCustomerType(type) {
+        activeCustomerType = type;
+        document.getElementById('customerType').value = type;
+
+        const btnGuest = document.getElementById('btnGuestType');
+        const btnReg = document.getElementById('btnRegisteredType');
+        const secGuest = document.getElementById('guestCustomerSection');
+        const secReg = document.getElementById('registeredCustomerSection');
+
+        if (type === 'guest') {
+            btnGuest.className = "btn btn-warning btn-toggle-custom";
+            btnGuest.style.color = "#fff";
+            btnReg.className = "btn btn-outline-secondary btn-toggle-custom";
+            btnReg.style.color = "";
+            secGuest.style.display = "block";
+            secReg.style.display = "none";
+
+            // Validate required guest details
+            document.getElementById('guestName').required = true;
+            document.getElementById('guestPhone').required = true;
+
+            document.getElementById('customerId').value = '';
+            document.getElementById('redeemPoints').value = 0;
+        } else {
+            btnGuest.className = "btn btn-outline-secondary btn-toggle-custom";
+            btnGuest.style.color = "";
+            btnReg.className = "btn btn-warning btn-toggle-custom";
+            btnReg.style.color = "#fff";
+            secGuest.style.display = "none";
+            secReg.style.display = "block";
+
+            // Disable guest validations
+            document.getElementById('guestName').required = false;
+            document.getElementById('guestPhone').required = false;
+        }
+        
+        // Remove error styling when toggling modes
+        document.querySelectorAll('.is-invalid-input').forEach(el => {
+            el.classList.remove('is-invalid-input');
+            const container = el.closest('.mb-3, .col-md-6, .col-md-8, .input-group');
+            const label = container ? container.querySelector('label') : null;
+            if (label) label.classList.remove('is-invalid-label');
+        });
+
+        updateBillingSummary();
+    }
+
+    function toggleFormSection(sectionId, isVisible) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.style.display = isVisible ? "block" : "none";
+        }
+
+        // Update required validations on inputs
+        if (sectionId === 'tableSection') {
+            document.getElementById('resDate').required = isVisible;
+            document.getElementById('resTime').required = isVisible;
+        }
+
+        updateBillingSummary();
+    }
+
+    // Live validation for date and time fields
+    function validateDateTimeFields() {
+        const bookTableChecked = document.getElementById('chkBookTable').checked;
+        if (!bookTableChecked) return;
+
+        const bookingDateVal = document.getElementById('resDate').value;
+        const startTimeVal = document.getElementById('resTime').value;
+        const endTimeVal = document.getElementById('resEndTime').value;
+        const dateInput = document.getElementById('resDate');
+        const timeInput = document.getElementById('resTime');
+        const endTimeInput = document.getElementById('resEndTime');
+        const endTimeError = document.getElementById('endTimeError');
+
+        if (!bookingDateVal || !startTimeVal) return;
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+
+        // Check if date is in the past
+        if (bookingDateVal < todayStr) {
+            dateInput.classList.add('is-invalid');
+            dateInput.style.borderColor = 'red';
+        } else {
+            dateInput.classList.remove('is-invalid');
+            dateInput.style.borderColor = '';
+        }
+
+        // Check if time is in the past for today
+        if (bookingDateVal === todayStr) {
+            const [startHour, startMinute] = startTimeVal.split(':').map(Number);
+            if (startHour < currentHour || (startHour === currentHour && startMinute <= currentMinute)) {
+                timeInput.classList.add('is-invalid');
+                timeInput.style.borderColor = 'red';
+            } else {
+                timeInput.classList.remove('is-invalid');
+                timeInput.style.borderColor = '';
+            }
+        } else {
+            timeInput.classList.remove('is-invalid');
+            timeInput.style.borderColor = '';
+        }
+
+        // Check that End Time is after Start Time
+        if (endTimeInput) {
+            if (endTimeVal && startTimeVal >= endTimeVal) {
+                endTimeInput.classList.add('is-invalid');
+                endTimeInput.style.borderColor = 'red';
+                if (endTimeError) endTimeError.style.display = 'block';
+            } else {
+                endTimeInput.classList.remove('is-invalid');
+                endTimeInput.style.borderColor = '';
+                if (endTimeError) endTimeError.style.display = 'none';
+            }
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        // Init fields required
+        document.getElementById('guestName').required = true;
+        document.getElementById('guestPhone').required = true;
+        document.getElementById('resDate').required = true;
+        document.getElementById('resTime').required = true;
+
+        // Prevent selecting past dates in the native date picker
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('resDate').min = today;
+
+        document.getElementById('offlineRestTableForm').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+                e.preventDefault();
+            }
+        });
+
+        // Add live validation listeners for Date/Time (Keep existing functionality)
+        document.getElementById('resDate').addEventListener('change', validateDateTimeFields);
+        document.getElementById('resTime').addEventListener('change', validateDateTimeFields);
+        document.getElementById('resEndTime').addEventListener('change', validateDateTimeFields);
+        document.getElementById('resEndTime').addEventListener('input', validateDateTimeFields);
+    });
+
+    // --- Live validation logic block ---
+    document.addEventListener('DOMContentLoaded', function () {
+        const liveRules = {
+            'guestName': { regex: /^[a-zA-Z\s]{2,}$/, msg: 'Guest Name must be at least 2 letters.', isGuestOnly: true },
+            'guestPhone': { regex: /^[0-9]{10}$/, msg: 'Phone must be exactly 10 digits.', isGuestOnly: true },
+            'guestEmail': { regex: /^([^\s@]+@[^\s@]+\.[^\s@]+)?$/, msg: 'Enter a valid email address.', isGuestOnly: true }
+        };
+
+        Object.keys(liveRules).forEach(id => {
+            const inputField = document.getElementById(id);
+            if (!inputField) return;
+
+            // Find closest parent for label styling
+            const parentDiv = inputField.closest('.col-md-6, .input-group');
+            const label = parentDiv ? (parentDiv.querySelector('label') || parentDiv.parentElement.querySelector('label')) : null;
+
+            // Append Validation Message Box
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'validation-message';
+            errorMsg.innerText = liveRules[id].msg;
+            if(inputField.parentElement.classList.contains('input-group')) {
+                inputField.parentElement.parentElement.appendChild(errorMsg);
+            } else {
+                inputField.parentNode.insertBefore(errorMsg, inputField.nextSibling);
+            }
+
+            inputField.addEventListener('input', function () {
+                const val = this.value.trim();
+                const rule = liveRules[id];
+                const currentType = document.getElementById('customerType').value;
+
+                // Bypass guest rules if "Registered Customer" is active
+                if (rule.isGuestOnly && currentType === 'registered') {
+                    this.classList.remove('is-invalid-input');
+                    if(label) label.classList.remove('is-invalid-label');
+                    return;
+                }
+
+                if (val === '') {
+                    // Empty is invalid for required guest fields
+                    if (rule.isGuestOnly && id !== 'guestEmail') {
+                        this.classList.add('is-invalid-input');
+                        if(label) label.classList.add('is-invalid-label');
+                    } else {
+                        this.classList.remove('is-invalid-input');
+                        if(label) label.classList.remove('is-invalid-label');
+                    }
+                } else if (!rule.regex.test(val)) {
+                    this.classList.add('is-invalid-input');
+                    if(label) label.classList.add('is-invalid-label');
+                    errorMsg.innerText = rule.msg;
+                } else {
+                    this.classList.remove('is-invalid-input');
+                    if(label) label.classList.remove('is-invalid-label');
+                    errorMsg.innerText = rule.msg; // Reset to default message
+
+                    // Live backend validation for guest email
+                    if (id === 'guestEmail' && currentType === 'guest') {
+                        fetch("{% url 'api_check_guest_email' %}?email=" + encodeURIComponent(val))
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.exists) {
+                                this.classList.add('is-invalid-input');
+                                if(label) label.classList.add('is-invalid-label');
+                                errorMsg.innerText = "Email already exist. try another";
+                            }
+                        })
+                        .catch(err => console.error(err));
+                    }
+                    
+                    // Live backend validation for guest phone
+                    if (id === 'guestPhone' && currentType === 'guest') {
+                        fetch("{% url 'api_check_phone' %}?phone=" + encodeURIComponent(val))
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.exists) {
+                                this.classList.add('is-invalid-input');
+                                if(label) label.classList.add('is-invalid-label');
+                                errorMsg.innerText = "Phone number already exist. try another";
+                            }
+                        })
+                        .catch(err => console.error(err));
+                    }
+                }
+            });
+        });
+    });
+
+    function searchCustomer() {
+        const phoneInput = document.getElementById('searchPhone').value.trim();
+        const detailsCard = document.getElementById('customerDetailsCard');
+        const errorMsg = document.getElementById('customerSearchError');
+
+        if (!phoneInput) {
+            alert('Please enter a phone number to search.');
+            return;
+        }
+
+        fetch("{% url 'api_search_customer' %}?phone=" + encodeURIComponent(phoneInput))
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    errorMsg.style.display = 'none';
+                    detailsCard.style.display = 'block';
+
+                    document.getElementById('customerId').value = data.customer.id;
+                    document.getElementById('custName').innerText = data.customer.name;
+                    document.getElementById('custEmail').innerText = data.customer.email || 'N/A';
+
+                    const memBadge = document.getElementById('custMembership');
+                    memBadge.innerText = data.customer.membership_status;
+                    if (data.customer.membership_status === 'Bronze') memBadge.style.background = '#cd7f32';
+                    else if (data.customer.membership_status === 'Silver') memBadge.style.background = '#c0c0c0';
+                    else if (data.customer.membership_status === 'Gold') memBadge.style.background = '#ffd700';
+                    else if (data.customer.membership_status === 'Platinum') memBadge.style.background = '#e5e4e2';
+
+                    document.getElementById('custPoints').innerText = data.customer.loyalty_points;
+
+                    document.getElementById('redeemPoints').max = data.customer.loyalty_points;
+                    document.getElementById('maxRedeemText').innerText = data.customer.loyalty_points;
+                } else {
+                    detailsCard.style.display = 'none';
+                    errorMsg.style.display = 'block';
+                    document.getElementById('customerId').value = '';
+                }
+                updateBillingSummary();
+            })
+            .catch(err => {
+                console.error(err);
+                alert('An error occurred during customer search.');
+            });
+    }
+
+    function checkTableAvailability() {
+        const date = document.getElementById('resDate').value;
+        const time = document.getElementById('resTime').value;
+        const endTimeInput = document.getElementById('resEndTime');
+        const endTime = endTimeInput ? endTimeInput.value : '';
+        const tableSelect = document.getElementById('tableId');
+        const loader = document.getElementById('tableLoader');
+
+        if (!date || !time) return;
+
+        loader.style.display = 'block';
+        tableSelect.disabled = true;
+        tableSelect.innerHTML = '<option value="">-- Loading available tables... --</option>';
+
+        fetch("{% url 'api_available_tables' %}?date=" + date + "&time=" + time + "&end_time=" + endTime)
+            .then(res => res.json())
+            .then(data => {
+                loader.style.display = 'none';
+                tableSelect.disabled = false;
+
+                if (data.success && data.tables.length > 0) {
+                    loadedTables = data.tables;
+                    tableSelect.innerHTML = '<option value="">-- Choose a Table --</option>';
+                    data.tables.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.id;
+                        opt.setAttribute('data-price', t.price);
+                        opt.innerText = `Table ${t.table_number} (Capacity: ${t.table_capacity} - ${t.location} - ₹${t.price}/hr)`;
+                        tableSelect.appendChild(opt);
+                    });
+                } else {
+                    loadedTables = [];
+                    tableSelect.innerHTML = '<option value="">-- No available tables found for this slot --</option>';
+                }
+                updateBillingSummary();
+            })
+            .catch(err => {
+                console.error(err);
+                loader.style.display = 'none';
+                tableSelect.innerHTML = '<option value="">-- Error loading tables --</option>';
+            });
+    }
+
+    function adjustFoodQty(foodId, amount) {
+        const qtyInput = document.getElementById(`food_qty_${foodId}`);
+        if (!qtyInput) return;
+
+        let val = parseInt(qtyInput.value || '0') + amount;
+        const maxVal = parseInt(qtyInput.getAttribute('max') || '0');
+
+        if (val < 0) val = 0;
+        if (val > maxVal) val = maxVal;
+
+        qtyInput.value = val;
+        updateBillingSummary();
+    }
+
+    function onQtyInput(foodId) {
+        const qtyInput = document.getElementById(`food_qty_${foodId}`);
+        if (!qtyInput) return;
+
+        let val = parseInt(qtyInput.value || '0');
+        const maxVal = parseInt(qtyInput.getAttribute('max') || '0');
+
+        if (val < 0) val = 0;
+        if (val > maxVal) val = maxVal;
+        qtyInput.value = val;
+        updateBillingSummary();
+    }
+
+    function calculateDurationInHours(startTime, endTime) {
+        if (!startTime || !endTime) return 1;
+        const [startH, startM] = startTime.split(':').map(Number);
+        const [endH, endM] = endTime.split(':').map(Number);
+
+        let diffMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+        if (diffMinutes <= 0) {
+            diffMinutes += 24 * 60;
+        }
+        return Math.max(1, Math.ceil(diffMinutes / 60.0));
+    }
+
+    function updateBillingSummary() {
+        const isTable = document.getElementById('chkBookTable').checked;
+        const isOrder = document.getElementById('chkPlaceOrder').checked;
+
+        // 1. Table Reservation Advance
+        let tableAdvance = 0;
+        if (isTable) {
+            const tableSelect = document.getElementById('tableId');
+            const selectedOpt = tableSelect ? tableSelect.options[tableSelect.selectedIndex] : null;
+            const tablePrice = selectedOpt ? parseFloat(selectedOpt.getAttribute('data-price') || '0') : 0;
+            const startTime = document.getElementById('resTime').value;
+            const endTimeInput = document.getElementById('resEndTime');
+            const endTime = endTimeInput ? endTimeInput.value : '';
+            const duration = calculateDurationInHours(startTime, endTime);
+
+            tableAdvance = tablePrice * duration;
+
+            const advanceInput = document.getElementById('tableAdvance');
+            if (advanceInput) {
+                advanceInput.value = tableAdvance.toFixed(2);
+            }
+            const advanceHidden = document.getElementById('advanceAmount');
+            if (advanceHidden) {
+                advanceHidden.value = tableAdvance.toFixed(2);
+            }
+        }
+        document.getElementById('summaryTableAdvance').innerText = `₹${tableAdvance.toFixed(2)}`;
+
+        // 2. Food Subtotal
+        let foodSubtotal = 0;
+        if (isOrder) {
+            document.querySelectorAll('.food-qty-input').forEach(input => {
+                const qty = parseInt(input.value || '0');
+                const price = parseFloat(input.getAttribute('data-price') || '0');
+                foodSubtotal += qty * price;
+            });
+        }
+        document.getElementById('summaryFoodSubtotal').innerText = `$${foodSubtotal.toFixed(2)}`;
+
+        // 3. GST (5% of Food Subtotal)
+        const gst = foodSubtotal * 0.05;
+        document.getElementById('summaryGST').innerText = `$${gst.toFixed(2)}`;
+
+        // 4. Delivery/Service Fee
+        let fee = 0;
+        if (isOrder) {
+            const typeSelect = document.getElementById('orderType');
+            if (typeSelect.value === 'Delivery') {
+                fee = 40.00; // $40 flat delivery fee
+            }
+        }
+        document.getElementById('summaryDeliveryFee').innerText = `$${fee.toFixed(2)}`;
+
+        const orderSubtotal = foodSubtotal + gst + fee;
+        const subtotal = tableAdvance + orderSubtotal;
+
+        // 5. Points discount (only applies to food order amount)
+        let pointsDiscount = 0;
+        const redeemInput = document.getElementById('redeemPoints');
+        const pointsRow = document.getElementById('summaryRedeemRow');
+
+        if (activeCustomerType === 'registered' && isOrder) {
+            let pts = parseInt(redeemInput.value || '0');
+            const maxPts = parseInt(redeemInput.max || '0');
+
+            if (pts < 0) pts = 0;
+            if (pts > maxPts) pts = maxPts;
+            if (pts > orderSubtotal) pts = Math.floor(orderSubtotal);
+
+            redeemInput.value = pts;
+            pointsDiscount = pts;
+
+            if (pointsDiscount > 0) {
+                pointsRow.setAttribute('style', 'display: flex !important;');
+                document.getElementById('summaryRedeemPrice').innerText = `-$${pointsDiscount.toFixed(2)}`;
+            } else {
+                pointsRow.setAttribute('style', 'display: none !important;');
+            }
+        } else {
+            pointsRow.setAttribute('style', 'display: none !important;');
+        }
+
+        // 6. Grand Total
+        const grandTotal = Math.max(0, subtotal - pointsDiscount);
+        document.getElementById('summaryTotalPrice').innerText = `$${grandTotal.toFixed(2)}`;
+
+        // 7. Paid Advance (Table Advance is paid immediately, so it counts as paid advance)
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        let totalPaid = tableAdvance;
+        if (paymentMethod === 'Razorpay') {
+            totalPaid = grandTotal;
+        }
+        document.getElementById('summaryPaidAdvance').innerText = `$${totalPaid.toFixed(2)}`;
+
+        // 8. Pending
+        const pending = Math.max(0, grandTotal - totalPaid);
+        document.getElementById('summaryPendingPrice').innerText = `$${pending.toFixed(2)}`;
+    }
+
+    function filterFoodItems() {
+        const query = document.getElementById('foodSearchInput').value.toLowerCase().trim();
+        const category = document.getElementById('foodCategoryFilter').value;
+        const cuisine = document.getElementById('foodCuisineFilter').value;
+
+        document.querySelectorAll('.food-item-col').forEach(col => {
+            const name = col.getAttribute('data-name');
+            const cat = col.getAttribute('data-category');
+            const cui = col.getAttribute('data-cuisine');
+
+            const matchQuery = !query || name.includes(query);
+            const matchCategory = !category || cat === category;
+            const matchCuisine = !cuisine || cui === cuisine;
+
+            if (matchQuery && matchCategory && matchCuisine) {
+                col.style.display = 'block';
+            } else {
+                col.style.display = 'none';
+            }
+        });
+    }
+
+    // Intercept form submission for Razorpay payments
+    document.getElementById('offlineRestTableForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        // ---- VALIDATION CHECKS ----
+        const form = this;
+        const customerType = document.getElementById('customerType').value;
+        const customerId = document.getElementById('customerId').value;
+        const nameInput = document.getElementById('guestName');
+        const phoneInput = document.getElementById('guestPhone');
+        const emailInput = document.getElementById('guestEmail');
+        const tableSelect = document.getElementById('tableId');
+        const tableIdVal = tableSelect ? tableSelect.value : '';
+        const bookingDateVal = document.getElementById('resDate').value;
+        const startTimeVal = document.getElementById('resTime').value;
+        const endTimeVal = document.getElementById('resEndTime').value;
+        const guestCountVal = parseInt(document.querySelector('input[name="guests"]').value) || 0;
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const bookTableChecked = document.getElementById('chkBookTable').checked;
+        const placeOrderChecked = document.getElementById('chkPlaceOrder').checked;
+
+        let isValid = true;
+        let errorMessages = [];
+        let firstInvalidField = null;
+
+        // Clear previous error styling
+        form.querySelectorAll('.is-invalid-input, .is-invalid').forEach(el => {
+            el.classList.remove('is-invalid-input', 'is-invalid');
+            el.style.borderColor = '';
+            const container = el.closest('.mb-3, .form-group, .col-md-6, .col-md-4, .col-md-8, .input-group');
+            const label = container ? container.querySelector('label') : null;
+            if (label) {
+                label.classList.remove('is-invalid-label');
+                label.style.color = '';
+            }
+        });
+
+        // 1. Customer validation
+        if (customerType === 'registered') {
+            if (!customerId) {
+                isValid = false;
+                errorMessages.push("Please search and verify a registered customer profile.");
+                const searchInput = document.getElementById('searchPhone');
+                if (searchInput) { 
+                    searchInput.classList.add('is-invalid-input');
+                    const label = searchInput.closest('.col-md-8').querySelector('label');
+                    if(label) label.classList.add('is-invalid-label');
+                    if(!firstInvalidField) firstInvalidField = searchInput;
+                }
+            }
+        } else {
+            if (!nameInput || !nameInput.value.trim() || nameInput.value.trim().length < 2 || !/^[a-zA-Z\s]{2,}$/.test(nameInput.value.trim())) {
+                isValid = false;
+                errorMessages.push("Guest Name must be at least 2 characters and contain only alphabets.");
+                if (nameInput) {
+                    nameInput.classList.add('is-invalid-input');
+                    const label = nameInput.closest('.col-md-6').querySelector('label');
+                    if(label) label.classList.add('is-invalid-label');
+                    if(!firstInvalidField) firstInvalidField = nameInput;
+                }
+            }
+            if (phoneInput && !phoneInput.value.match(/^\d{10}$/)) {
+                isValid = false;
+                errorMessages.push("Enter a valid 10-digit Guest phone number.");
+                if (phoneInput) {
+                    phoneInput.classList.add('is-invalid-input');
+                    const label = phoneInput.closest('.col-md-6').querySelector('label');
+                    if(label) label.classList.add('is-invalid-label');
+                    if(!firstInvalidField) firstInvalidField = phoneInput;
+                }
+            }
+            if (emailInput && emailInput.value.trim() && !/^([^\s@]+@[^\s@]+\.[^\s@]+)?$/.test(emailInput.value.trim())) {
+                isValid = false;
+                errorMessages.push("Enter a valid Guest email address.");
+                if (emailInput) {
+                    emailInput.classList.add('is-invalid-input');
+                    const label = emailInput.closest('.col-md-6').querySelector('label');
+                    if(label) label.classList.add('is-invalid-label');
+                    if(!firstInvalidField) firstInvalidField = emailInput;
+                }
+            }
+        }
+
+        // 2. Booking Date & Time (only validate if table booking is checked)
+        if (bookTableChecked) {
+            if (!bookingDateVal) {
+                isValid = false;
+                errorMessages.push("Reservation Date is required.");
+                const dateCal = document.getElementById('resDate');
+                if (dateCal) { 
+                    dateCal.classList.add('is-invalid'); dateCal.style.borderColor = 'red'; 
+                    if(!firstInvalidField) firstInvalidField = dateCal;
+                }
+            }
+            if (!startTimeVal || !endTimeVal) {
+                isValid = false;
+                errorMessages.push("Start Time and End Time are required.");
+                if(!firstInvalidField) firstInvalidField = document.getElementById('resTime');
+            } else {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const now = new Date();
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
+
+                if (bookingDateVal < todayStr) {
+                    isValid = false;
+                    errorMessages.push("Reservation date has already passed.");
+                    const dateCal = document.getElementById('resDate');
+                    if (dateCal) { 
+                        dateCal.classList.add('is-invalid'); dateCal.style.borderColor = 'red'; 
+                        if(!firstInvalidField) firstInvalidField = dateCal;
+                    }
+                } else if (bookingDateVal === todayStr) {
+                    const [startHour, startMinute] = startTimeVal.split(':').map(Number);
+                    if (startHour < currentHour || (startHour === currentHour && startMinute <= currentMinute)) {
+                        isValid = false;
+                        errorMessages.push("Please select a future reservation time.");
+                        const timeInput = document.getElementById('resTime');
+                        if (timeInput) { 
+                            timeInput.classList.add('is-invalid'); timeInput.style.borderColor = 'red'; 
+                            if(!firstInvalidField) firstInvalidField = timeInput;
+                        }
+                    }
+                }
+                if (startTimeVal >= endTimeVal) {
+                    isValid = false;
+                    errorMessages.push("Start Time cannot be after or equal to End Time.");
+                    const endTimeInputEl = document.getElementById('resEndTime');
+                    const endTimeErrorEl = document.getElementById('endTimeError');
+                    if (endTimeInputEl) {
+                        endTimeInputEl.classList.add('is-invalid');
+                        endTimeInputEl.style.borderColor = 'red';
+                    }
+                    if (endTimeErrorEl) endTimeErrorEl.style.display = 'block';
+                    if(!firstInvalidField) firstInvalidField = document.getElementById('resEndTime');
+                }
+            }
+        }
+
+        // 3. Table selection (only validate if table booking is checked)
+        if (bookTableChecked && !tableIdVal) {
+            isValid = false;
+            errorMessages.push("Please select an available table.");
+            if (tableSelect) { 
+                tableSelect.classList.add('is-invalid'); tableSelect.style.borderColor = 'red'; 
+                if(!firstInvalidField) firstInvalidField = tableSelect;
+            }
+        }
+
+        // 4. Guest count (only validate if table booking is checked)
+        if (bookTableChecked && guestCountVal < 1) {
+            isValid = false;
+            errorMessages.push("Number of persons must be at least 1.");
+            const gc = document.querySelector('input[name="guests"]');
+            if (gc) { 
+                gc.classList.add('is-invalid'); gc.style.borderColor = 'red'; 
+                if(!firstInvalidField) firstInvalidField = gc;
+            }
+        }
+
+        // 5. Payment method validation
+        if (!paymentMethod) {
+            isValid = false;
+            errorMessages.push("Please select a payment method.");
+            if(!firstInvalidField) firstInvalidField = document.getElementById('paymentMethod');
+        }
+
+        if (!bookTableChecked && !placeOrderChecked) {
+            isValid = false;
+            errorMessages.push("Please select at least one service: Reserve Restaurant Table or Order Food Items.");
+            if(!firstInvalidField) firstInvalidField = document.getElementById('chkBookTable');
+        }
+
+        // 7. Food Order Validation
+        if (placeOrderChecked) {
+            let totalFoodQty = 0;
+            document.querySelectorAll('.food-qty-input').forEach(input => {
+                totalFoodQty += parseInt(input.value || '0');
+            });
+            if (totalFoodQty === 0) {
+                isValid = false;
+                errorMessages.push("You must select at least one food item with quantity > 0 for a food order.");
+                // Focus the food search input to direct the user to the menu
+                if(!firstInvalidField) firstInvalidField = document.getElementById('foodSearchInput');
+            }
+        }
+        if (!isValid) {
+            if (firstInvalidField) firstInvalidField.focus();
+            Swal.fire({
+                icon: 'error',
+                title: 'Label Validation Error',
+                html: "<ul style='text-align:left; font-size:14px; padding-left:20px; margin-bottom:0;'><li>" + errorMessages.join("</li><li style='margin-top:6px;'>") + "</li></ul>",
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#ef4444',
+            });
+            return;
+        }
+        // ---- END VALIDATION ----
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalBtnHTML = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>Processing...';
+
+        // Helper function to reset button and hide spinner
+        const resetButton = () => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnHTML;
+        };
+
+        const formData = new FormData(this);
+        formData.append('ajax', '1');
+
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                try {
+                    if (data.success && data.razorpay) {
+                        const ctx = data.context;
+                        const options = {
+                            key: ctx.razorpay_key,
+                            amount: (function () {
+
+                                var amt = parseFloat(ctx.amount);
+
+                                var key = ctx.razorpay_key;
+
+                                if (key && key.indexOf("rzp_test") === 0 && amt > 50000) {
+
+                                    return 50000 * 100;
+
+                                }
+
+                                return Math.round(amt * 100);
+
+                            })(),
+                            currency: "INR",
+                            name: "StayZen",
+                            description: "Offline Restaurant / Table Payment #" + ctx.booking_id,
+                            prefill: {
+                                name: ctx.name,
+                                email: ctx.email,
+                                contact: ctx.phone
+                            },
+                            handler: function (response) {
+                                // Submit payment details to callback
+                                fetch("{% url 'razorpay_callback' %}", {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRFToken": "{{ csrf_token }}"
+                                    },
+                                    body: JSON.stringify({
+                                        booking_id: ctx.booking_id,
+                                        booking_type: ctx.booking_type,
+                                        razorpay_payment_id: response.razorpay_payment_id
+                                    })
+                                })
+                                    .then(res => res.json())
+                                    .then(cbData => {
+                                        try {
+                                            if (cbData.success) {
+                                                Swal.fire({
+                                                    title: 'Payment Successful',
+                                                    text: cbData.details ? cbData.details.message : 'Offline restaurant order/reservation has been confirmed successfully!',
+                                                    icon: 'success',
+                                                    confirmButtonText: 'OK',
+                                                    customClass: {
+                                                        popup: 'stayzen-swal-popup',
+                                                        title: 'stayzen-swal-title',
+                                                        confirmButton: 'stayzen-swal-confirm'
+                                                    },
+                                                    buttonsStyling: false
+                                                }).then(() => {
+                                                    window.location.href = cbData.redirect_url || "{% url 'receptionist_table_reservations' %}";
+                                                });
+                                            } else {
+                                                Swal.fire({
+                                                    title: 'Error',
+                                                    text: 'Payment confirmation failed: ' + cbData.message,
+                                                    icon: 'error',
+                                                    confirmButtonText: 'OK',
+                                                    customClass: {
+                                                        popup: 'stayzen-swal-popup',
+                                                        title: 'stayzen-swal-title',
+                                                        confirmButton: 'stayzen-swal-confirm'
+                                                    },
+                                                    buttonsStyling: false
+                                                });
+                                                resetButton();
+                                            }
+                                        } catch (cbErr) {
+                                            console.error('Error in payment callback:', cbErr);
+                                            Swal.fire({
+                                                title: 'Error',
+                                                text: 'An unexpected error occurred during payment verification.',
+                                                icon: 'error',
+                                                confirmButtonText: 'OK',
+                                                customClass: {
+                                                    popup: 'stayzen-swal-popup',
+                                                    title: 'stayzen-swal-title',
+                                                    confirmButton: 'stayzen-swal-confirm'
+                                                },
+                                                buttonsStyling: false
+                                            });
+                                            resetButton();
+                                        }
+                                    })
+                                    .catch(err => {
+                                        console.error('Network error in payment callback:', err);
+                                        Swal.fire({
+                                            title: 'Error',
+                                            text: 'Network connection lost. Please try again.',
+                                            icon: 'error',
+                                            confirmButtonText: 'OK',
+                                            customClass: {
+                                                popup: 'stayzen-swal-popup',
+                                                title: 'stayzen-swal-title',
+                                                confirmButton: 'stayzen-swal-confirm'
+                                            },
+                                            buttonsStyling: false
+                                        });
+                                        resetButton();
+                                    });
+                            },
+                            modal: {
+                                ondismiss: function () {
+                                    resetButton();
+                                }
+                            },
+                            theme: {
+                                color: "#f59e0b"
+                            }
+                        };
+                        const rzp = new Razorpay(options);
+                        rzp.open();
+                    } else if (data.success && !data.razorpay) {
+                        Swal.fire({
+                            title: 'Success',
+                            text: data.message || 'Offline booking created successfully.',
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                popup: 'stayzen-swal-popup',
+                                title: 'stayzen-swal-title',
+                                confirmButton: 'stayzen-swal-confirm'
+                            },
+                            buttonsStyling: false
+                        }).then(() => {
+                            window.location.href = data.redirect_url || "{% url 'receptionist_table_reservations' %}";
+                        });
+                        // We keep the button disabled during redirect
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message || 'Something went wrong while initiating booking.',
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                popup: 'stayzen-swal-popup',
+                                title: 'stayzen-swal-title',
+                                confirmButton: 'stayzen-swal-confirm'
+                            },
+                            buttonsStyling: false
+                        });
+                        resetButton();
+                    }
+                } catch (dataErr) {
+                    console.error('Error processing response:', dataErr);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'An unexpected error occurred. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'stayzen-swal-popup',
+                            title: 'stayzen-swal-title',
+                            confirmButton: 'stayzen-swal-confirm'
+                        },
+                        buttonsStyling: false
+                    });
+                    resetButton();
+                }
+            })
+            .catch(err => {
+                console.error('Network error:', err);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Network connection lost. Please try again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'stayzen-swal-popup',
+                        title: 'stayzen-swal-title',
+                        confirmButton: 'stayzen-swal-confirm'
+                    },
+                    buttonsStyling: false
+                });
+                resetButton();
+            });
+    });
+</script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+{% endblock %}

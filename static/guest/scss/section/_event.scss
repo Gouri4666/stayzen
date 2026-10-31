@@ -1,0 +1,134 @@
+// event
+.single__event {
+    display: flex;
+    gap: 70px;
+    align-items: center;
+    &.if__is__reverse {
+        flex-direction: row-reverse;
+        padding-top: 120px;
+
+        @include mq($md) {
+            padding-top: 60px;
+        }
+    }
+    @include mq($md) {
+        flex-wrap: wrap;
+        gap: 30px;
+    }
+
+    &__thumb {
+        overflow: hidden;
+        flex-basis: 50%;
+
+        @include mq($md) {
+            flex-basis: 100%;
+        }
+
+        img {
+            border-radius: 10px;
+
+            @include mq($md) {
+                width: 100%;
+            }
+
+            @include mq($sm) {
+                height: 100%;
+                object-fit: cover;
+            }
+        }
+    }
+
+    &__meta {
+        flex-basis: 50%;
+
+        @include mq($md) {
+            flex-basis: 100%;
+        }
+
+        .event__info {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            @include mq($sm) {
+                flex-wrap: wrap;
+                gap: 30px;
+            }
+            &__single {
+                .h5 {
+                    color: var(--heading-color);
+                }
+            }
+        }
+    }
+}
+
+// event newsletter
+.event__newsletter__bg {
+    position: relative;
+    background-image: url('../images/pages/event/cta__bg.webp');
+    @extend %background;
+    padding: 65px 0;
+
+    &::before {
+        @extend %position-common;
+        background-color: rgba(#000834, $alpha: 0.8);
+    }
+}
+
+.event__newsletter__text {
+    position: relative;
+    z-index: 1;
+
+    @include mq($sm) {
+        text-align: center;
+    }
+
+    h2 {
+        color: var(--rts-white);
+    }
+}
+
+.event__newsletter__contact {
+    position: relative;
+    display: flex;
+    gap: 40px;
+    z-index: 1;
+    justify-content: space-around;
+    margin-left: 20px;
+
+    @include mq($lg) {
+        flex-wrap: wrap;
+        gap: 30px;
+    }
+
+    @include mq($md) {
+        justify-content: center;
+        margin-left: 0;
+    }
+
+    .contact__method {
+        border: 1px solid rgba(#fff, $alpha: 0.5);
+        display: flex;
+        flex-direction: column;
+        padding: 25px;
+        border-radius: 12px;
+
+        @include mq($xs) {
+            width: 100%;
+            justify-content: center;
+            align-items: center;
+        }
+
+        span {
+            color: var(--rts-white);
+            font-family: var(--jost);
+        }
+
+        a {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            color: var(--rts-white);
+        }
+    }
+}

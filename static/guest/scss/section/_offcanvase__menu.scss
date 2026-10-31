@@ -1,0 +1,292 @@
+.offcanvas {
+    &.offcanvas-start {
+        min-width: 1300px;
+        max-width: 1300px;
+
+        @include mq($lg) {
+            min-width: 100%;
+            max-width: 100%;
+            width: 100%;
+        }
+
+        @include mq($md) {
+            min-width: unset;
+            width: unset;
+        }
+    }
+}
+
+.rts__btstrp__offcanvase {
+    max-width: 1300px;
+    position: relative;
+
+    .offcanvase__wrapper {
+        display: flex;
+        align-items: center;
+        background-color: #2B2B2B;
+
+        @include mq($md) {
+            background-color: transparent;
+        }
+
+        .left__side {
+            position: relative;
+            min-width: 470px;
+            max-width: 470px;
+            height: 100vh;
+            background-color: #1D1D1D;
+            padding: 50px 60px 35px 50px;
+            overflow: scroll;
+            overflow-x: hidden;
+            &::-webkit-scrollbar {
+                display: none;
+            }
+
+            @include mq($xs) {
+                min-width: 100%;
+                max-width: 100%;
+                padding: 50px 30px;
+            }
+
+            &.mobile__menu {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                gap: 20px;
+                .btn-close-white {
+                    position: absolute;
+                    right: 30px;
+                    display: none;
+
+                    @include mq($md) {
+                        display: block;
+                    }
+                }
+            }
+
+            .offcanvase__top {
+
+                @include mq($md) {
+                    margin-bottom: 60px;
+                }
+            }
+
+            .offcanvase__mobile__menu {
+                margin-bottom: 50px;
+
+                .mean-container .mean-nav {
+                    margin-top: 0;
+
+                    >ul {
+                        display: block !important;
+
+                        .has__children {
+                            .slide__menu__item {
+                                .toggle {
+                                    @include mq($sm) {
+                                        display: none;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    & .meanmenu-reveal {
+                        display: none !important;
+                    }
+
+                    >ul li a {
+                        border-top: 1px solid rgba(#65676B, $alpha: 0.4);
+                        text-transform: capitalize;
+                        font-family: var(--glida);
+
+                        &.mean-expand {
+                            border: 0 !important;
+                            margin-top: 0;
+                            background: transparent;
+                        }
+                    }
+                }
+
+                .mean-container {
+                    .mean-bar {
+                        background-color: transparent;
+
+                        .mean-nav {
+                            background-color: transparent;
+                        }
+
+                        .meanmenu-reveal {
+                            display: none !important;
+                        }
+                    }
+                }
+
+
+            }
+
+            .offcanvase__logo {
+                margin-bottom: 40px;
+            }
+
+            .description {
+                color: var(--rts-white);
+            }
+
+            .offcanvase__bottom {
+                position: relative;
+
+                .offcanvase__address {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+
+                    .item {
+                        span {
+                            display: block;
+                            font-size: 22px;
+                            color: var(--rts-white);
+                        }
+
+                        a {
+                            display: flex;
+                            gap: 8px;
+                            align-items: center;
+                            color: var(--rts-white);
+                        }
+                    }
+                }
+            }
+        }
+
+        .right__side {
+            &.desktop__menu {
+                width: 100%;
+
+                @include mq($md) {
+                    display: none;
+                }
+
+                .btn-close-white {
+                    position: absolute;
+                    right: 30px;
+                    top: 20px;
+                }
+            }
+        }
+    }
+}
+
+// desktop menu
+.rts__desktop__menu {
+    height: 80vh;
+    scroll-behavior: smooth;
+    overflow: scroll;
+    overflow-x: hidden;
+    display: flex;
+    align-items: center;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    .desktop__menu {
+        width: 100%;
+
+        ul {
+            .slide {
+                &.has__children {
+                    &.active {
+                        .toggle {
+                            &::after {
+                                content: '-';
+                                position: absolute;
+                            }
+                        }
+                    }
+                }
+
+                .slide__menu__item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-size: 20px;
+                    font-family: var(--glida);
+                    color: var(--rts-white);
+                    padding-bottom: 15px;
+                    margin-bottom: 15px;
+                    border-bottom: 1px solid rgba(#65676B, $alpha: 0.8);
+                    padding-left: 30px;
+                    padding-right: 50px;
+                    transition: var(--transition);
+
+                    &:hover {
+                        color: var(--heading-color);
+                    }
+                }
+
+                .toggle {
+                    font-size: 30px;
+                    color: #747474;
+                    position: relative;
+
+                    &::after {
+                        content: '+';
+                        position: absolute;
+                        right: -7px;
+                        top: -13px;
+                        transition: var(--transition);
+                    }
+                }
+
+                .slide__menu {
+                    display: none;
+                    transform: translate(196px, 189px);
+                    visibility: hidden;
+                    transition: var(--transition);
+
+                    li {
+
+                        a {
+                            font-size: 18px;
+                            font-family: var(--glida);
+                            color: var(--rts-white);
+                            border-bottom: 1px solid rgba(#65676B, $alpha: 0.8);
+                            display: block;
+                            margin-bottom: 10px;
+                            padding-bottom: 10px;
+                            transition: var(--transition);
+
+                            &:hover {
+                                color: var(--heading-color);
+                            }
+
+                        }
+                    }
+                }
+            }
+
+        }
+
+        .slide.has__children.active .slide__menu {
+            display: block !important;
+            visibility: visible !important;
+            transform: translate(0) !important;
+            margin-top: 30px;
+            padding-bottom: 30px;
+        }
+    }
+}
+
+// dark mode
+[data-theme='dark'] {
+    .rts__btstrp__offcanvase .offcanvase__wrapper .left__side .description {
+        color: #fff;
+    }
+
+    .rts__btstrp__offcanvase .offcanvase__wrapper .left__side .offcanvase__bottom .offcanvase__address .item span {
+        color: #fff;
+    }
+
+    .rts__btstrp__offcanvase .offcanvase__wrapper .left__side .offcanvase__bottom .offcanvase__address .item a {
+        color: #fff;
+    }
+}

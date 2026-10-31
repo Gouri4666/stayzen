@@ -1,0 +1,336 @@
+{% extends 'guest/base.html' %}
+{% load static %}
+
+{% block title %}Cancel Booking - StayZen{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --danger: #dc2626;
+        --danger-hover: #b91c1c;
+        --danger-bg: #fef2f2;
+        --text-main: #111827;
+        --text-muted: #6b7280;
+        --border: #e5e7eb;
+        --bg: #f3f4f6;
+        --surface: #ffffff;
+        --focus-ring: rgba(220, 38, 38, 0.2);
+    }
+
+    .cancel-page-wrapper {
+        background-color: var(--bg);
+        min-height: calc(100vh - 100px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem 1rem;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .cancel-card {
+        background: var(--surface);
+        max-width: 480px;
+        width: 100%;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes fadeUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .card-header {
+        padding: 24px 32px 0;
+    }
+
+    .card-header h2 {
+        margin: 0 0 8px 0;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .order-badge {
+        display: inline-block;
+        background: var(--bg);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+    }
+
+    .card-body {
+        padding: 24px 32px 32px;
+    }
+
+    .warning-alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        background-color: var(--danger-bg);
+        padding: 16px;
+        border-radius: 8px;
+        border-left: 4px solid var(--danger);
+        margin-bottom: 24px;
+    }
+
+    .warning-icon {
+        color: var(--danger);
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .warning-text h4 {
+        margin: 0 0 4px 0;
+        color: var(--danger);
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .warning-text p {
+        margin: 0;
+        color: #7f1d1d;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 8px;
+    }
+
+    .form-select,
+    .form-textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 15px;
+        color: var(--text-main);
+        background-color: #fff;
+        transition: all 0.2s;
+        font-family: inherit;
+        box-sizing: border-box;
+    }
+
+    .form-select:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--danger);
+        box-shadow: 0 0 0 3px var(--focus-ring);
+    }
+
+    .conditional-input {
+        display: none;
+        margin-top: 12px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .button-group {
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 12px;
+        margin-top: 32px;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 14px;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-secondary {
+        background: #fff;
+        color: var(--text-main);
+        border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+        background: var(--bg);
+        border-color: #d1d5db;
+    }
+
+    .btn-danger {
+        background: var(--danger);
+        color: #fff;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+        background: var(--danger-hover);
+    }
+
+    .btn-danger:disabled {
+        background: #fca5a5;
+        cursor: not-allowed;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+        display: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .is-loading .spinner {
+        display: block;
+    }
+
+    @media (min-width: 600px) {
+        .button-group {
+            flex-direction: row;
+        }
+
+        .btn {
+            flex: 1;
+        }
+    }
+</style>
+
+<div class="cancel-page-wrapper">
+    <div class="cancel-card">
+        <div class="card-header">
+            <h2>Cancel {{ type }}</h2>
+            <div class="order-badge">ID: {{ booking.long_order_id }}</div>
+        </div>
+
+        <div class="card-body">
+            <div class="warning-alert">
+                <svg class="warning-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                    </path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <div class="warning-text">
+                    <h4>Action cannot be undone</h4>
+                    <p>Are you sure you want to cancel? Refunds will be processed according to our cancellation policy
+                        rules.</p>
+                </div>
+            </div>
+
+            <form method="POST" id="cancelForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label" for="reasonSelect">Why are you canceling?</label>
+                    <select name="reason" id="reasonSelect" class="form-select" required>
+                        <option value="" disabled selected>Please select a reason...</option>
+                        <option value="Change of plans">Change of plans</option>
+                        <option value="Booked by mistake">Booked by mistake</option>
+                        <option value="Schedule conflict">Schedule conflict</option>
+                        <option value="Found a better alternative">Found a better alternative</option>
+                        <option value="Service delay">Service delay</option>
+                        <option value="Other">Other</option>
+                    </select>
+
+                    <div id="otherReasonWrapper" class="conditional-input">
+                        <textarea name="other_reason" id="otherReasonText" class="form-textarea"
+                            placeholder="Please tell us more..."></textarea>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <a href="{% url 'track_booking' booking.long_order_id %}" class="btn btn-secondary">Keep Booking</a>
+                    <button type="submit" id="submitBtn" class="btn btn-danger" disabled>
+                        <div class="spinner"></div>
+                        <span>Cancel Booking</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const reasonSelect = document.getElementById('reasonSelect');
+        const otherReasonWrapper = document.getElementById('otherReasonWrapper');
+        const otherReasonText = document.getElementById('otherReasonText');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelForm = document.getElementById('cancelForm');
+
+        // Handle Select Change
+        reasonSelect.addEventListener('change', function () {
+            // Enable the submit button once a valid option is picked
+            if (this.value) {
+                submitBtn.disabled = false;
+            }
+
+            // Show text area if "Other" is chosen
+            if (this.value === 'Other') {
+                otherReasonWrapper.style.display = 'block';
+                // Small timeout to allow CSS transition to trigger
+                setTimeout(() => {
+                    otherReasonWrapper.style.opacity = '1';
+                }, 10);
+                otherReasonText.setAttribute('required', 'true');
+            } else {
+                otherReasonWrapper.style.opacity = '0';
+                setTimeout(() => {
+                    otherReasonWrapper.style.display = 'none';
+                }, 300); // Matches the CSS transition time
+                otherReasonText.removeAttribute('required');
+                otherReasonText.value = ''; // Clear it out
+            }
+        });
+
+        // Handle Form Submission Loading State
+        cancelForm.addEventListener('submit', function (e) {
+            submitBtn.classList.add('is-loading');
+            submitBtn.disabled = true; // Prevent double clicks
+            submitBtn.querySelector('span').textContent = 'Processing...';
+
+            // Re-enable form submission since we disabled the button
+            // If we don't do this, the HTML form won't actually POST after disabling the button
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'reason';
+            hiddenInput.value = reasonSelect.value;
+            this.appendChild(hiddenInput);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,250 @@
+templates/admin/edit_loyalty_points.html
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <div class="card border-0 shadow-lg">
+
+        <div class="card-header bg-primary text-white d-flex flex-wrap justify-content-between align-items-center">
+            <h4 class="mb-0">
+                Manage Loyalty Points
+            </h4>
+
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'customer_loyalty_transactions' customer.id %}"
+                   class="btn btn-light btn-sm">
+                    Customer Transactions
+                </a>
+                <a href="{% url 'loyalty_customer_list' %}"
+                   class="btn btn-secondary btn-sm">
+                    Back
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="row g-4">
+
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">Customer Detail</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                {% if customer.image %}
+                                    <img src="{{ customer.image.url }}"
+                                         alt="{{ customer.user.get_full_name|default:customer.user.username }}"
+                                         class="rounded-circle"
+                                         width="96"
+                                         height="96"
+                                         style="object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center"
+                                         style="width:96px;height:96px;font-size:32px;">
+                                        {{ customer.user.first_name|default:customer.user.username|first|upper }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <th>Name</th>
+                                    <td>{{ customer.user.get_full_name|default:customer.user.username }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Username</th>
+                                    <td>{{ customer.user.username }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Email</th>
+                                    <td>{{ customer.user.email|default:"No email" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Phone</th>
+                                    <td>{{ customer.phone|default:"No phone" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Status</th>
+                                    <td>
+                                        {% if customer.verification_status %}
+                                            <span class="badge bg-success">Verified</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Unverified</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body">
+                                    <small class="text-muted">Available Points</small>
+                                    <h3 class="mb-0">{{ customer.loyalty_points }}</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body">
+                                    <small class="text-muted">Lifetime Earned</small>
+                                    <h3 class="mb-0">{{ customer.lifetime_points_earned }}</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body">
+                                    <small class="text-muted">Membership</small>
+                                    <h3 class="mb-0">{{ customer.membership_status }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0">Loyalty Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <p class="mb-1">
+                                        <strong>Current tier:</strong> {{ customer.membership_status }}
+                                    </p>
+                                    {% if customer.next_membership_tier %}
+                                        <p class="mb-2">
+                                            <strong>Next tier:</strong>
+                                            {{ customer.next_membership_tier }}
+                                            in {{ customer.points_needed_for_next_tier }} lifetime points
+                                        </p>
+                                    {% else %}
+                                        <p class="mb-2">
+                                            <span class="badge bg-success">Customer is at the highest tier.</span>
+                                        </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Tier Progress</label>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-success"
+                                             role="progressbar"
+                                             style="width: {{ customer.membership_progress_percent }}%;"
+                                             aria-valuenow="{{ customer.membership_progress_percent }}"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">
+                                            {{ customer.membership_progress_percent }}%
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        Bronze 0, Silver 500, Gold 1500, Platinum 3000 lifetime points.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0">Add Bonus Points</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="add">
+
+                                        <div class="mb-3">
+                                            <label for="addPoints" class="form-label fw-bold">
+                                                Points to add
+                                            </label>
+                                            <input type="number"
+                                                   min="1"
+                                                   step="1"
+                                                   name="points"
+                                                   id="addPoints"
+                                                   class="form-control"
+                                                   required>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-success w-100">
+                                            Add Points
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-danger text-white">
+                                    <h5 class="mb-0">Deduct Points</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="remove">
+
+                                        <div class="mb-3">
+                                            <label for="removePoints" class="form-label fw-bold">
+                                                Points to deduct
+                                            </label>
+                                            <input type="number"
+                                                   min="1"
+                                                   step="1"
+                                                   max="{{ customer.loyalty_points }}"
+                                                   name="points"
+                                                   id="removePoints"
+                                                   class="form-control"
+                                                   {% if customer.loyalty_points == 0 %}disabled{% endif %}
+                                                   required>
+                                            {% if customer.loyalty_points == 0 %}
+                                                <small class="text-muted">
+                                                    This customer has no available points to deduct.
+                                                </small>
+                                            {% endif %}
+                                        </div>
+
+                                        <button type="submit"
+                                                class="btn btn-danger w-100"
+                                                {% if customer.loyalty_points == 0 %}disabled{% endif %}>
+                                            Deduct Points
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

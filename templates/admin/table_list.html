@@ -1,0 +1,371 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    /* 1. HIDE THE DEFAULT TOP-RIGHT TOAST MESSAGES */
+    .global-toast-container,
+    #toast-container,
+    .toast {
+        display: none !important;
+    }
+
+    /* 2. CENTERED CUSTOM MODAL STYLES */
+    .custom-modal-overlay {
+        display: none; /* Hidden by default */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(3px);
+    }
+
+    .custom-modal-overlay.active {
+        display: flex;
+    }
+
+    .custom-modal-box {
+        background: #ffffff;
+        width: 100%;
+        max-width: 420px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        animation: modalFadeIn 0.3s ease-out forwards;
+        overflow: hidden;
+    }
+
+    /* Success Header */
+    .custom-modal-header.success {
+        background: #f0fdf4;
+        padding: 16px 20px;
+        border-bottom: 2px solid #bbf7d0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .custom-modal-header.success h5 {
+        color: #166534;
+        margin: 0;
+        font-weight: bold;
+    }
+
+    /* Warning/Confirm Header */
+    .custom-modal-header.warning {
+        background: #fffbeb;
+        padding: 16px 20px;
+        border-bottom: 2px solid #fef08a;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .custom-modal-header.warning h5 {
+        color: #854d0e;
+        margin: 0;
+        font-weight: bold;
+    }
+
+    /* Error Header */
+    .custom-modal-header.error {
+        background: #fef2f2;
+        padding: 16px 20px;
+        border-bottom: 2px solid #fecaca;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .custom-modal-header.error h5 {
+        color: #991b1b;
+        margin: 0;
+        font-weight: bold;
+    }
+
+    .custom-modal-body {
+        padding: 24px 20px;
+        color: #374151;
+        font-size: 15px;
+        line-height: 1.5;
+        text-align: center;
+    }
+
+    .custom-modal-footer {
+        padding: 12px 20px;
+        background: #f9fafb;
+        text-align: right;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+</style>
+
+<div class="container-fluid mt-4">
+
+    <div class="card border-0 shadow-lg">
+
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+            <h4 class="mb-0">🍽️ Restaurant Tables</h4>
+            {% if request.user.is_superuser or permissions.table_list.add %}
+            <a href="{% url 'add_table' %}" class="btn btn-light btn-sm">
+                + Add New Table
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="card-body">
+            <!-- Live Filter UI -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label text-muted font-weight-bold" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Search Table Number</label>
+                    <input type="text" id="liveSearchInput" class="form-control" placeholder="Type table number..." value="{{ q }}" style="border-radius: 8px; padding: 10px 14px; font-size: 14px;">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted font-weight-bold" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Category (Location)</label>
+                    <select id="liveCategorySelect" class="form-control" style="border-radius: 8px; height: auto; padding: 10px 14px; font-size: 14px;">
+                        <option value="">All Categories</option>
+                        <option value="Indoor" {% if category == 'Indoor' %}selected{% endif %}>Indoor</option>
+                        <option value="Outdoor" {% if category == 'Outdoor' %}selected{% endif %}>Outdoor</option>
+                        <option value="Pool Side" {% if category == 'Pool Side' %}selected{% endif %}>Pool Side</option>
+                        <option value="Window Side" {% if category == 'Window Side' %}selected{% endif %}>Window Side</option>
+                        <option value="Garden Side" {% if category == 'Garden Side' %}selected{% endif %}>Garden Side</option>
+                        <option value="Rooftop" {% if category == 'Rooftop' %}selected{% endif %}>Rooftop</option>
+                        <option value="Private Dining" {% if category == 'Private Dining' %}selected{% endif %}>Private Dining</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="tableContainer">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Image</th>
+                                <th>Table Number</th>
+                                <th>Capacity</th>
+                                <th>Location</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Description</th>
+                                <th>Audit Logs</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for table in tables %}
+                            <tr class="{% if table.is_deleted %}table-danger opacity-75{% endif %}">
+                                <td>
+                                    {% if table.table_image %}
+                                        <img src="{{ table.table_image.url }}" width="100" class="img-fluid rounded shadow-sm" alt="Table Image">
+                                    {% else %}
+                                        <span class="text-muted small">No Image</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold">{{ table.table_number }}</td>
+                                <td>{{ table.table_capacity }}</td>
+                                <td>{{ table.location }}</td>
+                                <td class="fw-bold">₹{{ table.price }}</td>
+                                <td>
+                                    {% if table.is_deleted %}
+                                        <span class="badge bg-danger">Deleted</span>
+                                    {% else %}
+                                        {% if table.status == 'Available' %}
+                                            <span class="badge bg-success">Available</span>
+                                        {% elif table.status == 'Reserved' %}
+                                            <span class="badge bg-primary">Reserved</span>
+                                        {% elif table.status == 'Occupied' %}
+                                            <span class="badge bg-danger">Occupied</span>
+                                        {% elif table.status == 'Maintenance' %}
+                                            <span class="badge bg-warning text-dark">Maintenance</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ table.status }}</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>{{ table.description|default:"-"|truncatechars:40 }}</td>
+                                <td>
+                                    <div class="small">
+                                        <span class="text-muted">Created:</span> {{ table.created_by.username|default:"System" }}<br>
+                                        <span class="text-muted" style="font-size: 11px;">{{ table.created_at|date:"Y-m-d H:i" }}</span>
+                                        {% if table.edited_by %}
+                                            <hr class="my-1">
+                                            <span class="text-muted">Edited:</span> {{ table.edited_by.username }}<br>
+                                            <span class="text-muted" style="font-size: 11px;">{{ table.edited_at|date:"Y-m-d H:i" }}</span>
+                                        {% endif %}
+                                        {% if table.is_deleted %}
+                                            <hr class="my-1">
+                                            <span class="text-danger fw-semibold">Deleted:</span> {{ table.deleted_by.username }}<br>
+                                            <span class="text-danger" style="font-size: 11px;">{{ table.deleted_at|date:"Y-m-d H:i" }}</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        {% if request.user.is_superuser or permissions.table_list.edit %}
+                                            <a href="{% url 'edit_table' table.id %}" class="btn btn-sm btn-warning btn-action-icon" title="Edit">
+                                                <i class="fa fa-pencil"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if request.user.is_superuser or permissions.table_list.delete %}
+                                            <form action="{% url 'delete_table' table.id %}" method="POST" style="display:inline;" onsubmit="event.preventDefault(); showConfirmModal('Are you sure you want to delete Table <br><b class=\'text-danger fs-5\'>{{ table.table_number|escapejs }}</b>?', this);">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger btn-action-icon" title="Delete">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center py-4 text-muted">No Restaurant Tables Found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <nav class="mt-4 d-flex justify-content-center"><ul class="pagination">
+                    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&category={{ category }}">← Prev</a></li>{% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}&q={{ q }}&category={{ category }}">{{ num }}</a></li>
+                    {% endfor %}
+                    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}&category={{ category }}">Next →</a></li>{% endif %}
+                </ul></nav>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<div id="customConfirmModal" class="custom-modal-overlay">
+    <div class="custom-modal-box">
+        <div class="custom-modal-header warning">
+            <h5><i class="fa fa-exclamation-triangle mr-2"></i>Confirm Deletion</h5>
+        </div>
+        <div class="custom-modal-body" id="customConfirmMessage">
+            </div>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn btn-secondary btn-sm px-4" onclick="closeConfirmModal()" style="border-radius: 6px;">Cancel</button>
+            <button type="button" class="btn btn-danger btn-sm px-4" id="customConfirmBtn" style="border-radius: 6px;">Yes, Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        
+        /* -------------------------------------------
+           DJANGO MESSAGES AUTO-POPUP LOGIC
+        ------------------------------------------- */
+        const alertModal = document.getElementById("customAlertModal");
+        const alertHeader = document.getElementById("customAlertHeader");
+        const alertTitle = document.getElementById("customAlertTitle");
+        const alertMessage = document.getElementById("customAlertMessage");
+
+        // Custom Alert Modal functions (can still be called manually if needed)
+        window.showAlertModal = function(message, type) {
+            alertMessage.innerHTML = message;
+            
+            // Adjust colors based on message type
+            alertHeader.className = "custom-modal-header " + (type === 'error' ? 'error' : 'success');
+            
+            if (type === 'error') {
+                alertTitle.innerHTML = '<i class="fa fa-times-circle mr-2"></i>Error';
+                alertTitle.style.color = '#991b1b';
+            } else {
+                alertTitle.innerHTML = '<i class="fa fa-check-circle mr-2"></i>Success';
+                alertTitle.style.color = '#166534';
+            }
+
+            alertModal.classList.add("active");
+        }
+
+        window.closeAlertModal = function() {
+            alertModal.classList.remove("active");
+        }
+
+
+        /* -------------------------------------------
+           CONFIRMATION MODAL LOGIC (For Deletions)
+        ------------------------------------------- */
+        const confirmModal = document.getElementById("customConfirmModal");
+        const confirmMessage = document.getElementById("customConfirmMessage");
+        const confirmBtn = document.getElementById("customConfirmBtn");
+        let formToSubmit = null;
+
+        window.showConfirmModal = function(message, formElement) {
+            confirmMessage.innerHTML = message;
+            formToSubmit = formElement; // Store the specific form that triggered the prompt
+            confirmModal.classList.add("active");
+        }
+
+        window.closeConfirmModal = function() {
+            confirmModal.classList.remove("active");
+            formToSubmit = null; // Clear the stored form
+        }
+
+        // Event listener for the "Yes, Delete" button inside the modal
+        confirmBtn.addEventListener("click", function() {
+            if (formToSubmit) {
+                formToSubmit.submit(); // Actually submit the form to Django
+            }
+        });
+
+        // AJAX live search logic
+        const searchInput = document.getElementById('liveSearchInput');
+        const categorySelect = document.getElementById('liveCategorySelect');
+        let debounceTimeout = null;
+
+        function performSearch() {
+            const q = searchInput ? searchInput.value.trim() : '';
+            const cat = categorySelect ? categorySelect.value : '';
+            const url = new URL(window.location.href);
+            url.searchParams.set('q', q);
+            url.searchParams.set('category', cat);
+            url.searchParams.set('page', '1'); // Reset to page 1
+
+            fetch(url.toString(), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newTable = doc.getElementById('tableContainer');
+                if (newTable) {
+                    document.getElementById('tableContainer').innerHTML = newTable.innerHTML;
+                }
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimeout);
+                debounceTimeout = setTimeout(performSearch, 300);
+            });
+        }
+        if (categorySelect) {
+            categorySelect.addEventListener('change', performSearch);
+        }
+
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,189 @@
+
+{% extends 'admin/base.html' %}
+{% load static %}
+{% block content %}
+<div class="container-fluid" style="margin-top:45px;">
+    <div class="card border-0 shadow-lg mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                {% if form.instance.pk %}
+                    🎁 Edit Package
+                {% else %}
+                    🎁 Add New Package
+                {% endif %}
+            </h4>
+        </div>
+        <div class="card-body p-4">
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Package Name
+                        </label>
+                        {{ form.package_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Package Type
+                        </label>
+                        {{ form.package_type }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">
+                            Description
+                        </label>
+                        {{ form.package_description }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Guest Capacity
+                        </label>
+                        {{ form.guest_capacity }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Event Hall
+                        </label>
+                        {{ form.hall }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">
+                            Services Included
+                        </label>
+                        <div class="border rounded p-3 bg-light">
+                            {{ form.services }}
+                        </div>
+                    </div>
+                    <!-- Service creation is available inside package management page after package is created -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Status
+                        </label>
+                        {{ form.status }}
+                    </div>
+                </div>
+                <!-- Inline services like activity sessions -->
+                <div class="col-12 mt-3">
+                    <div class="card border-0 shadow-sm p-3">
+                        <h5>Services (add multiple)</h5>
+                        <div id="services-rows">
+                            {% for s in service_values %}
+                            <div class="row service-row g-2 align-items-end mb-2">
+                                <div class="col-md-6">
+                                    <label class="form-label">Service Name</label>
+                                    <input type="text" name="service_name[]" class="form-control" value="{{ s.service_name }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Service Price</label>
+                                    <input type="number" step="0.01" name="service_price[]" class="form-control" value="{{ s.service_price }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-danger btn-sm remove-service">Remove</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-2 text-start">
+                            <button type="button" id="add-service-row" class="btn btn-outline-primary btn-sm">+ Add Service Row</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <a href="{% url 'package_list' %}" class="btn btn-secondary me-2">Back</a>
+                    <button type="submit" class="btn btn-success">Save Package</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    // Dynamic service rows for package creation
+    const container = document.getElementById('services-rows');
+    const addBtn = document.getElementById('add-service-row');
+
+    function makeRow(name='', price=''){
+        const div = document.createElement('div');
+        div.className = 'row service-row g-2 align-items-end mb-2';
+        div.innerHTML = `\
+            <div class="col-md-6">\
+                <label class="form-label">Service Name</label>\
+                <input type="text" name="service_name[]" class="form-control" value="${name}">\
+            </div>\
+            <div class="col-md-4">\
+                <label class="form-label">Service Price</label>\
+                <input type="number" step="0.01" name="service_price[]" class="form-control" value="${price}">\
+            </div>\
+            <div class="col-md-2">\
+                <button type="button" class="btn btn-danger btn-sm remove-service">Remove</button>\
+            </div>`;
+        return div;
+    }
+
+    if(addBtn){
+        addBtn.addEventListener('click', function(){
+            container.appendChild(makeRow());
+        });
+    }
+
+    document.addEventListener('click', function(e){
+        if(e.target && e.target.classList.contains('remove-service')){
+            const row = e.target.closest('.service-row');
+            if(row) row.remove();
+        }
+    });
+
+    // Inline AJAX add-service form (if present)
+    const inlineForm = document.getElementById('add-service-inline');
+    if(inlineForm){
+        inlineForm.addEventListener('submit', async function(e){
+            e.preventDefault();
+            const url = inlineForm.getAttribute('action');
+            const formData = new FormData(inlineForm);
+            const csrftoken = document.querySelector('#add-service-inline [name=csrfmiddlewaretoken]').value;
+
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken
+                },
+                body: formData
+            });
+
+            if(resp.ok){
+                const data = await resp.json();
+                if(data.success){
+                    // Add new service option to the services select (if present)
+                    const servicesInput = document.querySelector('select[name="services"]');
+                    if(servicesInput){
+                        const opt = document.createElement('option');
+                        opt.value = data.service.id;
+                        opt.text = data.service.name;
+                        opt.selected = true;
+                        servicesInput.appendChild(opt);
+                    }
+                    inlineForm.reset();
+                    const collapseEl = document.getElementById('addServiceFormNew');
+                    if(collapseEl && bootstrap && bootstrap.Collapse){
+                        const bs = bootstrap.Collapse.getOrCreateInstance(collapseEl);
+                        bs.hide();
+                    }
+                }
+            } else {
+                console.error('Failed to create service');
+            }
+        });
+    }
+});
+</script>
+<script src="{% static 'guest/js/unique_validation.js' %}"></script>
+
+{% endblock %}
+

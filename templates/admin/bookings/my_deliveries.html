@@ -1,0 +1,418 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ── Status badges ── */
+    .delivery-badge {
+        border-radius: 12px; padding: 5px 14px;
+        font-weight: 700; font-size: 11px; color: #fff; display: inline-block; letter-spacing: .5px;
+    }
+    .badge-assigned       { background: #8b5cf6; }
+    .badge-outfordelivery { background: #ec4899; }
+    .badge-delivered      { background: #22c55e; }
+    .badge-completed      { background: #0ea5e9; }
+    .badge-cancelled      { background: #ef4444; }
+    .badge-confirmed      { background: #3b82f6; }
+    .badge-preparing      { background: #f59e0b; }
+    .badge-readyforpickup { background: #06b6d4; }
+
+    /* ── Filter pills ── */
+    .filter-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .filter-pill {
+        padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+        text-decoration: none; border: 1px solid #e2e8f0; color: #475569; transition: all .15s;
+    }
+    .filter-pill:hover { border-color: #94a3b8; color: #1e293b; text-decoration: none; }
+    .filter-pill.active { background: #0ea5e9; color: #fff; border-color: #0ea5e9; }
+
+    /* ── Action buttons — icon-only squares ── */
+    .act-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 30px; height: 30px; border-radius: 7px; font-size: 12px;
+        border: 1px solid; cursor: pointer; text-decoration: none;
+        transition: all .15s; padding: 0; flex-shrink: 0;
+    }
+    .act-btn:hover { opacity: .8; text-decoration: none; transform: translateY(-1px); }
+    .act-btn-view   { color: #3b82f6; border-color: #bfdbfe; background: #eff6ff; }
+    .act-btn-track  { color: #06b6d4; border-color: #a5f3fc; background: #ecfeff; }
+    .act-btn-status { color: #d97706; border-color: #fde68a; background: #fffbeb; }
+    .act-btn-done   { color: #22c55e; border-color: #bbf7d0; background: #f0fdf4; }
+
+    /* ── Quick-status icon-only buttons ── */
+    .quick-status-btn {
+        width: 30px; height: 30px; border-radius: 7px; font-size: 13px;
+        border: none; cursor: pointer; transition: all .18s;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: #fff; flex-shrink: 0;
+    }
+    .quick-status-btn.btn-outfordelivery { background: #ec4899; }
+    .quick-status-btn.btn-delivered      { background: #22c55e; }
+    .quick-status-btn:hover { opacity: .85; transform: translateY(-1px); }
+
+    /* ── Action group ── */
+    .action-icon-group { display: flex; gap: 5px; align-items: center; justify-content: center; flex-wrap: wrap; }
+
+    /* ── Items inline chips ── */
+    .item-chip {
+        display: inline-block; background: #f1f5f9; border-radius: 4px;
+        padding: 1px 7px; margin: 1px 2px; font-size: 11px; white-space: nowrap;
+    }
+
+    /* ── Stats bar ── */
+    .stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .stat-card {
+        background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+        padding: 14px 20px; flex: 1; min-width: 130px; text-align: center;
+    }
+    .stat-value { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+    .stat-label { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .5px; }
+    .stat-card.active .stat-value { color: #ec4899; }
+    .stat-card.done .stat-value { color: #22c55e; }
+    .stat-card.assigned .stat-value { color: #8b5cf6; }
+    [data-theme="dark"] .stat-card { background: #1e293b; border-color: #334155; }
+    [data-theme="dark"] .stat-label { color: #94a3b8; }
+
+    /* ── Page header ── */
+    .page-header-card {
+        background: linear-gradient(135deg, #0ea5e9, #2563eb);
+        border-radius: 16px; padding: 24px 30px; margin-bottom: 24px; color: #fff;
+    }
+
+    /* ── Table head ── */
+    .my-delivery-table thead th {
+        background: #f8fafc !important; color: #0f172a !important;
+        border-bottom: 1px solid #cbd5e1 !important; font-weight: 700;
+    }
+    [data-theme="dark"] .my-delivery-table thead th {
+        background: #1e293b !important; color: #f8fafc !important;
+        border-bottom: 1px solid #334155 !important;
+    }
+
+    /* ── Detail modal ── */
+    .dlabel { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+    .dvalue { font-size: 14px; color: #1e293b; font-weight: 600; margin-bottom: 12px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+    [data-theme="dark"] .dvalue { color: #f1f5f9; }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- Page Header -->
+    <div class="page-header-card">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <h3 class="fw-bold mb-1" style="font-size: 22px; letter-spacing: -.3px;">
+                    <i class="fa fa-motorcycle me-2"></i> My Deliveries
+                </h3>
+                <p class="mb-0" style="font-size: 13px; opacity: .85;">Orders assigned to you — update statuses in real-time</p>
+            </div>
+            <a href="{% url 'admin_home_deliveries' %}" class="btn btn-sm"
+               style="background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.4); color: #fff; border-radius: 8px; padding: 7px 16px; font-weight: 600; font-size: 13px;">
+                <i class="fa fa-arrow-left me-1"></i> All Deliveries
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    {% with all_orders=page_obj.paginator.object_list %}
+    <div class="stats-row">
+        <div class="stat-card assigned">
+            <div class="stat-value">{{ all_orders|length }}</div>
+            <div class="stat-label">Total Assigned</div>
+        </div>
+        <div class="stat-card active">
+            <div class="stat-value" id="activeCount">—</div>
+            <div class="stat-label">Active Now</div>
+        </div>
+        <div class="stat-card done">
+            <div class="stat-value" id="deliveredCount">—</div>
+            <div class="stat-label">Delivered Today</div>
+        </div>
+    </div>
+    {% endwith %}
+
+    <!-- Main Card -->
+    <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+        <div class="card-body p-4">
+            {% csrf_token %}
+
+            <!-- Filter pills -->
+            <div class="filter-pills">
+                <a href="{% url 'staff_my_deliveries' %}" class="filter-pill {% if not status_filter %}active{% endif %}">All</a>
+                {% for val, label in all_statuses %}
+                <a href="?status={{ val }}&q={{ search }}"
+                   class="filter-pill {% if status_filter == val %}active{% endif %}">{{ label }}</a>
+                {% endfor %}
+            </div>
+
+            <!-- Search filter -->
+            <form method="GET" class="row g-3 align-items-end mb-4">
+                <div class="col-md-5">
+                    <label class="form-label text-muted fw-bold" style="font-size: 12px; text-transform: uppercase; letter-spacing: .5px;">Search</label>
+                    <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="Order #, Name, Phone…" style="border-radius: 8px; font-size: 14px; padding: 10px 14px;">
+                </div>
+                {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn w-100" style="border-radius: 8px; padding: 10px; font-weight: 600; background: #0ea5e9; border: none; color: #fff;">
+                        <i class="fa fa-filter me-1"></i> Filter
+                    </button>
+                    <a href="{% url 'staff_my_deliveries' %}" class="btn w-100" style="border-radius: 8px; padding: 10px; font-weight: 600; background: #6b7280; border: none; color: #fff; text-align: center; line-height: 1.5;">Reset</a>
+                </div>
+            </form>
+
+            <!-- Orders Table -->
+            <div class="table-responsive" style="border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0);">
+                <table class="table table-hover align-middle mb-0 my-delivery-table" style="font-size: 13px;">
+                    <thead>
+                        <tr class="text-uppercase" style="font-size: 11px; letter-spacing: .5px;">
+                            <th class="py-3 px-3">Order Info</th>
+                            <th class="py-3">Customer</th>
+                            <th class="py-3">Items</th>
+                            <th class="py-3 text-center">Status</th>
+                            <th class="py-3 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in page_obj %}
+                        <tr id="row-{{ order.id }}">
+                            <td class="py-3 px-3" style="min-width: 155px;">
+                                <div class="fw-bold text-dark" style="font-size: 12px;">{{ order.long_order_id }}</div>
+                                <div class="text-muted" style="font-size: 11px;">{{ order.order_date|date:"d M Y, h:i A" }}</div>
+                                <div class="fw-bold" style="font-size: 12px; color: #10b981;">₹{{ order.total_amount }}</div>
+                            </td>
+                            <td class="py-3" style="min-width: 150px;">
+                                <div class="fw-semibold text-dark" style="font-size: 13px;">{{ order.customer_name|default:"—" }}</div>
+                                <div class="text-muted" style="font-size: 11px;">{{ order.customer_phone|default:"—" }}</div>
+                                {% if order.delivery_address %}
+                                <div style="font-size: 10px; color: #64748b; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;" title="{{ order.delivery_address }}">📍 {{ order.delivery_address }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="py-3" style="max-width: 220px;">
+                                {% for item in order.items.all %}
+                                <span class="item-chip">{{ item.quantity }}× {{ item.food.item_name }}</span>
+                                {% empty %}<span class="text-muted" style="font-size: 11px;">No items</span>
+                                {% endfor %}
+                            </td>
+                            <td class="py-3 text-center" id="status-cell-{{ order.id }}">
+                                {% if order.status == 'Assigned' %}<span class="delivery-badge badge-assigned">Assigned</span>
+                                {% elif order.status == 'OutForDelivery' %}<span class="delivery-badge badge-outfordelivery">Out for Delivery</span>
+                                {% elif order.status == 'Delivered' %}<span class="delivery-badge badge-delivered">Delivered</span>
+                                {% elif order.status == 'Completed' %}<span class="delivery-badge badge-completed">Completed</span>
+                                {% elif order.status == 'Cancelled' %}<span class="delivery-badge badge-cancelled">Cancelled</span>
+                                {% else %}<span class="delivery-badge" style="background:#94a3b8;">{{ order.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 text-center">
+                                <div class="action-icon-group">
+                                    <!-- View details -->
+                                    <button class="act-btn act-btn-view" data-toggle="modal" data-target="#detailModal-{{ order.id }}" title="View Details">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                    <!-- Quick: Mark Out for Delivery -->
+                                    {% if order.status == 'Assigned' %}
+                                    <button class="quick-status-btn btn-outfordelivery"
+                                            onclick="quickUpdateStatus({{ order.id }}, 'OutForDelivery', this)"
+                                            title="Start Delivery">
+                                        <i class="fa fa-motorcycle"></i>
+                                    </button>
+                                    {% endif %}
+                                    <!-- Quick: Mark Delivered -->
+                                    {% if order.status == 'OutForDelivery' %}
+                                    <button class="quick-status-btn btn-delivered"
+                                            onclick="quickUpdateStatus({{ order.id }}, 'Delivered', this)"
+                                            title="Mark Delivered">
+                                        <i class="fa fa-check-circle"></i>
+                                    </button>
+                                    {% endif %}
+                                    <!-- Full status update -->
+                                    {% if order.status not in 'Completed,Cancelled,Delivered' %}
+                                    <button class="act-btn act-btn-status" onclick="openStatusModal({{ order.id }}, '{{ order.status }}', '{{ order.long_order_id }}')" title="Update Status">
+                                        <i class="fa fa-refresh"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <div style="font-size: 40px; margin-bottom: 12px;">🚚</div>
+                                <div style="font-size: 15px; font-weight: 600;">No deliveries assigned to you yet.</div>
+                                <div style="font-size: 13px; margin-top: 4px;">Check back when your manager assigns orders.</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav class="mt-4 d-flex justify-content-center"><ul class="pagination">
+                {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ status_filter }}&q={{ search }}&date_from={{ date_from }}&date_to={{ date_to }}">← Prev</a></li>{% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}&status={{ status_filter }}&q={{ search }}&date_from={{ date_from }}&date_to={{ date_to }}">{{ num }}</a></li>
+                {% endfor %}
+                {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ status_filter }}&q={{ search }}&date_from={{ date_from }}&date_to={{ date_to }}">Next →</a></li>{% endif %}
+            </ul></nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ DETAIL MODALS ═══════════ -->
+{% for order in page_obj %}
+<div class="modal fade" id="detailModal-{{ order.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-header px-4 py-3" style="background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 16px 16px 0 0;">
+                <div>
+                    <h5 class="modal-title text-white fw-bold">Order – {{ order.long_order_id }}</h5>
+                    <p class="mb-0 text-white-50" style="font-size: 12px;">{{ order.order_date|date:"d M Y, h:i A" }}</p>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="detail-grid mb-3">
+                    <div><div class="dlabel">Customer</div><div class="dvalue">{{ order.customer_name|default:"—" }}</div></div>
+                    <div><div class="dlabel">Phone</div><div class="dvalue">{{ order.customer_phone|default:"—" }}</div></div>
+                    <div><div class="dlabel">Email</div><div class="dvalue">{{ order.customer_email|default:"—" }}</div></div>
+                    <div><div class="dlabel">Status</div><div class="dvalue">{{ order.get_status_display }}</div></div>
+                    <div class="col-span-2"><div class="dlabel">Delivery Address</div><div class="dvalue">{{ order.delivery_address|default:"—" }}</div></div>
+                    <div><div class="dlabel">Total Amount</div><div class="dvalue" style="color: #10b981;">₹{{ order.total_amount }}</div></div>
+                    <div><div class="dlabel">Assigned By</div><div class="dvalue">{% if order.assigned_by %}{{ order.assigned_by.get_full_name|default:order.assigned_by.username }}{% else %}—{% endif %}</div></div>
+                    <div><div class="dlabel">Assigned At</div><div class="dvalue">{% if order.assigned_at %}{{ order.assigned_at|date:"d M Y, h:i A" }}{% else %}—{% endif %}</div></div>
+                </div>
+                <h6 class="fw-bold mb-3">Items</h6>
+                <table class="table table-sm table-bordered" style="font-size: 13px;">
+                    <thead><tr><th>Item</th><th class="text-center">Qty</th><th class="text-end">Price</th></tr></thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                        <tr><td>{{ item.food.item_name }}</td><td class="text-center">{{ item.quantity }}</td><td class="text-end">₹{{ item.get_total }}</td></tr>
+                        {% empty %}<tr><td colspan="3" class="text-center text-muted">No items</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+                {% if order.customer_phone %}
+                <a href="tel:{{ order.customer_phone }}" class="btn btn-success w-100 mt-2" style="border-radius: 8px; font-weight: 700;">
+                    <i class="fa fa-phone me-2"></i> Call Customer
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- ═══════════ UPDATE STATUS MODAL ═══════════ -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-header px-4 py-3" style="border-bottom: 1px solid #f1f5f9;">
+                <h5 class="modal-title fw-bold" id="statusModalTitle">Update Status</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="statusOrderId">
+                <div class="mb-3">
+                    <label class="form-label text-muted fw-bold" style="font-size: 12px; text-transform: uppercase; letter-spacing: .5px;">New Status</label>
+                    <select id="statusSelect" class="form-control" style="border-radius: 8px; padding: 10px 14px;"></select>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" data-dismiss="modal"
+                            style="flex: 1; border: 1.5px solid #e2e8f0; background: #fff; border-radius: 8px; padding: 11px; font-weight: 600; font-size: 14px; color: #64748b; cursor: pointer;">
+                        Cancel
+                    </button>
+                    <button onclick="submitStatus()"
+                            style="flex: 2; background: #0ea5e9; border: none; border-radius: 8px; padding: 11px; font-weight: 600; font-size: 14px; color: #fff; cursor: pointer;">
+                        <i class="fa fa-refresh me-1"></i> Update Status
+                    </button>
+                </div>
+                <div id="statusMsg" class="mt-2 text-center" style="font-size: 13px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+// Staff can only go: Assigned → OutForDelivery → Delivered
+const TRANSITIONS = {
+    'Assigned':       [{v:'OutForDelivery', l:'Out for Delivery'}],
+    'OutForDelivery': [{v:'Delivered', l:'Delivered'}],
+};
+
+function openStatusModal(orderId, currentStatus, orderRef) {
+    document.getElementById('statusOrderId').value = orderId;
+    document.getElementById('statusModalTitle').innerText = 'Update Status – ' + orderRef;
+    document.getElementById('statusMsg').innerText = '';
+    const sel = document.getElementById('statusSelect');
+    sel.innerHTML = '';
+    const opts = TRANSITIONS[currentStatus] || [];
+    if (opts.length === 0) {
+        sel.innerHTML = '<option value="">No transitions available</option>';
+    } else {
+        opts.forEach(o => { sel.innerHTML += `<option value="${o.v}">${o.l}</option>`; });
+    }
+    $('#statusModal').modal('show');
+}
+
+function submitStatus() {
+    const orderId = document.getElementById('statusOrderId').value;
+    const newStatus = document.getElementById('statusSelect').value;
+    if (!newStatus) { document.getElementById('statusMsg').innerText = 'No status selected.'; return; }
+    const formData = new FormData();
+    formData.append('status', newStatus);
+    fetch(`/admin-panel/bookings/home-deliveries/${orderId}/update-status/`, {
+        method: 'POST', headers: { 'X-CSRFToken': csrfToken }, body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('statusMsg').innerHTML = `<span class="text-success">✓ Updated to ${data.new_status}</span>`;
+            setTimeout(() => location.reload(), 800);
+        } else {
+            document.getElementById('statusMsg').innerHTML = `<span class="text-danger">${data.message}</span>`;
+        }
+    })
+    .catch(() => { document.getElementById('statusMsg').innerHTML = '<span class="text-danger">Network error</span>'; });
+}
+
+function quickUpdateStatus(orderId, newStatus, btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Updating…';
+    const formData = new FormData();
+    formData.append('status', newStatus);
+    fetch(`/admin-panel/bookings/home-deliveries/${orderId}/update-status/`, {
+        method: 'POST', headers: { 'X-CSRFToken': csrfToken }, body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            setTimeout(() => location.reload(), 500);
+        } else {
+            alert(data.message || 'Failed to update status.');
+            btn.disabled = false;
+        }
+    })
+    .catch(() => { alert('Network error. Please try again.'); btn.disabled = false; });
+}
+
+// Compute quick stats from page data
+document.addEventListener('DOMContentLoaded', function () {
+    const rows = document.querySelectorAll('tbody tr[id^="row-"]');
+    let active = 0, delivered = 0;
+    rows.forEach(row => {
+        const badge = row.querySelector('.delivery-badge');
+        if (!badge) return;
+        const cls = badge.className;
+        if (cls.includes('outfordelivery') || cls.includes('assigned')) active++;
+        if (cls.includes('badge-delivered') || cls.includes('badge-completed')) delivered++;
+    });
+    document.getElementById('activeCount').innerText = active;
+    document.getElementById('deliveredCount').innerText = delivered;
+});
+</script>
+{% endblock %}
+

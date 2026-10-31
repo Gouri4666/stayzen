@@ -1,0 +1,632 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Professional Dashboard Typography & Spacing */
+    body {
+        background-color: #f8f9fa;
+    }
+    
+    .dashboard-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        border: none;
+    }
+    
+    .card-header-modern {
+        background: #ffffff;
+        border-bottom: 1px solid #f1f5f9;
+        padding: 1.25rem 1.5rem;
+        border-radius: 12px 12px 0 0;
+    }
+
+    /* Custom Input Styling */
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        padding: 0.6rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #475569;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.4rem;
+    }
+
+    /* Permission Custom Checkboxes */
+    .perm-row {
+        transition: background-color 0.2s;
+    }
+    .perm-row:hover {
+        background-color: #f8fafc;
+    }
+
+    .perm-checkbox-wrapper {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        cursor: pointer;
+        user-select: none;
+        width: 38px;
+        height: 38px;
+        margin: 0;
+    }
+
+    .perm-checkbox-wrapper input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+
+    .checkmark {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        background-color: #f1f5f9;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        transition: all 0.2s ease-in-out;
+        color: #94a3b8;
+    }
+
+    .perm-checkbox-wrapper:hover input ~ .checkmark {
+        background-color: #e2e8f0;
+    }
+
+    /* Checked states for different actions */
+    .view-perm input:checked ~ .checkmark {
+        background-color: #eff6ff;
+        border-color: #3b82f6;
+        color: #3b82f6;
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
+    }
+    
+    .add-perm input:checked ~ .checkmark {
+        background-color: #f0fdf4;
+        border-color: #22c55e;
+        color: #22c55e;
+        box-shadow: 0 2px 4px rgba(34, 197, 94, 0.15);
+    }
+
+    .edit-perm input:checked ~ .checkmark {
+        background-color: #fff7ed;
+        border-color: #f97316;
+        color: #f97316;
+        box-shadow: 0 2px 4px rgba(249, 115, 22, 0.15);
+    }
+
+    .delete-perm input:checked ~ .checkmark {
+        background-color: #fef2f2;
+        border-color: #ef4444;
+        color: #ef4444;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.15);
+    }
+
+    /* Disabled Checkbox Styling */
+    .perm-checkbox-wrapper.disabled-perm {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+    .perm-checkbox-wrapper.disabled-perm .checkmark,
+    .perm-checkbox-wrapper.disabled-perm input:checked ~ .checkmark {
+        background-color: #f8fafc !important;
+        border-color: #e2e8f0 !important;
+        color: #94a3b8 !important;
+        box-shadow: none !important;
+    }
+    .perm-checkbox-wrapper.disabled-perm:hover input ~ .checkmark,
+    .perm-checkbox-wrapper.disabled-perm:hover input:checked ~ .checkmark {
+        background-color: #f8fafc !important;
+    }
+
+    /* Accordion Custom Styling */
+    .custom-accordion-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 1rem 1.25rem;
+        font-weight: 600;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .custom-accordion-btn .chevron {
+        transition: transform 0.3s;
+    }
+    
+    .custom-accordion-btn.collapsed .chevron {
+        transform: rotate(-90deg);
+    }
+    
+    /* Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    .sticky-footer-panel {
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid #f1f5f9;
+        padding: 1rem 1.5rem;
+        border-radius: 0 0 12px 12px;
+    }
+
+    /* Form Fields alignment inside left column */
+    .dashboard-card p { margin-bottom: 0; }
+    
+    /* --- Live Validation Styles --- */
+    .form-control.is-invalid-input {
+        border-color: #ef4444 !important;
+        color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+    
+    .form-label.is-invalid-label, 
+    .form-label.is-invalid-label .text-muted {
+        color: #ef4444 !important;
+        transition: color 0.2s;
+    }
+
+    /* Optional: Small text below input explaining the error */
+    .validation-message {
+        display: none;
+        color: #ef4444;
+        font-size: 0.75rem;
+        margin-top: 0.3rem;
+        font-weight: 500;
+    }
+    
+    .form-control.is-invalid-input ~ .validation-message {
+        display: block;
+    }
+</style>
+
+<div class="container-fluid mt-4 mb-5">
+    <form method="POST" id="staffUserForm">
+        {% csrf_token %}
+        
+        <div class="row g-4">
+            <!-- Left Column: Staff Information -->
+            <div class="col-lg-4">
+                <div class="dashboard-card h-100 d-flex flex-column">
+                    <div class="card-header-modern">
+                        <div class="d-flex align-items-center">
+                            <div class="p-2 rounded-circle mr-3" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                                <i class="fa fa-user-tie fa-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0 font-weight-bold text-dark">Staff Profile</h5>
+                                <p class="text-muted small mb-0">Identity and contact details</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body p-4 flex-grow-1 custom-scrollbar" style="max-height: calc(85vh - 70px); overflow-y: auto;">
+                        
+                        <!-- Registered Staff Selection -->
+                        <div class="mb-4 pb-4 border-bottom">
+                            <label class="form-label" style="color: #3b82f6;">
+                                <i class="fa fa-id-badge mr-1"></i> Pre-Registered Staff (Optional)
+                            </label>
+                            <select id="registered_staff_select" class="form-control font-weight-bold" style="border-color: rgba(59, 130, 246, 0.5); background-color: rgba(59, 130, 246, 0.05); color: #3b82f6;">
+                                <option value="">-- Select to Auto-Fill --</option>
+                                {% for rs in registered_staff %}
+                                <option value="{{ rs.id }}">{{ rs.full_name }} ({{ rs.username }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Staff Form Fields in 2-column grid -->
+                        <div class="row g-3">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fa fa-user mr-1 text-muted"></i> Full Name</label>
+                                {{ form.full_name }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fa fa-at mr-1 text-muted"></i> Username</label>
+                                {{ form.username }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fa fa-envelope mr-1 text-muted"></i> Email Address</label>
+                                {{ form.email }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fa fa-phone mr-1 text-muted"></i> Phone</label>
+                                {{ form.phone }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fa fa-lock mr-1 text-muted"></i> Password</label>
+                                {{ form.password }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fa fa-building mr-1 text-muted"></i> Department</label>
+                                {{ form.department }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fa fa-user-shield mr-1 text-muted"></i> Role</label>
+                                {{ form.role }}
+                            </div>
+                        </div>
+                        
+                        <!-- Help Box -->
+                        <div class="mt-4 bg-light rounded p-3 border border-light">
+                            <div class="d-flex align-items-start">
+                                <i class="fa fa-info-circle text-primary mt-1 mr-2"></i>
+                                <small class="text-muted" style="line-height: 1.4;">
+                                    Passwords should be secure. For existing staff members, selecting their name from the dropdown will automatically lock these fields and attach permissions to their existing account.
+                                </small>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column: Permissions Assignment -->
+            <div class="col-lg-8">
+                <div class="dashboard-card h-100 d-flex flex-column">
+                    <div class="card-header-modern d-flex flex-column flex-sm-row justify-content-between align-items-sm-center">
+                        <div class="d-flex align-items-center mb-3 mb-sm-0">
+                            <div class="p-2 rounded-circle mr-3" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                                <i class="fa fa-shield fa-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0 font-weight-bold text-dark">Access Permissions</h5>
+                                <p class="text-muted small mb-0">Granular module access control</p>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="btnSelectAll">
+                                <i class="fa fa-check-square mr-1"></i> Select All
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="btnClearAll">
+                                <i class="fa fa-square mr-1"></i> Clear All
+                            </button>
+                            <span class="border-right mx-1 d-none d-sm-inline-block"></span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnExpandAll">
+                                <i class="fa fa-expand mr-1"></i> Expand All
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCollapseAll">
+                                <i class="fa fa-compress mr-1"></i> Collapse All
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body p-0 custom-scrollbar" style="height: 75vh; overflow-y: auto;">
+                        <div class="p-4">
+                            {% if permission_menus %}
+                            <div class="accordion" id="permissionsAccordion">
+                                {% for item in permission_menus %}
+
+                                <div class="card border-0 mb-3 shadow-sm" style="border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0 !important;">
+                                    
+                                    <button class="custom-accordion-btn" type="button" data-toggle="collapse" data-target="#collapse{{ forloop.counter }}" aria-expanded="true" aria-controls="collapse{{ forloop.counter }}"
+                                        style="background-color: {% if 'Master Data' in item.menu.name %}#3b82f6{% elif 'Booking' in item.menu.name or 'Transaction' in item.menu.name %}#8b5cf6{% elif 'Report' in item.menu.name %}#10b981{% elif 'Loyalty' in item.menu.name %}#f97316{% elif 'Setting' in item.menu.name %}#64748b{% else %}#1f2937{% endif %};">
+                                        
+                                        <span>
+                                            <i class="fa {% if 'Master Data' in item.menu.name %}fa-database{% elif 'Booking' in item.menu.name or 'Transaction' in item.menu.name %}fa-credit-card{% elif 'Report' in item.menu.name %}fa-chart-pie{% elif 'Loyalty' in item.menu.name %}fa-medal{% elif 'Setting' in item.menu.name %}fa-cogs{% else %}fa-folder{% endif %} mr-2"></i>
+                                            {{ item.menu.name }}
+                                        </span>
+                                        <i class="fa fa-chevron-down chevron"></i>
+                                    </button>
+                                    
+                                    <div id="collapse{{ forloop.counter }}"
+     class="collapse show perm-section-collapse">
+                                        <div class="card-body p-0">
+                                            
+                                            <!-- Headers -->
+                                            <div class="d-none d-md-flex justify-content-between align-items-center p-3 bg-light border-bottom text-muted font-weight-bold small text-uppercase" style="letter-spacing: 0.5px;">
+                                                <div style="flex: 1;">Submodule Name</div>
+                                                <div class="d-flex px-2" style="gap: 1rem;">
+                                                    <div style="width: 38px; text-align: center;" title="View"><i class="fa fa-eye"></i></div>
+                                                    <div style="width: 38px; text-align: center;" title="Add"><i class="fa fa-plus"></i></div>
+                                                    <div style="width: 38px; text-align: center;" title="Edit"><i class="fa fa-pencil"></i></div>
+                                                    <div style="width: 38px; text-align: center;" title="Delete"><i class="fa fa-trash"></i></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Rows -->
+                                            {% for sub in item.submenus %}
+                                            
+                                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center p-3 border-bottom perm-row">
+                                                <div class="font-weight-bold text-dark mb-2 mb-md-0" style="flex: 1;">
+                                                    <i class="fa fa-angle-right text-muted mr-2 small"></i>{{ sub.name }}
+                                                </div>
+                                                <div class="d-flex align-items-center" style="gap: 1rem;">
+                                                    
+                                                    <label class="perm-checkbox-wrapper view-perm" data-toggle="tooltip" title="View {{ sub.name }}">
+                                                        <input type="checkbox" name="view_{{ sub.id }}" class="perm-chk" {% if sub.id in checked_view %}checked{% endif %}>
+                                                        <span class="checkmark"><i class="fa fa-eye"></i></span>
+                                                    </label>
+                                                    
+                                                    <label class="perm-checkbox-wrapper add-perm {% if sub.is_view_only %}disabled-perm{% endif %}" data-toggle="tooltip" title="Add {{ sub.name }}">
+                                                        <input type="checkbox" name="add_{{ sub.id }}" class="perm-chk" {% if sub.id in checked_add %}checked{% endif %} {% if sub.is_view_only %}disabled{% endif %}>
+                                                        <span class="checkmark">
+                                                            {% if sub.is_view_only %}<i class="fa fa-lock"></i>{% else %}<i class="fa fa-plus"></i>{% endif %}
+                                                        </span>
+                                                    </label>
+                                                    
+                                                    <label class="perm-checkbox-wrapper edit-perm {% if sub.is_view_only %}disabled-perm{% endif %}" data-toggle="tooltip" title="Edit {{ sub.name }}">
+                                                        <input type="checkbox" name="edit_{{ sub.id }}" class="perm-chk" {% if sub.id in checked_edit %}checked{% endif %} {% if sub.is_view_only %}disabled{% endif %}>
+                                                        <span class="checkmark">
+                                                            {% if sub.is_view_only %}<i class="fa fa-lock"></i>{% else %}<i class="fa fa-pencil"></i>{% endif %}
+                                                        </span>
+                                                    </label>
+                                                    
+                                                    <label class="perm-checkbox-wrapper delete-perm {% if sub.is_view_only or sub.is_no_delete %}disabled-perm{% endif %}" data-toggle="tooltip" title="Delete {{ sub.name }}">
+                                                        <input type="checkbox" name="delete_{{ sub.id }}" class="perm-chk" {% if sub.id in checked_delete %}checked{% endif %} {% if sub.is_view_only or sub.is_no_delete %}disabled{% endif %}>
+                                                        <span class="checkmark">
+                                                            {% if sub.is_view_only or sub.is_no_delete %}<i class="fa fa-lock"></i>{% else %}<i class="fa fa-trash"></i>{% endif %}
+                                                        </span>
+                                                    </label>
+
+                                                </div>
+                                            </div>
+                                            
+                                            {% endfor %}
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning m-3 border-0 shadow-sm rounded">
+                                <i class="fa fa-exclamation-triangle mr-2"></i> 
+                                <strong>Notice:</strong> No permissions data available.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Sticky Footer inside Right Card -->
+                    <div class="sticky-footer-panel d-flex justify-content-between align-items-center">
+                        <a href="{% url 'staff_user_list' %}" class="btn btn-light font-weight-bold text-secondary px-4 py-2" style="border-radius: 8px;">
+                            <i class="fa fa-arrow-left mr-2"></i> Back
+                        </a>
+                        <button type="submit" class="btn btn-primary font-weight-bold px-4 py-2" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                            <i class="fa fa-save mr-2"></i> Create Staff User
+                        </button>
+                    </div>
+                    
+                </div>
+            </div>
+            
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+
+    // --- Live Validation Logic ---
+    const validationRules = {
+        'id_full_name': {
+            regex: /^[a-zA-Z\s]{3,}$/, // Letters and spaces only, min 3 chars
+            errorMessage: 'Name must be at least 3 letters.'
+        },
+        'id_username': {
+            regex: /^[a-zA-Z0-9_]{4,}$/, // Alphanumeric and underscores, min 4 chars
+            errorMessage: 'Minimum 4 characters (letters, numbers, _).'
+        },
+        'id_phone': {
+            regex: /^\+?[0-9]{10}$/, // Optional + followed by 10-15 digits
+            errorMessage: 'Enter a valid 10 digit phone number.'
+        },
+        'id_password': {
+            regex: /^.{6,}$/, // Any character, minimum 6
+            errorMessage: 'Password must be at least 6 characters.'
+        }
+    };
+
+    Object.keys(validationRules).forEach(inputId => {
+        const inputField = document.getElementById(inputId);
+        
+        if (inputField) {
+            // Find the associated label in the same column div
+            const parentDiv = inputField.closest('.col-md-6');
+            const label = parentDiv ? parentDiv.querySelector('.form-label') : null;
+
+            // Create and append the error message element
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'validation-message';
+            errorMsg.innerText = validationRules[inputId].errorMessage;
+            inputField.parentNode.insertBefore(errorMsg, inputField.nextSibling);
+
+            // Listen for typing events
+            inputField.addEventListener('input', function() {
+                const value = this.value.trim();
+
+                // Skip validation if the field is readonly (e.g., auto-filled from the dropdown)
+                if (this.hasAttribute('readonly')) {
+                    this.classList.remove('is-invalid-input');
+                    if (label) label.classList.remove('is-invalid-label');
+                    return;
+                }
+
+                // If empty, reset styles (or you can mark it invalid if required)
+                if (value === '') {
+                    this.classList.remove('is-invalid-input');
+                    if (label) label.classList.remove('is-invalid-label');
+                } 
+                // Test against the regex rule
+                else if (!validationRules[inputId].regex.test(value)) {
+                    this.classList.add('is-invalid-input');
+                    if (label) label.classList.add('is-invalid-label');
+                } 
+                // Valid input
+                else {
+                    this.classList.remove('is-invalid-input');
+                    if (label) label.classList.remove('is-invalid-label');
+                }
+            });
+        }
+    });
+
+    const staffSelect = document.getElementById('registered_staff_select');
+
+    if (staffSelect) {
+
+        const fieldMap = {
+            'full_name': 'id_full_name',
+            'username': 'id_username',
+            'email': 'id_email',
+            'phone': 'id_phone',
+            'department': 'id_department',
+            'role': 'id_role',
+        };
+
+        staffSelect.addEventListener('change', function () {
+
+            const staffId = this.value;
+
+            if (!staffId) {
+
+                for (const [key, elementId] of Object.entries(fieldMap)) {
+
+                    const el = document.getElementById(elementId);
+
+                    if (el) {
+                        el.value = '';
+                        el.removeAttribute('readonly');
+                        el.style.backgroundColor = '';
+                    }
+                }
+
+                return;
+            }
+
+            fetch(`/admin-panel/api/get-staff-details/${staffId}/`)
+                .then(response => response.json())
+                .then(data => {
+
+                    if (data.error) {
+                        alert('Staff not found.');
+                        return;
+                    }
+
+                    for (const [key, elementId] of Object.entries(fieldMap)) {
+
+                        const el = document.getElementById(elementId);
+
+                        if (el && data[key] !== undefined) {
+                            el.value = data[key];
+                            el.setAttribute('readonly', 'readonly');
+                            el.style.backgroundColor = '#e9ecef';
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching staff details:', err);
+                });
+        });
+    }
+
+
+    // jQuery UI Actions
+    $(document).ready(function () {
+
+        // Expand All
+        $('#btnExpandAll').on('click', function () {
+
+            $('.perm-section-collapse').each(function () {
+
+                if (!$(this).hasClass('show')) {
+                    $(this).collapse('show');
+                }
+
+            });
+
+            $('.custom-accordion-btn')
+                .removeClass('collapsed')
+                .attr('aria-expanded', 'true');
+        });
+
+        // Collapse All
+        $('#btnCollapseAll').on('click', function () {
+
+            $('.perm-section-collapse').each(function () {
+
+                if ($(this).hasClass('show')) {
+                    $(this).collapse('hide');
+                }
+
+            });
+
+            $('.custom-accordion-btn')
+                .addClass('collapsed')
+                .attr('aria-expanded', 'false');
+        });
+
+        // Select All
+        $('#btnSelectAll').on('click', function () {
+            $('.perm-chk:not(:disabled)').prop('checked', true);
+        });
+
+        // Clear All
+        $('#btnClearAll').on('click', function () {
+            $('.perm-chk:not(:disabled)').prop('checked', false);
+        });
+
+        // Sync Chevron
+        $('.perm-section-collapse')
+            .on('shown.bs.collapse', function () {
+                $(this)
+                    .prev('.custom-accordion-btn')
+                    .removeClass('collapsed')
+                    .attr('aria-expanded', 'true');
+            })
+            .on('hidden.bs.collapse', function () {
+                $(this)
+                    .prev('.custom-accordion-btn')
+                    .addClass('collapsed')
+                    .attr('aria-expanded', 'false');
+            });
+
+        // Tooltips
+        $('[data-toggle="tooltip"]').tooltip();
+
+    });
+
+});
+</script>
+{% endblock %}

@@ -1,0 +1,438 @@
+{% extends 'guest/base.html' %}
+{% load static %}
+
+{% block title %}
+{{ hall.hall_name }} - StayZen Event Hall Details
+{% endblock %}
+
+{% block content %}
+
+<!-- EXTERNAL RESOURCES -->
+<link rel="stylesheet" href="{% static 'guest/css/event.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<style>
+    .detail-container {
+        max-width: 1200px;
+        margin: 60px auto;
+        padding: 0 20px;
+    }
+
+    .gallery-main {
+        width: 100%;
+        height: 500px;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-bottom: 15px;
+        position: relative;
+    }
+    
+    .gallery-main img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .gallery-main img:hover {
+        transform: scale(1.02);
+    }
+
+    .gallery-thumbnails {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 15px;
+        margin-bottom: 40px;
+        max-width: 450px;
+    }
+
+    .gallery-thumbnails .thumb {
+        height: 150px;
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .gallery-thumbnails .thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+    .gallery-thumbnails .thumb:hover img {
+        opacity: 1;
+    }
+
+    .hall-header h1 {
+        font-family: 'Gilda Display', serif;
+        font-size: 42px;
+        color: #1a1a1a;
+        margin-bottom: 10px;
+    }
+
+    .hall-type-badge {
+        display: inline-block;
+        background: #c89b63;
+        color: #fff;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 20px;
+    }
+
+    .hall-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
+        background: #fdfbf7;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 40px;
+        border: 1px solid #f2eadc;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .info-item i {
+        font-size: 24px;
+        color: #c89b63;
+        margin-bottom: 10px;
+    }
+
+    .info-item span {
+        font-weight: 600;
+        color: #1a1a1a;
+        font-size: 18px;
+    }
+    
+    .info-item small {
+        color: #666;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .hall-description {
+        font-size: 16px;
+        line-height: 1.8;
+        color: #555;
+        margin-bottom: 40px;
+    }
+
+    /* Embedded Booking Box Styling */
+    .booking-widget {
+        background: #fff;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        border: 1px solid #eee;
+        position: sticky;
+        top: 100px;
+    }
+    
+    .booking-widget h3 {
+        font-family: 'Gilda Display', serif;
+        margin-bottom: 25px;
+        color: #1a1a1a;
+        border-bottom: 1px solid #f0f0f0;
+        padding-bottom: 15px;
+    }
+
+    /* Packages styling inside Details page */
+    .package-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 25px;
+        margin-top: 20px;
+    }
+
+    .package-card {
+        background: #fff;
+        border: 1px solid #eaeaea;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .package-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(200, 155, 93, 0.12);
+        border-color: rgba(200, 155, 93, 0.25);
+    }
+
+    .package-card h4 {
+        font-family: 'Gilda Display', serif;
+        font-size: 20px;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+    }
+
+    .package-type {
+        display: inline-block;
+        background: #c89b63;
+        color: #fff;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 15px;
+    }
+
+    .package-services {
+        font-size: 13px;
+        color: #555;
+    }
+</style>
+
+<!-- TOP GAP SPACER -->
+<div style="height: 60px; width: 100%; display: block;"></div>
+
+<div class="detail-container">
+    <div class="row">
+        <!-- LEFT COLUMN: IMAGES & DETAILS -->
+        <div class="col-lg-8">
+            
+            <div class="hall-header">
+                <span class="hall-type-badge">{{ hall.get_hall_type_display }}</span>
+                <h1>{{ hall.hall_name }}</h1>
+            </div>
+
+            <!-- Image Gallery -->
+            <div class="gallery-main">
+                {% if hall.hall_image %}
+                    <img src="{{ hall.hall_image.url }}" alt="{{ hall.hall_name }} Main" id="mainImage">
+                {% else %}
+                    <img src="{% static 'guest/images/no-image.jpg' %}" alt="No Image" id="mainImage">
+                {% endif %}
+            </div>
+            
+            <!-- Dynamic Image Gallery Thumbnails -->
+            <div class="gallery-thumbnails">
+                {% if hall.hall_image %}
+                <div class="thumb" onclick="document.getElementById('mainImage').src = this.querySelector('img').src">
+                    <img src="{{ hall.hall_image.url }}" alt="Hall Image 1">
+                </div>
+                {% endif %}
+                {% if hall.hall_image2 %}
+                <div class="thumb" onclick="document.getElementById('mainImage').src = this.querySelector('img').src">
+                    <img src="{{ hall.hall_image2.url }}" alt="Hall Image 2">
+                </div>
+                {% endif %}
+                {% if hall.hall_image3 %}
+                <div class="thumb" onclick="document.getElementById('mainImage').src = this.querySelector('img').src">
+                    <img src="{{ hall.hall_image3.url }}" alt="Hall Image 3">
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Hall Info Grid -->
+            <div class="hall-info-grid">
+                <div class="info-item">
+                    <i class="flaticon-user"></i>
+                    <span>{{ hall.hall_capacity }}</span>
+                    <small>Capacity</small>
+                </div>
+                <div class="info-item">
+                    <i class="flaticon-tag"></i>
+                    <span>₹{{ hall.hall_price }}</span>
+                    <small>Per Day</small>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <h3 style="font-family: 'Gilda Display', serif; margin-bottom: 20px;">Hall Description</h3>
+            <div class="hall-description">
+                <p>{{ hall.hall_description }}</p>
+            </div>
+
+            <!-- Packages Section below gallery/description -->
+            <h3 style="font-family: 'Gilda Display', serif; margin-top: 40px; margin-bottom: 20px; border-top: 1px solid #eee; padding-top: 30px;">Available Packages</h3>
+            <div class="package-grid">
+                {% for package in packages %}
+                <div class="package-card package-selectable-card" style="cursor: pointer; border: 2px solid #eaeaea; transition: all 0.3s ease;" data-package-id="{{ package.package_id }}">
+                    <div>
+                        <span class="package-type">{{ package.get_package_type_display }}</span>
+                        <h4>{{ package.package_name }}</h4>
+                        <p style="font-size: 13px; color: #777; margin-bottom: 12px;">Capacity: {{ package.guest_capacity }} guests</p>
+                        
+                        <div class="package-services">
+                            <strong>Included Services:</strong>
+                            <ul style="padding-left: 18px; margin-top: 6px;">
+                                {% for service in package.services.all %}
+                                <li>{{ service.service_name }} (₹{{ service.service_price }})</li>
+                                {% empty %}
+                                <li style="color: #999;">No Services Included</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="grid-column: 1 / -1; text-align: center; color: #888; padding: 20px;">
+                    No customized packages available for this hall.
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: BOOKING WIDGET -->
+        <div class="col-lg-4">
+            <div class="booking-widget">
+                <h3>Reserve the Hall</h3>
+                {% if not is_available %}
+                    <div class="alert alert-danger text-center">
+                        <strong>Not Available</strong><br>
+                        This hall is currently not available for the selected dates.
+                    </div>
+                {% endif %}
+                
+                <!-- Embed Booking Form -->
+                {% include 'booking/event_booking.html' %}
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const hallId = "{{ hall.hall_id }}";
+        
+        // Disable form if not available
+        {% if not is_available %}
+            const submitBtn = document.querySelector('.eb-submit-btn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.style.backgroundColor = '#cbd5e1';
+                submitBtn.style.cursor = 'not-allowed';
+            }
+        {% endif %}
+
+        // Prefill start_date, end_date, and guest_count inputs in embedded booking form
+        const ciFilter = "{{ filter_check_in }}";
+        const coFilter = "{{ filter_check_out }}";
+        const gcFilter = "{{ filter_guest_count }}";
+
+        const ciBook = document.getElementById('start_date');
+        const coBook = document.getElementById('end_date');
+        const gcBook = document.querySelector('#eventBookingForm input[name="guest_count"]');
+
+        if (ciFilter && ciBook) ciBook.value = ciFilter;
+        if (coFilter && coBook) coBook.value = coFilter;
+        if (gcFilter && gcBook) gcBook.value = gcFilter;
+
+        // Flatpickr setup
+        function formatDate(date) {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1);
+            let day   = '' + d.getDate();
+            const year = d.getFullYear();
+            if (month.length < 2) month = '0' + month;
+            if (day.length   < 2) day   = '0' + day;
+            return [year, month, day].join('-');
+        }
+
+        function initPickers(booked, reserved, notAvailable) {
+            const config = {
+                appendTo: document.body,
+                minDate: 'today',
+                disable: booked,
+                dateFormat: 'Y-m-d',
+                monthSelectorType: 'dropdown',
+                onChange: function (selectedDates, dateStr, instance) {
+                    if (typeof calculateBill === 'function') calculateBill();
+                },
+                onDayCreate: function (dObj, dStr, fp, dayElem) {
+                    if (!dayElem.dateObj) return;
+                    const dateStr = formatDate(dayElem.dateObj);
+                    if (reserved.includes(dateStr)) {
+                        dayElem.classList.add('date-reserved');
+                    } else if (notAvailable.includes(dateStr)) {
+                        dayElem.classList.add('date-not-available');
+                    }
+                }
+            };
+            
+            const sdEl = document.querySelector('#start_date');
+            const edEl = document.querySelector('#end_date');
+            if (sdEl && sdEl._flatpickr) sdEl._flatpickr.destroy();
+            if (edEl && edEl._flatpickr) edEl._flatpickr.destroy();
+            
+            flatpickr('#start_date', config);
+            flatpickr('#end_date', config);
+        }
+
+        // Fetch booked dates on load
+        fetch(`/booking/booked-dates/hall/${hallId}/`)
+            .then(r => r.json())
+            .then(data => {
+                initPickers(
+                    data.booked       || [],
+                    data.reserved     || [],
+                    data.not_available || []
+                );
+                if (typeof calculateBill === 'function') calculateBill();
+            })
+            .catch(err => {
+                console.error('Error loading booked dates:', err);
+            });
+
+        // Select package on card click
+        const packageCards = document.querySelectorAll('.package-selectable-card');
+        const packageSelect = document.getElementById('package_id');
+        
+        if (packageSelect) {
+            packageCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const pkgId = this.getAttribute('data-package-id');
+                    packageSelect.value = pkgId;
+                    
+                    // Trigger change event to update price and list
+                    packageSelect.dispatchEvent(new Event('change'));
+                    
+                    // Highlight selected card
+                    packageCards.forEach(c => {
+                        c.style.borderColor = '#eaeaea';
+                        c.style.boxShadow = 'none';
+                    });
+                    this.style.borderColor = '#c89b63';
+                    this.style.boxShadow = '0 8px 25px rgba(200, 155, 93, 0.12)';
+                });
+            });
+
+            // If select changes directly, highlight corresponding card too
+            packageSelect.addEventListener('change', function() {
+                const selectedVal = this.value;
+                packageCards.forEach(c => {
+                    if (c.getAttribute('data-package-id') === selectedVal) {
+                        c.style.borderColor = '#c89b63';
+                        c.style.boxShadow = '0 8px 25px rgba(200, 155, 93, 0.12)';
+                    } else {
+                        c.style.borderColor = '#eaeaea';
+                        c.style.boxShadow = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+
+{% endblock %}
+

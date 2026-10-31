@@ -1,0 +1,309 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>StayZen Staff Login</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background: linear-gradient(rgba(0, 0, 0, .4), rgba(0, 0, 0, .4)),
+            url("{% static 'guest/images/pages/blog/3d_rendering_living_room_family_space_3.webp' %}");
+
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .login-card {
+
+            width: 420px;
+
+            padding: 40px;
+
+            background: rgba(255, 255, 255, 0.12);
+
+            border: 1px solid rgba(255, 255, 255, 0.2);
+
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+
+            border-radius: 25px;
+
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, .35);
+
+            color: white;
+        }
+
+
+        .logo {
+
+            text-align: center;
+
+            margin-bottom: 10px;
+
+            font-size: 38px;
+
+            font-weight: 700;
+
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+
+            text-align: center;
+
+            color: #e2e8f0;
+
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+
+            display: block;
+
+            margin-bottom: 8px;
+
+            font-size: 14px;
+        }
+
+        .form-control {
+
+            width: 100%;
+
+            padding: 14px;
+
+            border: none;
+
+            border-radius: 12px;
+
+            background: rgba(255, 255, 255, 0.15);
+
+            color: white;
+
+            outline: none;
+        }
+
+        .form-control::placeholder {
+
+            color: #cbd5e1;
+        }
+
+        .password-wrapper {
+
+            position: relative;
+        }
+
+        .toggle-password {
+
+            position: absolute;
+
+            right: 15px;
+
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            cursor: pointer;
+
+            color: white;
+        }
+
+        .remember {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            margin-bottom: 20px;
+
+            font-size: 14px;
+        }
+
+        .btn-login {
+
+            width: 100%;
+
+            padding: 14px;
+
+            border: none;
+
+            border-radius: 12px;
+
+            background: white;
+
+            color: #0f172a;
+
+            font-size: 16px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition: .3s;
+        }
+
+        .btn-login:hover {
+
+            transform: translateY(-2px);
+
+            box-shadow: 0 10px 20px rgba(0, 0, 0, .25);
+        }
+
+        .message {
+
+            padding: 12px;
+
+            margin-bottom: 15px;
+
+            border-radius: 10px;
+
+            background: rgba(239, 68, 68, .25);
+
+            border: 1px solid rgba(239, 68, 68, .5);
+
+            text-align: center;
+        }
+
+        .footer {
+
+            margin-top: 20px;
+
+            text-align: center;
+
+            color: #cbd5e1;
+
+            font-size: 13px;
+        }
+
+        .hotel-icon {
+
+            text-align: center;
+
+            font-size: 45px;
+
+            margin-bottom: 10px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="login-card">
+
+        <div class="hotel-icon">
+            <i class="fa-solid fa-hotel"></i>
+        </div>
+
+        <div class="logo">
+            StayZen
+        </div>
+
+        <div class="subtitle">
+            Staff Management Portal
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="message">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Username or Email</label>
+                <input type="text" name="username" class="form-control" placeholder="Enter Username or Email" required>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+
+                <div class="password-wrapper">
+
+                    <input type="password" name="password" id="password" class="form-control"
+                        placeholder="Enter Password" required>
+
+                    <i class="fa-solid fa-eye toggle-password" onclick="togglePassword()"></i>
+
+                </div>
+            </div>
+
+            <div class="remember">
+                <input type="checkbox">
+                <span>Remember Me</span>
+            </div>
+
+            <button type="submit" class="btn-login">
+                Login
+            </button>
+
+        </form>
+
+        <div class="footer">
+            © StayZen Hotel Management System
+        </div>
+
+    </div>
+
+    <script>
+
+        function togglePassword() {
+
+            const password =
+                document.getElementById("password");
+
+            if (password.type === "password") {
+                password.type = "text";
+            } else {
+                password.type = "password";
+            }
+        }
+
+        // Auto logout if coming back/exiting from a dashboard section
+        if (sessionStorage.getItem('on_dashboard') === 'true') {
+            sessionStorage.removeItem('on_dashboard');
+            window.location.href = "{% url 'logout_view' %}";
+        }
+
+    </script>
+
+    <!-- <script src="{% static 'guest/js/form_validation.js' %}"></script> -->
+
+</body>
+
+</html>
+
+
+
+

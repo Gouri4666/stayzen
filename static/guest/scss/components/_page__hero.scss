@@ -1,0 +1,101 @@
+.page__hero__bg{
+    @extend %background;
+    &::before{
+        @extend %position-common;
+        background-color: rgba(#1b1b1b, $alpha: 0.6);
+    }
+    &.no__shadow{
+        &::before{
+            background-color: rgba(#1b1b1b, $alpha: 0);
+        }
+    }
+}
+.page__hero__height{
+    height: 700px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    @include mq($md){
+        height: 600px;
+    }
+    @include mq($sm){
+        height: 500px;
+    }
+    @include mq($xs){
+        height: 400px;
+    }
+}
+.page__hero__content{
+    color: var(--rts-white);
+    position: relative;
+    h1{
+        color: var(--rts-white);
+        margin-bottom: 25px;
+        @include mq($sm){
+            font-size: 50px;
+            line-height: 60px;
+        }
+        @include mq($xs){
+            font-size: 40px;
+            line-height: 50px;
+        }
+    }
+
+}
+
+// blog details
+.page__hero__content{
+    .texonomy{
+        color: var(--rts-white);
+        margin-bottom: 30px;
+        position: relative;
+        display: block;
+        z-index: 1;
+    }
+    .author__meta {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+        a {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            color: var(--rts-white);
+    
+            img {
+                border-radius: 50%;
+            }
+        }
+    
+        span {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            img{
+                filter: brightness(0) saturate(100%) invert(99%) sepia(4%) saturate(721%) hue-rotate(183deg) brightness(117%) contrast(100%);
+            }
+        }
+    }
+}
+
+// page__hero
+.page__hero__height{
+    &.if__has__search{
+        height: 700px;
+        @include mq($xs){
+            height: 850px;
+        }
+    }
+    &.if__is__blog{
+        height: 700px;
+        @include mq($xs){
+            height: 550px;
+        }
+    }
+}
+

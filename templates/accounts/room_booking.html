@@ -1,0 +1,219 @@
+{% extends 'accounts/dashboard_base.html' %}
+
+{% block title %}Book Room - StayZen{% endblock %}
+
+{% block extra_css %}
+.page-header { margin-bottom: 28px; }
+.page-header h2 { font-size: 26px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+.page-header p { font-size: 14px; color: var(--text-muted); }
+.page-header a { color: var(--text-highlight); text-decoration: none; font-weight: 500; }
+.page-header a:hover { text-decoration: underline; }
+
+.booking-form-card {
+background: var(--card-bg);
+border: 1px solid var(--border-color);
+border-radius: 16px;
+padding: 28px;
+max-width: 600px;
+}
+.bf-row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.bf-col { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 6px; }
+.bf-col label { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing:
+0.5px; }
+.bf-col input, .bf-col select {
+padding: 12px 14px; border: 1px solid var(--border-color);
+border-radius: 8px; font-size: 15px;
+background: var(--bg-primary); color: var(--text-primary);
+font-family: 'Inter', sans-serif;
+transition: border-color 0.2s ease;
+}
+.bf-col input:focus, .bf-col select:focus { outline: none; border-color: var(--text-highlight); }
+.bf-submit {
+width: 100%; padding: 14px; margin-top: 8px;
+background: var(--text-highlight); color: #fff;
+border: none; border-radius: 8px;
+font-size: 16px; font-weight: 600; cursor: pointer;
+transition: background 0.2s ease;
+}
+.bf-submit:hover { background: #a57f5a; }
+
+.room-info {
+background: var(--card-hover-bg);
+border: 1px solid var(--border-color);
+border-radius: 10px;
+padding: 16px; margin-bottom: 20px;
+}
+.room-info h4 { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+.room-info p { font-size: 13px; color: var(--text-muted); margin: 2px 0; }
+.room-info .ri-price { font-size: 18px; font-weight: 700; color: var(--text-highlight); margin-top: 8px; }
+
+/* Custom disabled date styling for Flatpickr */
+.flatpickr-day.flatpickr-disabled.date-reserved {
+opacity: 0.85;
+text-decoration: line-through !important;
+}
+.flatpickr-day.flatpickr-disabled.date-not-available {
+opacity: 0.85;
+text-decoration: line-through !important;
+}
+
+.flatpickr-calendar {
+    z-index: 99999 !important;
+    background: #ffffff !important;
+    border: 1px solid #e0e0e0 !important;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2) !important;
+}
+
+.flatpickr-month {
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.flatpickr-calendar .flatpickr-current-month {
+    position: relative !important;
+    left: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    height: 34px !important;
+    padding: 0 40px !important;
+    box-sizing: border-box !important;
+}
+
+.flatpickr-calendar .flatpickr-monthDropdown-months {
+    padding: 4px 24px 4px 8px !important;
+    height: 30px !important;
+    font-size: 14px !important;
+    color: #1c1d1f !important;
+    background-color: #ffffff !important;
+    border: 1px solid rgba(197, 168, 128, 0.3) !important;
+    border-radius: 6px !important;
+    width: auto !important;
+    display: inline-block !important;
+    cursor: pointer !important;
+}
+
+.flatpickr-calendar .numInputWrapper {
+    width: 75px !important;
+    display: inline-block !important;
+    position: relative !important;
+}
+
+.flatpickr-calendar .numInputWrapper input.cur-year {
+    padding: 4px 6px !important;
+    height: 30px !important;
+    font-size: 14px !important;
+    color: #1c1d1f !important;
+    background-color: #ffffff !important;
+    width: 100% !important;
+    display: inline-block !important;
+    box-sizing: border-box !important;
+}
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<div class="page-header">
+    <h2>Book Room</h2>
+    <p><a href="{% url 'rooms_dashboard' %}">← Back to Rooms</a></p>
+</div>
+
+<div class="premium-card" style="max-width:700px;">
+    <div class="card-content">
+        {% include 'booking/room_booking.html' %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const roomIdElement = document.getElementById('room_id');
+        if (!roomIdElement) return;
+
+        let checkInPicker = null;
+        let checkOutPicker = null;
+
+        function formatDate(date) {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1);
+            let day = '' + d.getDate();
+            const year = d.getFullYear();
+
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+
+            return [year, month, day].join('-');
+        }
+
+        function initPickers(booked, reserved, notAvailable) {
+            const config = {
+                minDate: 'today',
+                disable: booked,
+                dateFormat: 'Y-m-d',
+                monthSelectorType: 'dropdown',
+                onDayCreate: function (dObj, dStr, fp, dayElem) {
+                    if (!dayElem.dateObj) return;
+                    const dateStr = formatDate(dayElem.dateObj);
+                    if (reserved.includes(dateStr)) {
+                        dayElem.classList.add('date-reserved');
+                    } else if (notAvailable.includes(dateStr)) {
+                        dayElem.classList.add('date-not-available');
+                    }
+                }
+            };
+
+            if (checkInPicker) checkInPicker.destroy();
+            if (checkOutPicker) checkOutPicker.destroy();
+
+            checkInPicker = flatpickr('#check_in', {
+                ...config,
+                onChange: function(selectedDates, dateStr) {
+                    if (dateStr) {
+                        // Allow same-day checkout: min = check-in date itself
+                        if (checkOutPicker) {
+                            checkOutPicker.set('minDate', dateStr);
+                            // If current checkout is before new check-in, reset it
+                            const coVal = document.getElementById('check_out').value;
+                            if (coVal && coVal < dateStr) {
+                                checkOutPicker.setDate(dateStr, true);
+                            }
+                        }
+                    }
+                }
+            });
+            checkOutPicker = flatpickr('#check_out', config);
+        }
+
+        function loadBookedDates(roomId) {
+            if (!roomId) {
+                initPickers([], [], []);
+                return;
+            }
+            fetch(`/booking/booked-dates/${roomId}/`)
+                .then(r => r.json())
+                .then(data => {
+                    const booked = data.booked || [];
+                    const reserved = data.reserved || [];
+                    const notAvailable = data.not_available || [];
+                    initPickers(booked, reserved, notAvailable);
+                })
+                .catch(err => console.error('Error loading booked dates:', err));
+        }
+
+        // Load initial room booked dates
+        loadBookedDates(roomIdElement.value);
+
+        // If room is selected from select dropdown, reload dates on change
+        if (roomIdElement.tagName === 'SELECT') {
+            roomIdElement.addEventListener('change', function () {
+                loadBookedDates(this.value);
+            });
+        }
+    });
+</script>
+{% endblock %}

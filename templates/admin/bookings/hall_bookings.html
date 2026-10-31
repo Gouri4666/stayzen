@@ -1,0 +1,475 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .booking-admin-table thead th {
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        border-bottom: 1px solid #cbd5e1 !important;
+        font-weight: 700;
+    }
+    [data-theme="dark"] .booking-admin-table thead th {
+        background: #1e293b !important;
+        color: #f8fafc !important;
+        border-bottom: 1px solid #334155 !important;
+    }
+    
+    .booking-admin-table thead th {
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        border-bottom: 1px solid #cbd5e1 !important;
+        font-weight: 700;
+    }
+    [data-theme="dark"] .booking-admin-table thead th {
+        background: #1e293b !important;
+        color: #f8fafc !important;
+        border-bottom: 1px solid #334155 !important;
+    }
+    /* Loading state overlay for dynamic filtering */
+    #dynamic-results {
+        transition: opacity 0.2s ease-in-out;
+    }
+    .is-loading {
+        opacity: 0.4;
+        pointer-events: none;
+    }
+
+</style>
+<div class="container-fluid">
+    <div class="card border-0 shadow-lg" style="border-radius: 16px; background: var(--bg-card, #ffffff); overflow: hidden;">
+        <div class="card-header d-flex justify-content-between align-items-center py-4" style="background: linear-gradient(135deg, #7c3aed, #8b5cf6); border: none;">
+            <div>
+                <h3 class="mb-1 text-white font-weight-bold" style="font-family: 'Outfit', sans-serif;">🏢 Hall Bookings</h3>
+                <p class="mb-0 text-white-50" style="font-size: 13px;">Manage and monitor all event hall reservations</p>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <form id="filter-form" method="GET" class="row g-3 align-items-end mb-4">
+                <!-- Search Guest -->
+                <div class="col-md-6 col-lg-3">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Search Guest Name or Phone</label>
+                    <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Search..." style="border-radius: 8px; font-size: 14px; padding: 10px 14px;">
+                </div>
+
+                <!-- Hall Name -->
+                <div class="col-md-4 col-lg-2">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Hall Name</label>
+                    <input type="text" name="hall_name" value="{{ hall_name }}" class="form-control" placeholder="e.g. Grand Hall" style="border-radius: 8px; font-size: 14px; padding: 10px 14px;">
+                </div>
+
+                <!-- Hall Type -->
+                <div class="col-md-4 col-lg-2">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Hall Type</label>
+                    <select name="hall_type" class="form-control" style="border-radius: 8px; font-size: 14px; padding: 10px 14px; height: auto;">
+                        <option value="">All Types</option>
+                        <option value="conference" {% if hall_type == 'conference' %}selected{% endif %}>Conference Hall</option>
+                        <option value="banquet" {% if hall_type == 'banquet' %}selected{% endif %}>Banquet Hall</option>
+                        <option value="wedding" {% if hall_type == 'wedding' %}selected{% endif %}>Wedding Hall</option>
+                    </select>
+                </div>
+
+                <!-- Status -->
+                <div class="col-md-4 col-lg-2">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Status</label>
+                    <select name="status" class="form-control" style="border-radius: 8px; font-size: 14px; padding: 10px 14px; height: auto;">
+                        <option value="">All Statuses</option>
+                        <option value="Pending" {% if status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Confirmed" {% if status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                        <option value="Checked In" {% if status == 'Checked In' %}selected{% endif %}>Checked In</option>
+                        <option value="Cancelled" {% if status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+
+                <!-- Membership -->
+                <div class="col-md-4 col-lg-2">
+                    <label class="form-label text-muted font-weight-semibold" style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">User Type</label>
+                    <select name="membership" class="form-control" style="border-radius: 8px; font-size: 14px; padding: 10px 14px; height: auto;">
+                        <option value="">All</option>
+                        <option value="Registered" {% if membership == 'Registered' %}selected{% endif %}>Registered User</option>
+                        <option value="Guest" {% if membership == 'Guest' %}selected{% endif %}>Guest</option>
+                        <option value="Bronze" {% if membership == 'Bronze' %}selected{% endif %}>Bronze</option>
+                        <option value="Silver" {% if membership == 'Silver' %}selected{% endif %}>Silver</option>
+                        <option value="Gold" {% if membership == 'Gold' %}selected{% endif %}>Gold</option>
+                        <option value="Platinum" {% if membership == 'Platinum' %}selected{% endif %}>Platinum</option>
+                    </select>
+                </div>
+
+                <div class="col-12 mt-3 d-flex justify-content-end gap-2">
+                    <a href="{% url 'receptionist_hall_bookings' %}" class="btn btn-secondary px-4 py-2" style="border-radius: 8px; font-weight: 600;">Reset</a>
+                    <button type="submit" class="btn btn-primary px-4 py-2" style="border-radius: 8px; font-weight: 600; background: #4f46e5; border: none;">
+                        <i class="fa fa-filter mr-2"></i> Apply Filters
+                    </button>
+                </div>
+            </form>
+
+            <div id="dynamic-results">
+            <div class="table-responsive" style="border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0);">
+                <table class="table table-hover align-middle mb-0 booking-admin-table" style="font-size: 14px;">
+                    <thead>
+                        <tr class="text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                            <th class="py-3 px-4">Booking Info</th>
+                            <th class="py-3">Who Booked</th>
+                            <th class="py-3">Phone</th>
+                            <th class="py-3">Membership</th>
+                            <th class="py-3">Hall</th>
+                            <th class="py-3">Event</th>
+                            <th class="py-3">Date</th>
+                            <th class="py-3">Total Amount</th>
+                            <th class="py-3">Paid Amount</th>
+                            <th class="py-3">Pending Amount</th>
+                            <th class="py-3 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in page_obj %}
+                        <tr>
+                            <td class="py-3 px-4">
+                                <div class="font-weight-bold text-dark">{{ b.id }}</div>
+                                <div class="text-muted" style="font-size: 11px;">{{ b.created_at|date:"d M Y" }}</div>
+                            </td>
+                            <td class="py-3">
+                                {% if b.customer %}
+                                    <div class="font-weight-semibold text-primary">{{ b.customer.user.get_full_name|default:b.customer.user.username }}</div>
+                                    <span class="badge" style="font-size: 10px; font-weight: 600; padding: 3px 6px; border-radius: 4px; background: rgba(59, 130, 246, 0.1); color: #2563eb;">Registered</span>
+                                {% else %}
+                                    <div class="font-weight-semibold text-dark">{{ b.guest_name|default:"-" }}</div>
+                                    <span class="badge" style="font-size: 10px; font-weight: 600; padding: 3px 6px; border-radius: 4px; background: rgba(107, 114, 128, 0.1); color: #6b7280;">Guest</span>
+                                {% endif %}
+                                {% if b.id_type %}
+                                    <div class="text-muted mt-1" style="font-size: 11px;">
+                                        🆔 {{ b.id_type }}: 
+                                        {% if b.id_number and 'checkin_ids/' in b.id_number %}
+                                            <a href="/media/{{ b.id_number }}" target="_blank" class="text-primary font-weight-semibold"><i class="fa fa-eye"></i> View ID Document</a>
+                                        {% else %}
+                                            {{ b.id_number }}
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="py-3">{% if b.customer %}{{ b.customer.phone }}{% else %}{{ b.guest_phone|default:"-" }}{% endif %}</td>
+                            <td class="py-3">
+                                {% if b.customer %}
+                                    {% if b.customer.membership_status == 'Bronze' %}
+                                        <span class="badge text-white" style="background: #cd7f32; border-radius: 12px; padding: 4px 10px;">Bronze</span>
+                                    {% elif b.customer.membership_status == 'Silver' %}
+                                        <span class="badge text-dark" style="background: #c0c0c0; border-radius: 12px; padding: 4px 10px;">Silver</span>
+                                    {% elif b.customer.membership_status == 'Gold' %}
+                                        <span class="badge text-dark" style="background: #ffd700; border-radius: 12px; padding: 4px 10px;">Gold</span>
+                                    {% elif b.customer.membership_status == 'Platinum' %}
+                                        <span class="badge" style="background: #e5e4e2; border-radius: 12px; padding: 4px 10px; color: #333;">Platinum</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted" style="font-size: 13px;">Guest</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3">
+                                <div class="font-weight-semibold text-dark">{{ b.hall.hall_name }}</div>
+                                <div class="text-muted" style="font-size: 11px;">{{ b.hall.get_hall_type_display }}</div>
+                            </td>
+                            <td class="py-3">
+                                <div class="font-weight-semibold text-dark">{{ b.event_name }}</div>
+                                <div class="text-muted" style="font-size: 11px;">
+                                    {{ b.event_type }}{% if b.package %} • {{ b.package.package_name }}{% endif %}
+                                </div>
+                            </td>
+                            <td class="py-3">
+                                <div class="font-weight-semibold text-dark">{{ b.start_date|date:"d M Y" }}</div>
+                                <div class="text-muted" style="font-size: 11px;">{{ b.start_time|time:"h:i A" }} - {{ b.end_time|time:"h:i A" }}</div>
+                            </td>
+                            <td class="py-3">
+                                <div class="font-weight-bold text-dark">₹{{ b.final_amount }}</div>
+                                <!-- <div class="text-muted" style="font-size: 11px;">Payment: {{ b.payment_status }}</div> -->
+                            </td>
+                            <td class="py-3 font-weight-semibold text-dark">₹{{ b.advance_amount }}</td>
+                            <td class="py-3 font-weight-semibold text-dark">₹{{ b.pending_payment }}</td>
+                            <td class="py-3 text-center">
+                                {% if b.status == 'Pending' %}
+                                    <span class="badge bg-warning text-dark" style="border-radius: 12px; padding: 5px 12px; font-weight: 500;">Pending</span>
+                                {% elif b.status == 'Confirmed' %}
+                                    <span class="badge" style="background: #3b82f6; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">Confirmed</span>
+                                {% elif b.status == 'Checked In' %}
+                                    <span class="badge" style="background: #10b981; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">Checked In</span>
+                                {% elif b.status == 'Cancelled' %}
+                                    <span class="badge" style="background: #ef4444; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">Cancelled</span>
+                                {% else %}
+                                    <span class="badge bg-secondary" style="border-radius: 12px; padding: 5px 12px; font-weight: 500;">{{ b.status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="11" class="text-center py-5 text-muted">
+                                <div class="mb-2" style="font-size: 32px;">📭</div>
+                                No hall bookings found matching your search.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav class="mt-4 d-flex justify-content-center"><ul class="pagination">
+                {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&phone={{ phone }}&name={{ name }}&membership={{ membership }}">← Prev</a></li>{% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}&phone={{ phone }}&name={{ name }}&membership={{ membership }}">{{ num }}</a></li>
+                {% endfor %}
+                {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&phone={{ phone }}&name={{ name }}&membership={{ membership }}">Next →</a></li>{% endif %}
+            </ul></nav>
+            {% endif %}
+
+        </div>
+
+
+
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Event Checkout Modals -->
+{% for b in page_obj %}
+<div class="modal fade" id="checkoutModalEvent{{ b.id }}" tabindex="-1" role="dialog" aria-labelledby="checkoutModalEventLabel{{ b.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; background: var(--bg-card, #ffffff); overflow: hidden;">
+            <div class="modal-header border-0 py-4" style="background: linear-gradient(135deg, #7c3aed, #8b5cf6); border-top-left-radius: 16px; border-top-right-radius: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: none;">
+                <h5 class="modal-title text-white font-weight-bold" id="checkoutModalEventLabel{{ b.id }}" style="font-family: 'Outfit', sans-serif; margin-bottom: 0;">🏢 Event Checkout #{{ b.id }}</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.8; font-size: 28px; background: none; border: none; padding: 0;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{% url 'process_event_checkout' b.id %}">
+                {% csrf_token %}
+                <div class="modal-body p-4" style="text-align: left;">
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span class="text-muted font-weight-semibold">Guest Name:</span>
+                            <span class="text-dark font-weight-bold" style="font-size: 15px;">
+                                {% if b.customer %}
+                                    {{ b.customer.user.get_full_name|default:b.customer.user.username }}
+                                {% else %}
+                                    {{ b.guest_name }}
+                                {% endif %}
+                            </span>
+                        </div>
+                         {% if b.id_type and b.id_number %}
+                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                             <span class="text-muted font-weight-semibold">Guest ID:</span>
+                             {% if b.id_number and 'checkin_ids/' in b.id_number %}
+                                 <span class="text-dark font-weight-semibold" style="font-size: 14px;">
+                                     {{ b.id_type }} (<a href="/media/{{ b.id_number }}" target="_blank" class="text-primary font-weight-bold"><i class="fa fa-file-alt"></i> View ID Document</a>)
+                                 </span>
+                             {% else %}
+                                 <span class="text-dark font-weight-semibold" style="font-size: 14px;">{{ b.id_type }} ({{ b.id_number }})</span>
+                             {% endif %}
+                         </div>
+                         {% endif %}
+
+                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                             <span class="text-muted font-weight-semibold">Event Duration:</span>
+                             <span class="text-dark font-weight-semibold" style="font-size: 14px;">{{ b.stay_days }} {% if b.stay_days == 1 %}day{% else %}days{% endif %} ({{ b.start_date|date:"M d" }} - {{ b.end_date|date:"M d" }})</span>
+                         </div>
+                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                             <span class="text-muted font-weight-semibold">Hall Rate:</span>
+                             <span class="text-dark font-weight-semibold" style="font-size: 14px;">${{ b.hall.hall_price }} / day</span>
+                         </div>
+                         {% if b.package %}
+                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                             <span class="text-muted font-weight-semibold">Selected Package:</span>
+                             <span class="text-dark font-weight-semibold" style="font-size: 14px;">{{ b.package.package_name }} (${{ b.package.package_price }})</span>
+                         </div>
+                         {% endif %}
+                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                             <span class="text-muted font-weight-semibold">Subtotal:</span>
+                             <span class="text-dark font-weight-semibold" style="font-size: 14px;">${{ b.total_amount }}</span>
+                         </div>
+                         {% if b.discount_amount > 0 %}
+                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                             <span class="text-muted font-weight-semibold">Discount Redeemed:</span>
+                             <span class="text-danger font-weight-semibold" style="font-size: 14px;">-${{ b.discount_amount }}</span>
+                         </div>
+                         {% endif %}
+                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                             <span class="text-muted font-weight-semibold">Total Bill:</span>
+                             <span class="text-dark font-weight-bold" style="font-size: 15px;">${{ b.final_amount }}</span>
+                         </div>
+                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                             <span class="text-muted font-weight-semibold">Advance Paid:</span>
+                             <span class="text-success font-weight-bold" style="font-size: 15px;">${{ b.advance_amount }}</span>
+                         </div>
+                        <div class="d-flex justify-content-between align-items-center py-3 border-bottom mt-2" style="background: rgba(239, 68, 68, 0.05); border-radius: 8px; padding: 8px 12px;">
+                            <span class="text-danger font-weight-bold" style="font-size: 15px;">Pending Amount due:</span>
+                            <span class="text-danger font-weight-extrabold h4 mb-0">${{ b.pending_payment }}</span>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label text-muted font-weight-semibold mb-2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Payment Method</label>
+                            <select name="payment_method" class="form-control" style="border-radius: 8px; padding: 10px 14px; height: auto;" required>
+                                <option value="Cash">Cash</option>
+                                <option value="Card">Card</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Online">Online Payment (Razorpay)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 d-flex gap-2 justify-content-end" style="border-top: none;">
+                    <button type="button" class="btn btn-secondary px-4 py-2" data-dismiss="modal" style="border-radius: 8px; font-weight: 600; background: #6b7280; border: none; color: #fff;">Cancel</button>
+                    <button type="submit" class="btn btn-success px-4 py-2" style="border-radius: 8px; font-weight: 600; background: #22c55e; border: none; color: #fff;">Collect & Checkout</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ==========================================
+    // 1. DYNAMIC FILTER LOGIC
+    // ==========================================
+    const filterForm = document.getElementById('filter-form');
+    const resultsContainer = document.getElementById('dynamic-results');
+    let debounceTimer;
+
+    const fetchResults = (url) => {
+        if (!resultsContainer) return;
+        resultsContainer.classList.add('is-loading');
+
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newResults = doc.getElementById('dynamic-results');
+            
+            if (newResults) {
+                resultsContainer.innerHTML = newResults.innerHTML;
+                attachPaginationListeners(); 
+                attachCheckoutListeners(); // Re-bind checkout forms after HTML swap
+            }
+            resultsContainer.classList.remove('is-loading');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultsContainer.classList.remove('is-loading');
+        });
+    };
+
+    const handleFilterChange = () => {
+        if (!filterForm) return;
+        const formData = new FormData(filterForm);
+        const params = new URLSearchParams(formData);
+        
+        // Remove empty params
+        for (const [key, value] of Array.from(params.entries())) {
+            if (!value) params.delete(key);
+        }
+
+        const url = `${window.location.pathname}?${params.toString()}`;
+        history.pushState(null, '', url);
+        fetchResults(url);
+    };
+
+    // Attach listeners to form elements
+    if (filterForm) {
+        filterForm.querySelectorAll('input, select').forEach(element => {
+            if (element.tagName === 'INPUT' && element.type === 'text') {
+                element.addEventListener('input', () => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(handleFilterChange, 450);
+                });
+            } else {
+                element.addEventListener('change', handleFilterChange);
+            }
+        });
+
+        filterForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleFilterChange();
+        });
+    }
+
+    const attachPaginationListeners = () => {
+        const paginationLinks = document.querySelectorAll('.pagination a.page-link');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                fetchResults(link.getAttribute('href'));
+            });
+        });
+    };
+
+    // ==========================================
+    // 2. RAZORPAY CHECKOUT LOGIC
+    // ==========================================
+    const handleCheckoutSubmit = function(e) {
+        const form = e.target;
+        const paymentMethodSelect = form.querySelector('select[name="payment_method"]');
+        if (!paymentMethodSelect || paymentMethodSelect.value !== 'Online') return;
+        
+        e.preventDefault();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>Processing...';
+        
+        const formData = new FormData(form);
+        formData.append('ajax', '1');
+        
+        fetch(form.action, { method: 'POST', body: formData, headers: {'X-Requested-With': 'XMLHttpRequest'} })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.razorpay) {
+                const ctx = data.context;
+                const options = {
+                    key: ctx.razorpay_key,
+                    amount: Math.round(parseFloat(ctx.amount) * 100),
+                    currency: "INR",
+                    name: "StayZen",
+                    description: "Checkout #" + ctx.booking_id,
+                    handler: function(response) {
+                        fetch("{% url 'razorpay_callback' %}", {
+                            method: "POST",
+                            headers: {"Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}"},
+                            body: JSON.stringify({booking_id: ctx.booking_id, razorpay_payment_id: response.razorpay_payment_id})
+                        })
+                        .then(res => res.json())
+                        .then(cbData => {
+                            if (cbData.success) {
+                                Swal.fire('Success', 'Payment completed!', 'success').then(() => window.location.reload());
+                            } else {
+                                Swal.fire('Error', 'Payment failed', 'error');
+                                submitBtn.disabled = false; submitBtn.innerHTML = originalText;
+                            }
+                        });
+                    }
+                };
+                new Razorpay(options).open();
+            } else {
+                Swal.fire('Error', data.message || 'Error', 'error');
+                submitBtn.disabled = false; submitBtn.innerHTML = originalText;
+            }
+        });
+    };
+
+    const attachCheckoutListeners = () => {
+        document.querySelectorAll('form[action*="checkout"]').forEach(form => {
+            form.removeEventListener('submit', handleCheckoutSubmit);
+            form.addEventListener('submit', handleCheckoutSubmit);
+        });
+    };
+
+    attachPaginationListeners();
+    attachCheckoutListeners();
+});
+</script>
+{% endblock %}

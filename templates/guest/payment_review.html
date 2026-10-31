@@ -1,0 +1,194 @@
+{% extends 'guest/base.html' %}
+{% load static %}
+
+{% block title %}Review Payment - StayZen{% endblock %}
+
+{% block content %}
+<div class="payment-container py-4 mt-5 pt-5" style="background-color: #f8fafc; min-height: 90vh;">
+  <style>
+    .step-indicator {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .step-indicator .active {
+      color: #3b82f6;
+    }
+    .review-main-card, .review-side-card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+      border: 1px solid #e2e8f0;
+    }
+    .info-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .info-value {
+      font-size: 14px;
+      color: #0f172a;
+      font-weight: 500;
+    }
+    .section-divider {
+      border-top: 1px dashed #e2e8f0;
+      margin: 16px 0;
+    }
+    .sticky-sidebar {
+      position: -webkit-sticky;
+      position: sticky;
+      top: 100px;
+    }
+    .alert-banner {
+      background-color: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #15803d;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+  </style>
+
+  <div class="container">
+
+
+    <div class="row">
+      <div class="col-lg-8 mb-4">
+        <div class="review-main-card p-4">
+
+          <div class="alert-banner p-3 mb-4 d-flex align-items-center">
+            <span class="mr-2">✨</span>
+            <div><strong>Please review your booking details below</strong> before executing secure payment routing.</div>
+          </div>
+
+          <h5 class="font-weight-bold mb-3" style="color: #0f172a;">Booking details</h5>
+
+          <div class="row row-cols-2 row-cols-md-3 g-3">
+            <div class="col mb-3">
+              <div class="info-label">Service</div>
+              <div class="info-value">{{ service_name }}</div>
+            </div>
+            <div class="col mb-3">
+              <div class="info-label">Booking Reference</div>
+              <div class="info-value">#SZ-{{ booking_id }}</div>
+            </div>
+            <div class="col mb-3">
+              <div class="info-label">Guest Name</div>
+              <div class="info-value">{{ name }}</div>
+            </div>
+            <div class="col mb-3">
+              <div class="info-label">Email</div>
+              <div class="info-value text-break">{{ email }}</div>
+            </div>
+            <div class="col mb-3">
+              <div class="info-label">Phone</div>
+              <div class="info-value">{{ phone }}</div>
+            </div>
+            <div class="col mb-3">
+              <div class="info-label">Current Stage Due</div>
+              <div class="info-value text-primary font-weight-bold">₹{{ amount }}</div>
+            </div>
+          </div>
+
+          {% if service_details %}
+          <div class="section-divider"></div>
+          <h6 class="font-weight-bold mb-3 text-muted" style="font-size: 14px;">Service Parameters</h6>
+          <div class="row row-cols-2 row-cols-md-3">
+            {% for label, value in service_details %}
+              <div class="col mb-3">
+                <div class="info-label">{{ label }}</div>
+                <div class="info-value">{{ value }}</div>
+              </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if guest_details %}
+          <div class="section-divider"></div>
+          <h6 class="font-weight-bold mb-3 text-muted" style="font-size: 14px;">Guest Matrix</h6>
+          <div class="row row-cols-2 row-cols-md-3">
+            {% for label, value in guest_details %}
+              <div class="col mb-3">
+                <div class="info-label">{{ label }}</div>
+                <div class="info-value">{{ value }}</div>
+              </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if offer_details %}
+          <div class="section-divider"></div>
+          <h6 class="font-weight-bold mb-3 text-success" style="font-size: 14px;">Redeemed Incentives</h6>
+          <div class="row row-cols-2 row-cols-md-3">
+            {% for label, value in offer_details %}
+              <div class="col mb-3">
+                <div class="info-label">{{ label }}</div>
+                <div class="info-value text-success font-weight-bold">{{ value }}</div>
+              </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="sticky-sidebar">
+          <div class="review-side-card p-4">
+            <h5 class="font-weight-bold mb-3" style="color: #0f172a;">Reservation Summary</h5>
+
+            <div class="mb-4">
+              <div class="info-label">Selected Item</div>
+              <div class="info-value font-weight-bold" style="font-size: 15px;">{{ service_name }}</div>
+              <small class="text-muted d-block mt-1">Reference: #SZ-{{ booking_id }}</small>
+            </div>
+
+            <div class="section-divider"></div>
+            <h6 class="font-weight-bold mb-3" style="color: #0f172a; font-size: 14px;">Your price summary</h6>
+
+            <div class="price-breakdown mb-3">
+              {% for label, value in summary_details %}
+                {% if label != 'Final Amount' %}
+                <div class="d-flex justify-content-between py-1.5" style="font-size: 14px;">
+                  <span class="text-muted">{{ label }}</span>
+                  <span class="font-weight-medium text-dark">{{ value }}</span>
+                </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+
+            <div class="section-divider" style="border-top-style: solid;"></div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <span class="font-weight-bold text-dark" style="font-size: 16px;">Total Price</span>
+              <span class="font-weight-bold text-success" style="font-size: 22px;">
+                {% for label, value in summary_details %}
+                  {% if label == 'Final Amount' %}{{ value }}{% endif %}
+                {% endfor %}
+              </span>
+            </div>
+
+            <form method="POST" action="{% url 'payment_start' booking_type=booking_type booking_id=booking_id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success btn-lg w-100 py-3 font-weight-bold shadow-sm" style="border-radius: 12px; font-size: 16px; background-color: #10b981; border: none;">
+                Proceed to Payment
+              </button>
+            </form>
+
+            <a href="javascript:history.back()" class="btn btn-outline-secondary btn-block w-100 mt-2" style="border-radius: 12px; font-size: 14px;">
+              Edit Booking
+            </a>
+
+            <p class="text-muted text-center mt-3 mb-0 style-note" style="font-size: 11.5px; line-height: 1.4;">
+              🔒 Secure routing connection. You will be safely directed onto standard gateway confirmation handlers.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,540 @@
+{% extends 'guest/base.html' %}
+{% load static %}
+
+{% block title %}Event Halls - StayZen{% endblock %}
+
+{% block content %}
+
+<!-- EXTERNAL RESOURCES -->
+<link rel="stylesheet" href="{% static 'guest/css/event.css' %}">
+
+<!-- INLINE STYLES FOR GRID AND ROUNDED CARDS -->
+
+<style>
+    /* ===== HERO BANNER BACKGROUND WITH BLENDED NAVBAR OVERLAY ===== */
+    .hero-section-match {
+        position: relative;
+        width: 100%;
+        height: 50vh;
+        min-height: 400px;
+        /* Adjusted background: Removed the heavy top-shadow gradient to let the light page background blend cleanly */
+        background: linear-gradient(to bottom,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(0, 0, 0, 0.1) 40%,
+            rgba(0, 0, 0, 0.6) 100%),
+        url("{% static 'guest/images/event-hall2.jpeg' %}") no-repeat center center;
+        background-size: cover;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        color: #fff;
+        padding: 0 20px;
+    }
+
+    /* ===== INJECT CONTRAST FOR THE PARENT NAVBAR LINKS ===== */
+    /* MATCHED TO SECOND IMAGE: Dark, clean typography with high clarity */
+    nav a,
+    .navbar a,
+    header a,
+    .nav-link,
+    .navbar-nav .nav-link {
+        color: #1a1a1a !important;
+        /* Clean dark color from your reference image */
+        text-shadow: none !important;
+        /* Removed shadows completely */
+        font-weight: 600 !important;
+        /* Bold typography for modern clean layout */
+        font-family: 'Jost', sans-serif;
+        font-size: 15px;
+        letter-spacing: 0.5px;
+        transition: color 0.2s ease;
+    }
+
+    /* Active / Hover State */
+    nav a:hover,
+    .navbar a:hover,
+    .nav-link:hover,
+    nav a.active,
+    .navbar a.active,
+    .nav-link.active {
+        color: #c89b63 !important;
+        /* Smooth transition to your accent gold color */
+        text-shadow: none !important;
+    }
+
+    /* Optional parent navbar backing cleanup */
+    header,
+    nav,
+    .navbar {
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .hero-section-match h1 {
+        font-family: 'Gilda Display', serif;
+        font-size: 56px;
+        color: #fefdfc;
+        margin-bottom: 10px;
+        letter-spacing: 2px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    }
+
+    .hero-section-match p {
+        font-family: 'Jost', sans-serif;
+        font-size: 16px;
+        letter-spacing: 1px;
+        max-width: 600px;
+        opacity: 0.9;
+        text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    }
+
+    /* ===== BOOKING SIDEBAR ===== */
+    .booking-sidebar {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 550px;
+        height: 100vh;
+        background: #fff;
+        z-index: 9999;
+        padding: 25px 36px;
+        overflow-y: auto;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+        transition: right 0.3s ease;
+        border-radius: 30px 0 0 30px;
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-size: 26px;
+        cursor: pointer;
+        color: #1a1a1a;
+        transition: transform 0.3s ease;
+    }
+
+    .close-btn:hover {
+        transform: rotate(90deg);
+        color: #ef4444;
+    }
+
+    @media (max-width: 768px) {
+        .booking-sidebar {
+            width: 100%;
+            border-radius: 0;
+            padding: 20px;
+        }
+    }
+
+    /* ==========================================
+       FLOATING HORIZONTAL FILTER BAR 
+       ========================================== */
+    .filter-container-wrapper {
+        position: relative;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        z-index: 10;
+    }
+
+    .filter-box {
+        background: #fff;
+        padding: 25px 35px;
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+        margin-top: -60px;
+        margin-bottom: 60px;
+    }
+
+    .filter-box form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        align-items: flex-end;
+        width: 100%;
+    }
+
+    .filter-group {
+        flex: 1;
+        min-width: 160px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .filter-group.button-area {
+        flex: 0 1 auto;
+        min-width: auto;
+    }
+
+    .filter-group label {
+        font-family: 'Jost', sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #1a1a1a;
+        margin: 0;
+        padding-left: 5px;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        height: 50px;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 0 15px !important;
+        font-family: 'Jost', sans-serif;
+        font-size: 14px;
+        color: #4a5568;
+        background-color: #f8fafc;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .filter-group select:focus,
+    .filter-group input:focus {
+        border-color: #c89b63 !important;
+        background-color: #fff;
+    }
+
+    .filter-btn {
+        height: 50px;
+        padding: 0 30px !important;
+        background: #22252a !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-family: 'Jost', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        white-space: nowrap;
+    }
+
+    .filter-btn:hover {
+        background: #111418 !important;
+    }
+
+    .reset-btn {
+        height: 50px;
+        padding: 0 25px !important;
+        background: #ef4444 !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-family: 'Jost', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+
+    .reset-btn:hover {
+        background: #dc2626 !important;
+        color: #fff !important;
+    }
+
+    @media (max-width: 991px) {
+        .filter-box form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-group.button-area {
+            flex: 1;
+        }
+
+        .filter-btn,
+        .reset-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* ==========================================
+       GRID LAYOUT & ROUNDED CARDS 
+       ========================================== */
+    .hall-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px 80px 20px;
+    }
+
+    .halls-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 35px;
+    }
+
+    .hall-card-grid {
+        background: #fff;
+        border-radius: 24px;
+        overflow: hidden;
+        border: 1px solid #eaeaea;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .hall-card-grid:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(200, 155, 93, 0.18);
+        border-color: rgba(200, 155, 93, 0.3);
+    }
+
+    .hall-img-wrap {
+        width: 100%;
+        height: 280px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hall-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+    }
+
+    .hall-card-grid:hover .hall-img-wrap img {
+        transform: scale(1.08);
+    }
+
+    .description-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        padding: 15px 20px;
+        font-size: 14px;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+    }
+
+    .hall-card-grid:hover .description-overlay {
+        transform: translateY(0);
+    }
+
+    .hall-details {
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+
+    .hall-details h2 {
+        font-family: 'Gilda Display', serif;
+        font-size: 28px;
+        color: #1a1a1a;
+        margin-bottom: 15px;
+    }
+
+    .hall-meta {
+        display: flex;
+        justify-content: flex-start;
+        gap: 20px;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #f0f0f0;
+        color: #666;
+        font-size: 15px;
+        font-weight: 500;
+        flex-wrap: wrap;
+    }
+
+    .hall-price-wrap {
+        margin-bottom: 25px;
+    }
+
+    .hall-price {
+        font-family: 'Gilda Display', serif;
+        font-size: 28px;
+        color: #c89b63;
+        font-weight: 600;
+    }
+
+    .hall-action-area {
+        margin-top: auto;
+    }
+
+    .book-btn,
+    .package-btn {
+        border-radius: 30px !important;
+        padding: 12px 25px !important;
+        font-weight: 600;
+    }
+
+    .package-btn {
+        background: #1a1a1a;
+        color: #fff;
+        transition: background 0.3s;
+    }
+
+    .package-btn:hover {
+        background: #333;
+        color: #fff;
+    }
+
+    /* JS Animation Class */
+    .fade-in-up {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .fade-in-up.appear {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+
+<!-- TOP HERO HEADER AREA -->
+<div class="hero-section-match">
+    <h1>Event Halls</h1>
+    <p>Elegant spaces tailored to celebrate your milestone moments.</p>
+</div>
+
+<!-- FLOATING BAR WRAPPER FOR ALIGNMENT -->
+<div class="filter-container-wrapper">
+    <!-- FILTER SECTION -->
+    <div class="filter-box">
+        <form method="GET" id="eventFilterForm">
+            <div class="filter-group">
+                <label>Check-in Date</label>
+                <input type="date" id="filter_check_in" name="check_in" value="{{ filter_check_in|default:'' }}">
+            </div>
+
+            <div class="filter-group">
+                <label>Check-out Date</label>
+                <input type="date" id="filter_check_out" name="check_out" value="{{ filter_check_out|default:'' }}">
+            </div>
+
+            <div class="filter-group">
+                <label>Guest Count</label>
+                <input type="number" id="filter_guest_count" name="guest_count" min="1"
+                    value="{{ filter_guest_count|default:'' }}" placeholder="e.g. 150">
+            </div>
+
+            <div class="filter-group button-area">
+                <button type="submit" class="filter-btn">Search Halls</button>
+            </div>
+
+            <div class="filter-group button-area">
+                <a href="{% url 'event' %}" class="reset-btn">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="hall-container" id="hall-section">
+
+    <!-- NEW GRID HALL CARDS -->
+    <div class="halls-grid">
+        {% for hall in halls %}
+        <div class="hall-card-grid fade-in-up">
+
+            <!-- Image Area -->
+            <div class="hall-img-wrap">
+                {% if hall.hall_image %}
+                <img src="{{ hall.hall_image.url }}" alt="{{ hall.hall_name }}">
+                {% else %}
+                <img src="{% static 'guest/images/no-image.jpg' %}" alt="No Image">
+                {% endif %}
+                <div class="description-overlay">
+                    {{ hall.hall_description }}
+                </div>
+            </div>
+
+            <!-- Details Area -->
+            <div class="hall-details">
+                <h2>{{ hall.hall_name }}</h2>
+
+                <div class="hall-meta">
+                    <span><strong>Type:</strong> <span style="text-transform: capitalize;">{{ hall.get_hall_type_display }}</span></span>
+                    <span><strong>Capacity:</strong> {{ hall.hall_capacity }} Guests</span>
+                </div>
+
+                <div class="hall-price-wrap">
+                    <span class="hall-price">₹{{ hall.hall_price }}</span>
+                </div>
+
+                <!-- Action Buttons (Pinned to bottom) -->
+                <div class="hall-action-area button-group d-flex gap-2"
+                    style="width: 100%; align-items: center; flex-wrap: wrap;">
+                    {% if hall.hall_status == 'maintenance' %}
+                    <button class="btn book-btn" disabled
+                        style="background-color: #cbd5e1 !important; color: #64748b !important; border: none !important; cursor: not-allowed !important; pointer-events: none; width: 100%; text-align: center; text-transform: capitalize;">
+                        Maintenance
+                    </button>
+                    {% else %}
+                    <!-- <a href="#" class="btn book-btn openBooking" data-hall-id="{{ hall.hall_id }}"
+                        style="flex: 1; text-align: center; white-space: nowrap;">
+                        Book Now
+                    </a>
+                    {% endif %} -->
+
+                    <a href="{% url 'hall_packages' hall.hall_id %}?check_in={{ filter_check_in }}&check_out={{ filter_check_out }}&guest_count={{ filter_guest_count }}"
+                        class="btn package-btn"
+                        style="flex: 1; text-align: center; white-space: nowrap; background: transparent !important; border: 2px solid #c89b63 !important; color: #c89b63 !important;">
+                        &#128065; View Details
+                    </a>
+                </div>
+
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1 / -1;">
+            <h2 style="margin-top: 30px; text-align: center; color: #666;">No Event Halls Available matching your
+                criteria.</h2>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- BOOKING SIDEBAR -->
+<div class="booking-sidebar event-booking-sidebar" id="bookingSidebar">
+    <span class="close-btn" id="closeBooking">&times;</span>
+    <h3 style="font-family: 'Gilda Display', serif; margin-bottom: 20px; padding-top: 10px;">Book Event Hall</h3>
+    {% include 'booking/event_booking.html' %}
+</div>
+
+<!-- SCRIPTS -->
+<script src="{% static 'guest/js/event.js' %}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // --- SCROLL REVEAL ANIMATION FOR CARDS ---
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: "0px 0px -50px 0px"
+        };
+        const observer = new IntersectionObserver(function (entries, observer) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('appear');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in-up').forEach(card => {
+            observer.observe(card);
+        });
+    });
+</script>
+
+{% endblock %}

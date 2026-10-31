@@ -1,0 +1,185 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid" style="margin-top:45px;">
+
+    <div class="card border-0 shadow-lg">
+
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">👥 Staff Users</h4>
+
+            <a href="{% url 'add_staff_user' %}" class="btn btn-light btn-sm">
+                + Add Staff User
+            </a>
+        </div>
+
+        <div class="card-body">
+
+
+            <!-- FILTER -->
+            <div class="row mb-3">
+
+                <div class="col-md-4">
+                    <input type="text" id="nameSearch" class="form-control" placeholder="Search by Name...">
+                </div>
+
+                <div class="col-md-3">
+                    <input type="text" id="departmentFilter" class="form-control" placeholder="Search by Department...">
+                </div>
+
+            </div>
+
+            <!-- TABLE -->
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-striped align-middle" id="staffTable">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Sl.No.</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Role</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Audit Logs</th>
+                            <th width="180">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for staff in staff_users %}
+
+                        <tr class="{% if staff.is_deleted %}table-danger opacity-75{% endif %}">
+
+                            <td>{{ forloop.counter }}</td>
+
+                            <td>{{ staff.user.first_name }}</td>
+
+                            <td>
+                                <span class="text-info fw-semibold">
+                                    {{ staff.department }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="text-secondary fw-semibold">
+                                    {{ staff.role }}
+                                </span>
+                            </td>
+
+                            <td>{{ staff.phone }}</td>
+
+                            <td>
+                                {% if staff.is_deleted %}
+                                    <span class="badge bg-danger">Deleted</span>
+                                {% else %}
+                                    {% if staff.status %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <div class="small">
+                                    <span class="text-muted">Created:</span> {{ staff.created_by.username|default:"System" }}<br>
+                                    <span class="text-muted" style="font-size: 11px;">{{ staff.created_at|date:"Y-m-d H:i" }}</span>
+
+                                    {% if staff.edited_by %}
+                                        <hr class="my-1">
+                                        <span class="text-muted">Edited:</span> {{ staff.edited_by.username }}<br>
+                                        <span class="text-muted" style="font-size: 11px;">{{ staff.edited_at|date:"Y-m-d H:i" }}</span>
+                                    {% endif %}
+
+                                    {% if staff.is_deleted %}
+                                        <hr class="my-1">
+                                        <span class="text-danger fw-semibold">Deleted:</span> {{ staff.deleted_by.username }}<br>
+                                        <span class="text-danger" style="font-size: 11px;">{{ staff.deleted_at|date:"Y-m-d H:i" }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'edit_staff_user' staff.id %}"
+                                       class="btn btn-warning btn-sm">
+                                        <i class="fa fa-pencil"></i>
+                                    </a>
+
+                                    <form action="{% url 'delete_staff_user' staff.id %}" method="POST">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Delete this staff user?');">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </form>
+
+                                    <a href="{% url 'manage_permissions' staff.id %}"
+                                       class="btn btn-info btn-sm">
+                                        <i class="fa fa-key"></i>
+                                    </a>
+                                </div>
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+                            <td colspan="8" class="text-center">
+                                No Staff Users Found
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- FILTER SCRIPT -->
+<script>
+const nameSearch = document.getElementById("nameSearch");
+const departmentFilter = document.getElementById("departmentFilter");
+
+function filterTable() {
+
+    const searchValue = nameSearch.value.toLowerCase();
+    const departmentValue = departmentFilter.value.toLowerCase();
+
+    const rows = document.querySelectorAll("#staffTable tbody tr");
+
+    rows.forEach(row => {
+
+        if (row.innerText.includes("No Staff Users Found")) return;
+
+        const cells = row.getElementsByTagName("td");
+
+        const name = (cells[1]?.innerText || "").toLowerCase();
+        const department = (cells[2]?.innerText || "").toLowerCase();
+
+        const matchName = name.includes(searchValue);
+        const matchDepartment = department.includes(departmentValue);
+
+        row.style.display = (matchName && matchDepartment) ? "" : "none";
+    });
+}
+
+nameSearch.addEventListener("keyup", filterTable);
+departmentFilter.addEventListener("keyup", filterTable);
+</script>
+
+{% endblock %}

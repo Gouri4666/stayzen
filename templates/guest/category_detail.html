@@ -1,0 +1,635 @@
+{% extends 'guest/base.html' %}
+{% load static %}
+{% load cart_tags %}
+{% block content %}
+
+<style>
+    /* =========================
+       Typography & Background
+    ========================= */
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .serif-font {
+        font-family: 'Gilda Display', 'Playfair Display', serif;
+    }
+
+    /* =========================
+       Premium Hero Banner Section
+    ========================= */
+    .hero-banner {
+        position: relative;
+        width: 100%;
+        min-height: 420px;
+        background-size: cover;
+        background-position: center;
+        background-attachment: scroll;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 100px 20px 110px 20px;
+    }
+
+    .hero-content {
+        max-width: 750px;
+        color: #ffffff;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .hero-subtitle {
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        color: #00a884;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .hero-title {
+        font-size: 52px;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 25px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        /* Golden Gradient effect */
+        background: linear-gradient(135deg, #f39c12, #f1c40f);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Modern Overlay Pill Variant for Back Button */
+    .back-menu-link {
+        color: #ffffff;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        padding: 10px 22px;
+        border-radius: 50px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .back-menu-link:hover {
+        color: #ffffff;
+        background: #00a884;
+        border-color: #00a884;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 168, 132, 0.4);
+    }
+
+    /* =========================
+       Floating View Cart Button (Bottom Left)
+    ========================= */
+    .floating-cart-btn {
+        position: fixed;
+        left: 25px;
+        bottom: 25px;
+        z-index: 9999;
+        background: linear-gradient(135deg, #00a884, #008c6f);
+        color: #fff !important;
+        padding: 14px 24px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, .20);
+        transition: all .3s ease;
+    }
+
+    .floating-cart-btn:hover {
+        transform: translateY(-4px);
+        color: #fff !important;
+    }
+
+    /* =========================
+       Adaptive Overlaid Filters & Cards
+    ========================= */
+    .filter-box {
+        background: #fff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 10;
+        margin-top: -65px;
+        /* Clean overlay position into the hero banner image */
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .filter-box .form-select,
+    .filter-box .form-control {
+        height: 50px;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+    }
+
+    .filter-box .form-select:focus,
+    .filter-box .form-control:focus {
+        border-color: #00a884;
+        box-shadow: 0 0 0 3px rgba(0, 168, 132, 0.15);
+    }
+
+    .menu-card {
+        border-radius: 8px;
+        background: #fff;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        height: 100%;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .menu-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .menu-img-container {
+        height: 100%;
+        min-height: 280px;
+    }
+
+    .menu-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .badge-custom {
+        font-weight: 500;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+
+    .badge-gray {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .badge-green {
+        background-color: #198754;
+        color: white;
+    }
+
+    .food-title {
+        font-size: 26px;
+        color: #333;
+        margin-top: 15px;
+        margin-bottom: 10px;
+    }
+
+    .food-desc {
+        color: #777;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+
+    .food-price-label {
+        color: #888;
+        font-size: 13px;
+        margin-bottom: 2px;
+    }
+
+    .food-price {
+        color: #00a884;
+        font-size: 32px;
+        margin-bottom: 0;
+    }
+
+    /* =========================
+       Action Buttons
+    ========================= */
+    .btn-cart {
+        background: #212832;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all .3s ease;
+        white-space: nowrap;
+    }
+
+    .btn-cart:hover {
+        background: #000;
+        transform: translateY(-2px);
+    }
+
+    .btn-order {
+        background: linear-gradient(135deg, #00a884, #008c6f);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all .3s ease;
+        white-space: nowrap;
+    }
+
+    .btn-order:hover {
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 168, 132, .3);
+    }
+
+    /* Updated Clear Button Styling to Dark Grey Palette */
+    .btn-clear {
+        background: #343a40;
+        color: #ffffff;
+        border: 1px solid #343a40;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all .3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-clear:hover {
+        background: #212832;
+        color: #ffffff;
+        border-color: #212832;
+    }
+
+    /* =========================
+       Cross-Gadget Adjustments
+    ========================= */
+    @media(max-width: 1199px) and (min-width: 768px) {
+        .menu-img-container {
+            min-height: 240px;
+        }
+
+        .food-title {
+            font-size: 22px;
+        }
+
+        .food-price {
+            font-size: 28px;
+        }
+
+        .btn-cart,
+        .btn-order,
+        .ajax-quantity-controls {
+            padding: 10px 14px;
+            font-size: 14px;
+        }
+    }
+
+    @media(max-width: 767px) {
+        .filter-box {
+            margin-top: -45px;
+            padding: 20px;
+        }
+
+        .floating-cart-btn {
+            left: 15px;
+            bottom: 15px;
+            padding: 12px 18px;
+            font-size: 14px;
+        }
+
+        .hero-banner {
+            min-height: 340px;
+            padding: 80px 15px 80px 15px;
+        }
+
+        .hero-title {
+            font-size: 34px !important;
+            margin-bottom: 20px;
+        }
+
+        .food-title {
+            font-size: 22px !important;
+        }
+
+        .food-price {
+            font-size: 26px !important;
+        }
+
+        .menu-img-container {
+            min-height: 210px !important;
+            height: 210px !important;
+        }
+
+        .action-button-group {
+            display: flex;
+            width: 100%;
+            gap: 12px !important;
+            margin-top: 15px !important;
+        }
+
+        .action-button-group form,
+        .action-button-group .cart-action-wrapper {
+            flex: 1;
+            width: 100%;
+        }
+
+        .btn-cart,
+        .btn-order,
+        .ajax-quantity-controls {
+            width: 100% !important;
+            text-align: center;
+            justify-content: center;
+            padding: 12px 10px !important;
+            font-size: 14px;
+        }
+    }
+</style>
+
+<div class="hero-banner"
+    style="background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.65)), url('{% static "guest/images/restaurant.jpeg" %}');">
+    <div class="hero-content">
+        <div class="hero-subtitle">Premium Selections</div>
+        <h1 class="serif-font hero-title">{{ category_name }} Collection</h1>
+        <a href="{% url 'food_menu' %}" class="back-menu-link">
+            <i class="fas fa-arrow-left"></i> Back to Full Menu
+        </a>
+    </div>
+</div>
+
+<div class="container mb-5">
+
+    <div class="filter-box mb-5">
+        <form method="GET" id="filterForm">
+            <div class="row g-3">
+                <div class="col-lg-3 col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Search dish name..."
+                        value="{{ selected_search|default_if_none:'' }}">
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <select name="cuisine" class="form-select">
+                        <option value="">All Cuisines</option>
+                        {% for value, label in cuisines %}
+                        <option value="{{ value }}" {% if selected_cuisine == value %}selected{% endif %}>{{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <select name="dietary" class="form-select">
+                        <option value="">Dietary Type</option>
+                        {% for value, label in dietary_choices %}
+                        <option value="{{ value }}" {% if selected_dietary == value %}selected{% endif %}>{{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <input type="number" name="price" class="form-control" placeholder="Max Price"
+                        value="{{ selected_price|default_if_none:'' }}">
+                </div>
+                <div class="col-lg-2 col-md-12">
+                    <a href="{% url 'category_detail' category_name %}" class="btn-clear h-100 m-0 w-100">
+                        <i class="fas fa-undo me-1"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="row g-4" id="food-items-grid">
+        {% for food in food_items %}
+        <div class="col-lg-6 d-flex">
+            <div class="card menu-card w-100">
+                <div class="row g-0 h-100">
+
+                    <div class="col-md-5 menu-img-container">
+                        {% if food.image %}
+                        <img src="{{ food.image.url }}" class="menu-img" alt="{{ food.item_name }}">
+                        {% else %}
+                        <img src="{% static 'guest/images/default-food.jpg' %}" class="menu-img"
+                            alt="{{ food.item_name }}">
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-7">
+                        <div class="card-body p-4 d-flex flex-column h-100">
+
+                            <div class="d-flex gap-2">
+                                <span class="badge badge-custom badge-gray">{{ food.category }}</span>
+                                {% if food.dietary_status == 'Veg' %}
+                                <span class="badge badge-custom badge-green">Veg</span>
+                                {% elif food.dietary_status == 'Non-Veg' %}
+                                <span class="badge badge-custom badge-green">Non-Veg</span>
+                                {% else %}
+                                <span class="badge badge-custom badge-gray">{{ food.dietary_status }}</span>
+                                {% endif %}
+                            </div>
+
+                            <h3 class="food-title serif-font">{{ food.item_name }}</h3>
+                            <p class="food-desc">{{ food.description|truncatewords:15 }}</p>
+
+                            <div class="mt-auto">
+                                <div>
+                                    <div class="food-price-label">Price</div>
+                                    <h2 class="food-price serif-font">₹{{ food.price }}</h2>
+                                </div>
+
+                                <div class="d-flex align-items-center gap-3 mt-3 flex-wrap action-button-group">
+                                    {% with food_id=food.id|stringformat:"s" %}
+
+                                    <div class="cart-action-wrapper" data-food-id="{{ food.id }}"
+                                        data-max-quantity="{{ food.quantity }}">
+
+                                        <form method="POST" action="{% url 'add_to_cart' food.id %}"
+                                            class="ajax-add-to-cart-form {% if cart|get_item:food_id %}d-none{% endif %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn-cart">
+                                                <i class="fas fa-cart-plus me-1"></i> Add To Cart
+                                            </button>
+                                        </form>
+
+                                        <div
+                                            class="ajax-quantity-controls d-flex align-items-center bg-light rounded border p-1 {% if not cart|get_item:food_id %}d-none{% endif %}">
+                                            <button type="button"
+                                                class="btn btn-sm text-dark fw-bold px-2 btn-decrement-ajax">-</button>
+                                            <span class="mx-2 fw-bold small quantity-count">{{ cart|get_item:food_id|default:0 }}</span>
+                                            <button type="button"
+                                                class="btn btn-sm text-dark fw-bold px-2 btn-increment-ajax" {% if cart|get_item:food_id|add:"0" >= food.quantity %}disabled{% endif %}>+</button>
+                                        </div>
+
+                                    </div>
+                                    {% endwith %}
+
+                                    <form method="POST" action="{% url 'order_now' food.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-order">
+                                            <i class="fas fa-bolt me-1"></i> Order Now
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted serif-font">No dishes found matching your filters.</h4>
+            <a href="{% url 'category_detail' category_name %}" class="btn btn-link text-decoration-none">Clear
+                Filters</a>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<a href="{% url 'view_cart' %}" class="floating-cart-btn {% if not cart %}d-none{% endif %}" id="floating-cart-btn">
+    <i class="fas fa-shopping-cart"></i> View Cart
+</a>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterForm = document.getElementById('filterForm');
+        const foodItemsGrid = document.getElementById('food-items-grid');
+        let debounceTimeout;
+
+        function initCartLogic() {
+            foodItemsGrid.querySelectorAll('.ajax-add-to-cart-form').forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    const wrapper = this.closest('.cart-action-wrapper');
+
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: new FormData(this),
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                        .then(() => {
+                            this.classList.add('d-none');
+                            const controls = wrapper.querySelector('.ajax-quantity-controls');
+                            controls.classList.remove('d-none');
+                            controls.querySelector('.quantity-count').textContent = '1';
+
+                            const floatingCart = document.getElementById('floating-cart-btn');
+                            if (floatingCart) floatingCart.classList.remove('d-none');
+                        });
+                });
+            });
+
+            foodItemsGrid.querySelectorAll('.btn-increment-ajax').forEach(button => {
+                button.replaceWith(button.cloneNode(true));
+            });
+            foodItemsGrid.querySelectorAll('.btn-increment-ajax').forEach(button => {
+                button.addEventListener('click', function () {
+                    const wrapper = this.closest('.cart-action-wrapper');
+                    const foodId = wrapper.dataset.foodId;
+                    const maxQty = parseInt(wrapper.dataset.maxQuantity) || 0;
+                    const countSpan = wrapper.querySelector('.quantity-count');
+                    let currentQty = parseInt(countSpan.textContent) || 0;
+
+                    if (currentQty < maxQty) {
+                        fetch(`/increase-cart/${foodId}/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                            .then(() => {
+                                currentQty++;
+                                countSpan.textContent = currentQty;
+                                if (currentQty >= maxQty) {
+                                    this.disabled = true;
+                                }
+                            });
+                    }
+                });
+            });
+
+            foodItemsGrid.querySelectorAll('.btn-decrement-ajax').forEach(button => {
+                button.replaceWith(button.cloneNode(true));
+            });
+            foodItemsGrid.querySelectorAll('.btn-decrement-ajax').forEach(button => {
+                button.addEventListener('click', function () {
+                    const wrapper = this.closest('.cart-action-wrapper');
+                    const foodId = wrapper.dataset.foodId;
+                    const countSpan = wrapper.querySelector('.quantity-count');
+                    let currentQty = parseInt(countSpan.textContent) || 0;
+
+                    if (currentQty > 0) {
+                        fetch(`/decrease-cart/${foodId}/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                            .then(() => {
+                                currentQty--;
+                                countSpan.textContent = currentQty;
+
+                                const incBtn = wrapper.querySelector('.btn-increment-ajax');
+                                if (incBtn) incBtn.disabled = false;
+
+                                if (currentQty <= 0) {
+                                    wrapper.querySelector('.ajax-quantity-controls').classList.add('d-none');
+                                    wrapper.querySelector('.ajax-add-to-cart-form').classList.remove('d-none');
+                                    checkCartState();
+                                }
+                            });
+                    }
+                });
+            });
+        }
+
+        function checkCartState() {
+            let activeItemsCount = 0;
+            document.querySelectorAll('.quantity-count').forEach(span => {
+                if (!span.closest('.ajax-quantity-controls').classList.contains('d-none')) {
+                    activeItemsCount += parseInt(span.textContent) || 0;
+                }
+            });
+            const floatingCart = document.getElementById('floating-cart-btn');
+            if (floatingCart) {
+                if (activeItemsCount === 0) floatingCart.classList.add('d-none');
+                else floatingCart.classList.remove('d-none');
+            }
+        }
+
+        function performLiveFilterUpdate() {
+            const queryParameters = new URLSearchParams(new FormData(filterForm)).toString();
+            const targetEndpointUrl = `${window.location.pathname}?${queryParameters}`;
+
+            window.history.pushState({ path: targetEndpointUrl }, '', targetEndpointUrl);
+
+            fetch(targetEndpointUrl, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(response => response.text())
+                .then(htmlDataText => {
+                    const documentDOMParser = new DOMParser();
+                    const virtualDocumentHTML = documentDOMParser.parseFromString(htmlDataText, 'text/html');
+                    const newlyGeneratedGridContent = virtualDocumentHTML.getElementById('food-items-grid').innerHTML;
+
+                    foodItemsGrid.innerHTML = newlyGeneratedGridContent;
+                    initCartLogic();
+                });
+        }
+
+        filterForm.querySelectorAll('select').forEach(dropdownSelectElement => {
+            dropdownSelectElement.addEventListener('change', performLiveFilterUpdate);
+        });
+
+        filterForm.querySelectorAll('input').forEach(inputFieldElement => {
+            inputFieldElement.addEventListener('input', function () {
+                clearTimeout(debounceTimeout);
+                debounceTimeout = setTimeout(performLiveFilterUpdate, 300);
+            });
+        });
+
+        initCartLogic();
+    });
+</script>
+
+{% endblock %}

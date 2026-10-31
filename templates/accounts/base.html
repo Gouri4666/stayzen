@@ -1,0 +1,673 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StayZen Customer Panel{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #c19b76;
+            --gold-light: #d4b896;
+            --gold-dark: #a57f5a;
+            --gold-glow: rgba(193, 155, 118, 0.25);
+            --bg: #f0f2f7;
+            --white: #ffffff;
+            --text: #1a1d2e;
+            --text-secondary: #5a6178;
+            --muted: #8a8fa8;
+            --border: #e8eaf0;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.12);
+            --sidebar-width: 290px;
+            --topbar-height: 72px;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: color 0.2s ease;
+        }
+
+        /* ─── Top Navigation Bar ─── */
+        .topbar {
+            background: linear-gradient(135deg, #1a1d2e 0%, #2a2d3e 50%, #1a1d2e 100%);
+            color: #fff;
+            padding: 0 28px;
+            height: var(--topbar-height);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .topbar::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold));
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .menu-btn {
+            border: 0;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-btn:hover {
+            background: var(--gold);
+            transform: scale(1.05);
+        }
+
+        .brand h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #fff, var(--gold-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .brand p {
+            margin: 2px 0 0;
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 12px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        /* ─── Profile Chip & Dropdown ─── */
+        .profile-chip {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            padding: 5px 16px 5px 5px;
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+            will-change: background-color, border-color, box-shadow;
+        }
+
+        .profile-chip:hover,
+        .profile-chip.active {
+            background: rgba(255, 255, 255, 0.14);
+            border-color: rgba(193, 155, 118, 0.4);
+            box-shadow: 0 0 10px rgba(193, 155, 118, 0.08);
+        }
+
+        .profile-chip__avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            object-fit: cover;
+            box-shadow: 0 0 12px rgba(193, 155, 118, 0.3);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .profile-chip.active .profile-chip__avatar {
+            box-shadow: 0 0 14px rgba(193, 155, 118, 0.35);
+        }
+
+        /* Default avatar when no image */
+        .profile-chip__avatar-placeholder {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            text-transform: uppercase;
+            box-shadow: 0 0 12px rgba(193, 155, 118, 0.3);
+        }
+
+        .profile-chip__name {
+            font-weight: 600;
+            font-size: 14px;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .profile-chip__arrow {
+            font-size: 10px;
+            transition: transform 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .profile-chip:hover .profile-chip__arrow,
+        .profile-chip.active .profile-chip__arrow {
+            transform: rotate(180deg);
+            opacity: 1;
+        }
+
+        /* ─── Profile Dropdown Menu ─── */
+        .profile-menu {
+            position: absolute;
+            top: calc(100% - 1px);
+            right: 0;
+            background: var(--white);
+            color: var(--text);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            min-width: 260px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-4px) scale(0.99);
+            transform-origin: top right;
+            transition: opacity 0.18s ease, transform 0.18s ease;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            z-index: 200;
+            will-change: opacity, transform;
+        }
+
+        .profile-chip.active .profile-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .profile-menu__header {
+            padding: 18px 18px 14px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #faf8f5, #fff);
+        }
+
+        .profile-menu__header img,
+        .profile-menu__header .pm-avatar-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--gold);
+        }
+
+        .pm-avatar-placeholder {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .profile-menu__header-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text);
+        }
+
+        .profile-menu__header-info p {
+            font-size: 12px;
+            color: var(--muted);
+            margin: 2px 0 0;
+        }
+
+        .profile-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+            border-bottom: 1px solid #f5f5f7;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            margin: 0;
+            line-height: 1.4;
+            position: relative;
+        }
+
+        .profile-menu a:last-child {
+            border-bottom: 0;
+        }
+
+        .profile-menu a:hover,
+        .profile-menu a:focus-visible {
+            outline: none;
+            background: linear-gradient(90deg, #fff8f2, #fff);
+            color: var(--gold-dark);
+        }
+
+        .profile-menu a .pm-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .profile-menu a:hover .pm-icon {
+            background: inherit;
+        }
+
+        .profile-menu a:nth-child(1) .pm-icon {
+            background: #eef6ff;
+        }
+
+        .profile-menu a:nth-child(2) .pm-icon {
+            background: #f0faf0;
+        }
+
+        .profile-menu a:nth-child(3) .pm-icon {
+            background: #fff4ec;
+        }
+
+        .profile-menu a:nth-child(4) .pm-icon {
+            background: #fff0f0;
+        }
+
+        .profile-menu__divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0;
+        }
+
+        /* ─── Layout ─── */
+        .layout {
+            display: flex;
+            min-height: calc(100vh - var(--topbar-height));
+        }
+
+        /* ─── Sidebar ─── */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--white);
+            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.04);
+            padding: 24px 16px;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+        }
+
+        .sidebar__label {
+            display: block;
+            margin: 8px 0 18px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding-left: 14px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar li {
+            margin-bottom: 4px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .sidebar a:hover {
+            background: #faf6f2;
+            color: var(--gold-dark);
+            transform: translateX(3px);
+        }
+
+        .sidebar a.active {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(193, 155, 118, 0.35);
+            font-weight: 600;
+        }
+
+        .sidebar a .sidebar-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            flex-shrink: 0;
+            transition: all 0.25s ease;
+        }
+
+        .sidebar a:not(.active) .sidebar-icon {
+            background: #f5f6fa;
+        }
+
+        .sidebar a.active .sidebar-icon {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar a:hover:not(.active) .sidebar-icon {
+            background: #fff3ea;
+        }
+
+        .sidebar__footer {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ─── Main Content ─── */
+        .main {
+            flex: 1;
+            padding: 28px;
+            overflow-y: auto;
+        }
+
+        .page-card {
+            background: var(--white);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .page-card:hover {
+            box-shadow: var(--shadow);
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 1024px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: var(--topbar-height);
+                bottom: 0;
+                z-index: 90;
+                transform: translateX(-110%);
+                box-shadow: var(--shadow-lg);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                top: var(--topbar-height);
+                background: rgba(0, 0, 0, 0.3);
+                backdrop-filter: blur(2px);
+                z-index: 89;
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+            .main {
+                padding: 18px;
+            }
+
+            .profile-chip__name {
+                display: none;
+            }
+
+            .profile-chip {
+                padding: 5px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .brand h2 {
+                font-size: 16px;
+            }
+
+            .brand p {
+                display: none;
+            }
+
+            .main {
+                padding: 12px;
+            }
+        }
+
+        /* ─── Animations ─── */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .main>* {
+            animation: fadeInUp 0.4s ease forwards;
+        }
+    </style>
+</head>
+
+<body>
+    
+    
+    <!-- Sidebar overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <header class="topbar">
+        <div class="topbar-left">
+            <button class="menu-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle menu">☰</button>
+            <div class="brand">
+                <h2>StayZen</h2>
+                <p>Customer Dashboard</p>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <div class="profile-chip" id="profileChip" tabindex="0" onclick="toggleProfileMenu()"
+                aria-label="User profile menu">
+                {% if user.customer.image %}
+                <img class="profile-chip__avatar" src="{{ user.customer.image.url }}" alt="Profile picture">
+                {% else %}
+                <div class="profile-chip__avatar-placeholder">
+                    {{ user.first_name|default:"G"|first }}
+                </div>
+                {% endif %}
+                <span class="profile-chip__name">{{ user.get_full_name|default:user.username|default:'Guest' }}</span>
+                <span class="profile-chip__arrow">▼</span>
+
+                <div class="profile-menu" id="profileMenu">
+                    <div class="profile-menu__header">
+                        {% if user.customer.image %}
+                        <img src="{{ user.customer.image.url }}" alt="Profile">
+                        {% else %}
+                        <div class="pm-avatar-placeholder">
+                            {{ user.first_name|default:"G"|first }}
+                        </div>
+                        {% endif %}
+                        <div class="profile-menu__header-info">
+                            <h4>{{ user.get_full_name|default:user.username|default:'Guest' }}</h4>
+                            <p>{{ user.email|default:'guest@stayzen.com' }}</p>
+                        </div>
+                    </div>
+                    <a href="#">
+                        <span class="pm-icon">👤</span>
+                        My Profile
+                    </a>
+                    <a href="#">
+                        <span class="pm-icon">✏️</span>
+                        Update Profile
+                    </a>
+                    <a href="#">
+                        <span class="pm-icon">🔄</span>
+                        Change User
+                    </a>
+                    <div class="profile-menu__divider"></div>
+                    <a href="{% url 'logout_view' %}" style="color: #d9534f;">
+                        <span class="pm-icon">🚪</span>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar" id="sidebar">
+            <span class="sidebar__label">Main Menu</span>
+            <ul>
+                <li>
+                    <a class="active" href="#">
+                        <span class="sidebar-icon">👤</span>
+                        My Profile
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <span class="sidebar-icon">📅</span>
+                        My Bookings
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <span class="sidebar-icon">💳</span>
+                        Payment History
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <span class="sidebar-icon">🎁</span>
+                        Loyalty Points
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <span class="sidebar-icon">⭐</span>
+                        Reviews & Ratings
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <span class="sidebar-icon">🔔</span>
+                        Notifications
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <main class="main">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        // Toggle sidebar (mobile)
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+
+        // Toggle profile dropdown
+        function toggleProfileMenu() {
+            const chip = document.getElementById('profileChip');
+            chip.classList.toggle('active');
+        }
+
+        // Close profile menu on outside click
+        document.addEventListener('click', function (e) {
+            const chip = document.getElementById('profileChip');
+            if (!chip.contains(e.target)) {
+                chip.classList.remove('active');
+            }
+        });
+
+        // Prevent clicks inside the profile menu from bubbling up and closing the dropdown
+        document.getElementById('profileMenu').addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        // Mark that user is on a dashboard page
+        sessionStorage.setItem('on_dashboard', 'true');
+
+        // Force page reload on back/forward navigation to prevent showing cached states
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                window.location.reload();
+            }
+        });
+    </script>
+      <script src="{% static 'js/form_preservation.js' %}"></script>
+</body>
+
+</html>

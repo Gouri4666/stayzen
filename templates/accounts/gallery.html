@@ -1,0 +1,147 @@
+{% extends 'accounts/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Resort Gallery - StayZen{% endblock %}
+
+{% block extra_css %}
+.page-header { margin-bottom: 28px; }
+.page-header h2 { font-size: 26px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+.page-header p { font-size: 14px; color: var(--text-muted); }
+
+.gallery-filter {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+.filter-btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.filter-btn:hover, .filter-btn.active {
+    background: var(--text-highlight);
+    border-color: var(--text-highlight);
+    color: #fff;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+.gallery-item {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    transition: all 0.3s ease;
+}
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+.gallery-item:hover {
+    border-color: var(--text-highlight);
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow);
+}
+.gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+.gallery-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(16, 18, 26, 0.9));
+    padding: 16px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.gallery-item:hover .gallery-overlay {
+    opacity: 1;
+}
+.gallery-title {
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+.gallery-category {
+    color: var(--text-highlight);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.no-images {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    font-size: 16px;
+    grid-column: 1 / -1;
+}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Photo Gallery</h2>
+    <p>Explore the luxurious rooms, spaces, dining options and facilities at StayZen.</p>
+</div>
+
+<!-- Filters -->
+<div class="gallery-filter">
+    <button class="filter-btn active" onclick="filterGallery('all', this)">All Photos</button>
+    <button class="filter-btn" onclick="filterGallery('Rooms', this)">Rooms</button>
+    <button class="filter-btn" onclick="filterGallery('Event Halls', this)">Event Halls</button>
+    <button class="filter-btn" onclick="filterGallery('Dining', this)">Dining</button>
+    <button class="filter-btn" onclick="filterGallery('Activities', this)">Activities</button>
+</div>
+
+<!-- Grid -->
+<div class="gallery-grid">
+    {% for item in gallery_items %}
+        <div class="gallery-item" data-category="{{ item.category }}">
+            <img src="{{ item.url }}" alt="{{ item.title }}">
+            <div class="gallery-overlay">
+                <div class="gallery-title">{{ item.title }}</div>
+                <div class="gallery-category">{{ item.category }}</div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="no-images">No gallery images available to display.</div>
+    {% endfor %}
+</div>
+
+<script>
+    function filterGallery(category, button) {
+        // Toggle active button
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        button.classList.add('active');
+
+        // Filter items
+        const items = document.querySelectorAll('.gallery-item');
+        items.forEach(item => {
+            if (category === 'all' || item.getAttribute('data-category') === category) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}
+

@@ -1,0 +1,74 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+
+<section id="main-content">
+
+    <div class="container-fluid">
+
+        <div class="card p-4">
+
+            <h2>Add SubMenu</h2>
+
+            <hr>
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="mb-3">
+
+                    <label>Menu</label>
+
+                    <select name="menu"
+                            class="form-control">
+
+                        {% for menu in menu_list %}
+
+                        <option value="{{ menu.id }}">
+                            {{ menu.name }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label>SubMenu Name</label>
+
+                    <input type="text"
+                           name="name"
+                           class="form-control"
+                           required>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label>URL Name</label>
+
+                    <input type="text"
+                           name="url_name"
+                           class="form-control"
+                           placeholder="room_list"
+                           required>
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-success">
+                    Save
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

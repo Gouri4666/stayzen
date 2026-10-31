@@ -1,0 +1,310 @@
+// nav menu style
+.navigation {
+  &__menu {
+    ul {
+      display: flex;
+      max-width: max-content;
+      position: relative;
+      padding: 0;
+      margin: 0;
+    }
+
+    &--item {
+      position: relative;
+      margin: 0 20px;
+
+      @include mq($xl) {
+        margin: 0 25px;
+      }
+
+      @media screen and (max-width: 1300px) and (min-width: 1200px) {
+        margin: 0 15px;
+      }
+
+      @include mq($lg) {
+        margin: 0 14px;
+      }
+
+      &:last-child {
+        margin-right: 0;
+
+        &::after {
+          display: none;
+        }
+      }
+
+      &:first-child {
+        margin-left: 0;
+      }
+
+      &:hover>a {
+        color: var(--btn-1) !important;
+      }
+
+
+      &__link {
+        position: relative;
+        font-size: 16px;
+        text-transform: capitalize;
+        padding-top: 24px;
+        padding-bottom: 30px;
+        font-weight: 400;
+        display: block;
+        color: var(--rts-para);
+        transition: padding 0.3s ease;
+        transition: var(--transition);
+      }
+
+      &.has-child {
+        &:hover {
+          ul.submenu {
+            opacity: 1;
+            visibility: visible;
+            transform: scaleY(1);
+
+            li.has-child {
+              &:hover {
+                ul {
+                  opacity: 1;
+                  visibility: visible;
+                  transform: scaleY(1);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      &.has-arrow {
+        position: relative;
+
+        &::before {
+          position: absolute;
+          content: "\f122";
+          font-family: flaticon_bokinn !important;
+          top: 48%;
+          right: -15px;
+          transform: translateY(-50%);
+          color: var(--rts-heading);
+          font-size: 14px;
+          transition: var(--transition);
+        }
+
+        &:hover {
+          &::before {
+            content: "\f121";
+            font-family: flaticon_bokinn !important;
+            transition: var(--transition);
+            color: var(--rts-button-1);
+          }
+        }
+      }
+
+      ul.submenu,
+      .sub__style {
+        position: absolute;
+        top: 100%;
+        min-width: 230px;
+        background: var(--rts-white);
+        z-index: 1024;
+        display: inline-block;
+        opacity: 0;
+        padding: 20px 0 30px 0;
+        transform: scaleY(0);
+        transform-origin: top center;
+        visibility: hidden;
+        transition: var(--transition);
+        left: 0;
+        box-shadow: 0 36px 35px rgba(0, 0, 0, .08);
+
+        li {
+          position: relative;
+          display: block;
+          padding: 0 30px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          &:hover>a {
+            color: var(--heading-color);
+            transition: var(--transition);
+
+            &::before {
+              width: 80%;
+            }
+          }
+
+          &:not(:last-child) {
+            margin: 0 0 10px;
+          }
+
+          &.has-arrow {
+            position: relative;
+
+            &::before {
+              position: absolute;
+              content: "\f121";
+              font-family: flaticon_bokinn !important;
+              top: 50%;
+              right: 25px;
+              transform: translateY(-50%);
+              color: var(--rts-heading);
+              font-size: 14px;
+              transition: var(--transition);
+            }
+
+            &:hover {
+              &::before {
+                content: "\f122";
+                font-family: flaticon_bokinn !important;
+                transition: var(--transition);
+              }
+            }
+          }
+
+          a {
+            padding: 0;
+            font-size: 15px;
+            text-transform: capitalize;
+            font-weight: 400;
+            position: relative;
+            color: var(--rts-heading);
+
+            &::before {
+              left: 0;
+              bottom: 0;
+              width: 0;
+              height: 1px;
+              @extend %position-style;
+              background: var(--heading-color);
+              transition: var(--transition);
+            }
+
+            &:hover {
+              &::before {
+                width: 100%;
+              }
+            }
+          }
+
+          ul {
+            top: 0;
+            position: absolute;
+            left: 100%;
+            visibility: hidden;
+            transform: scaleY(0);
+            transform-origin: top center;
+            opacity: 0;
+            transition: var(--transition);
+          }
+        }
+      }
+    }
+  }
+}
+
+// sticky header
+.header__sticky {
+  position: relative;
+  top: 0;
+  display: block;
+  width: 100%;
+  box-shadow: none;
+  background: transparent;
+  z-index: 999;
+  margin: auto;
+  align-items: center;
+  left: 0;
+  border-radius: 0;
+  transition: all 0.5s ease-in-out;
+  top: 0;
+  transform: translateY(0);
+
+  &.fixed {
+    position: fixed !important;
+    box-shadow: 0px 7px 18px #1810100d;
+    background: var(--rts-white);
+  }
+}
+
+// nav style home three
+.main__header {
+  &.is__home__three {
+    .navigation {
+      .navigation__menu--item {
+        &.has-arrow {
+          &::before {
+            color: var(--rts-white);
+          }
+
+          &:hover::before {
+            color: var(--btn-1);
+          }
+        }
+      }
+
+      .navigation__menu--item__link {
+        color: var(--rts-white);
+      }
+
+    }
+  }
+}
+
+[data-theme="dark"] {
+  .navigation__menu--item.has-arrow::before {
+    color: var(--rts-para);
+  }
+}
+
+// mega menu
+.navigation__menu--item {
+  &.has-child {
+    .has__mega__menu {
+      position: absolute;
+      width: 1000px;
+      background-color: var(--rts-white);
+      padding: 30px;
+      opacity: 0;
+      visibility: hidden;
+      box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+      transition: var(--transition);
+      z-index: 1024;
+      top: 100%;
+      @include mq($lg) {
+        width: 940px;
+      }
+      .menu__item{
+        text-align: center;
+        overflow: hidden;
+        a{
+          display: block;
+          overflow: hidden;
+          img{
+            border-radius: 4px;
+            width: 100%;
+            transition: var(--transition);
+          }
+          span{
+            display: block;
+            margin-top: 15px;
+            color: var(--rts-heading);
+            transition: var(--transition);
+          }
+        }
+        &:hover{
+          span{
+            text-decoration: underline;
+          }
+        }
+      }
+    }
+    &:hover{
+      .has__mega__menu{
+        opacity: 1;
+        visibility: visible;
+      }
+    }
+  }
+}

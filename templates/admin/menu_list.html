@@ -1,0 +1,112 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+
+<section id="main-content" class="fadeIn">
+
+    <div class="container-fluid mt-5">
+
+        <div class="row">
+
+            <div class="col-md-12">
+
+                <div class="card p-4">
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+
+                        <h2>Module Management</h2>
+
+                        <a href="{% url 'add_menu' %}"
+                           class="btn btn-primary">
+                            Add Module
+                        </a>
+
+                    </div>
+
+                    <!-- SUCCESS MESSAGE -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="table-responsive">
+
+                        <table class="table table-bordered table-hover">
+
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Icon</th>
+                                    <th>Module Name</th>
+                                    <th>Sub Menus</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                {% for menu in menus %}
+
+                                <tr>
+
+                                    <td>{{ forloop.counter }}</td>
+
+                                    <td>
+                                        <i class="fa {{ menu.menu.icon }}"></i>
+                                    </td>
+
+                                    <td>
+                                        <strong>{{ menu.menu.name }}</strong>
+                                    </td>
+
+                                    <td>
+                                        {{ menu.submenus|length }}
+                                    </td>
+
+                                     <td>
+                                         {% if request.user.is_superuser %}
+                                         <div class="d-flex gap-2">
+                                             <form method="POST"
+                                                   action="{% url 'delete_menu' menu.menu.id %}"
+                                                   style="display:inline;">
+                                                 {% csrf_token %}
+                                                 <button class="btn btn-sm btn-danger btn-action-icon"
+                                                         title="Delete"
+                                                         onclick="return confirm('Delete this module and all submenus?')">
+                                                     <i class="fa fa-trash"></i>
+                                                 </button>
+                                             </form>
+                                         </div>
+                                         {% endif %}
+                                     </td>
+
+                                </tr>
+
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        No Modules Found
+                                    </td>
+                                </tr>
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

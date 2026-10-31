@@ -1,0 +1,3233 @@
+<!DOCTYPE html>
+{% load static %}
+<html class=" ">
+
+<head>
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <meta charset="utf-8" />
+    <title>StayZen Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta content="StayZen Admin Panel" name="description" />
+    <meta content="StayZen" name="author" />
+    <link rel="shortcut icon" href="{% static 'admin/assets/images/favicon.png' %}" type="image/x-icon" />
+
+    <link href="{% static 'admin/assets/plugins/pace/pace-theme-flash.css' %}" rel="stylesheet" type="text/css"
+        media="screen" />
+    <link href="{% static 'admin/assets/plugins/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'admin/assets/fonts/font-awesome/css/font-awesome.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'admin/assets/css/animate.min.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'admin/assets/plugins/perfect-scrollbar/perfect-scrollbar.css' %}" rel="stylesheet"
+        type="text/css" />
+    <link href="{% static 'admin/assets/css/style.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'admin/assets/css/responsive.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'admin/assets/css/custom.css' %}?v=3.3" rel="stylesheet">
+    <link href="{% static 'admin/assets/css/mediline-theme.css' %}?v=2.0" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+    <style>
+        /* ==============================================================
+           1. STRICT THEME VARIABLES (Solid Light Mode)
+        ============================================================== */
+        :root {
+            --sb-bg: #ffffff;
+            --sb-sub-bg: #f8fafc;
+            --sb-border: #e2e8f0;
+            --sb-text: #475569;
+            --sb-icon: #64748b;
+            --sb-hover-bg: #eff6ff;
+            --sb-hover-text: #2563eb;
+        }
+
+        html[data-theme="dark"] {
+            --sb-bg: #1e293b;
+            --sb-sub-bg: #0f172a;
+            --sb-border: #334155;
+            --sb-text: #cbd5e1;
+            --sb-icon: #94a3b8;
+            --sb-hover-bg: #0f172a;
+            --sb-hover-text: #38bdf8;
+        }
+
+        /* ==============================================================
+           2. SIDEBAR — moved to mediline-theme.css (single source of
+           truth for all sidebar structure, color, collapse, submenu,
+           tooltip, and mobile behavior). Do not add sidebar CSS here.
+        ============================================================== */
+
+        /* ==============================================================
+           5. TOAST STYLES
+        ============================================================== */
+        .global-toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 380px;
+            width: calc(100% - 48px);
+        }
+
+        .toast-item {
+            background: #ffffff;
+            color: #1e293b;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid #3b82f6;
+            animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        [data-theme="dark"] .toast-item {
+            background: #1e293b;
+            color: #f8fafc;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast-item.success {
+            border-left-color: #22c55e;
+        }
+
+        .toast-item.error,
+        .toast-item.danger {
+            border-left-color: #ef4444;
+        }
+
+        .toast-item.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .toast-icon {
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        .toast-item.success .toast-icon {
+            color: #22c55e;
+        }
+
+        .toast-item.error .toast-icon,
+        .toast-item.danger .toast-icon {
+            color: #ef4444;
+        }
+
+        .toast-item.warning .toast-icon {
+            color: #f59e0b;
+        }
+
+        .toast-content {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(60px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes toastFadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        /* ==============================================================
+           6. NOTIFICATION BELL & DROPDOWN (Professional Mailbox Style)
+        ============================================================== */
+        .notification-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .notification-container>a {
+            color: var(--sb-icon) !important;
+            font-size: 20px;
+            text-decoration: none;
+            transition: color 0.3s;
+            padding: 5px;
+        }
+
+        .notification-container>a:hover {
+            color: var(--sb-hover-text) !important;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background-color: #ef4444;
+            /* red */
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            line-height: 1;
+            border: 2px solid var(--sb-bg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .notification-dropdown {
+            display: none;
+            position: fixed;
+            right: 20px;
+            top: 60px;
+            width: 550px;
+            max-height: calc(100vh - 100px);
+            background-color: var(--sb-bg);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.15), 0 5px 15px -3px rgba(0, 0, 0, 0.1);
+            border-radius: 14px;
+            border: 1px solid var(--sb-border);
+            overflow: hidden;
+            z-index: 1050;
+            animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            flex-direction: column;
+        }
+
+        .notification-dropdown.show {
+            display: flex !important;
+        }
+
+        /* Tab buttons styling */
+        .notif-header .tab-btn {
+            outline: none;
+        }
+
+        .notif-header .tab-btn:hover {
+            background-color: rgba(37, 99, 235, 0.05) !important;
+            color: var(--sb-hover-text) !important;
+        }
+
+        .notif-header .tab-btn.active {
+            background-color: var(--sb-bg) !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            color: var(--sb-hover-text) !important;
+        }
+
+        /* Dropdown panels layout */
+        .notif-panel {
+            display: none;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+        }
+
+        .notif-panel.active {
+            display: flex !important;
+        }
+
+        .btn-notif-back {
+            background: none;
+            border: none;
+            color: var(--sb-hover-text);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+
+        .btn-notif-back:hover {
+            color: var(--sb-text);
+        }
+
+        .notif-detail-body,
+        .notif-compose-body {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notif-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--sb-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--sb-sub-bg);
+        }
+
+        .notif-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .notif-header h6 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--sb-text);
+        }
+
+        .notif-unread-count {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--sb-hover-text);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .btn-notif-compose {
+            background: var(--sb-hover-bg);
+            color: var(--sb-hover-text);
+            border: none;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-notif-compose:hover {
+            background-color: var(--sb-hover-text);
+            color: #ffffff;
+        }
+
+        .notif-list {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .notif-item {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--sb-border);
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+
+        .notif-item:hover {
+            background-color: var(--sb-hover-bg);
+        }
+
+        .notif-item.unread {
+            background-color: rgba(59, 130, 246, 0.03);
+        }
+
+        .notif-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .notif-avatar.bg-blue {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .notif-avatar.bg-green {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .notif-avatar.bg-orange {
+            background-color: #ffedd5;
+            color: #9a3412;
+        }
+
+        .notif-avatar.bg-purple {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+        }
+
+        .notif-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notif-sender {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--sb-icon);
+            margin-bottom: 2px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .notif-subject {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--sb-text);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+
+        .notif-item.unread .notif-subject {
+            color: #1e293b;
+        }
+
+        [data-theme="dark"] .notif-item.unread .notif-subject {
+            color: #ffffff;
+        }
+
+        .notif-message-preview {
+            font-size: 12px;
+            color: var(--sb-icon);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+            margin-bottom: 4px;
+        }
+
+        /* ==============================================================
+           SENT HISTORY — TOAST-STYLE CARDS
+        ============================================================== */
+        .sent-notif-item {
+            display: block;
+            padding: 7px 14px;
+            margin: 6px 28px;
+            border-radius: 12px;
+            background-color: var(--sb-hover-bg);
+            border: 1px solid var(--sb-border);
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.15s;
+        }
+
+        .sent-notif-item:hover {
+            transform: translateY(-1px);
+        }
+
+        .sent-notif-item .notif-item {
+            padding: 0;
+            border-bottom: none;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .sent-toast-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--sb-hover-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .sent-toast-icon i {
+            font-size: 13px;
+            color: #ffffff;
+        }
+
+        .sent-notif-item .notif-sender {
+            display: none;
+            /* sender label not needed in compact toast view */
+        }
+
+        .sent-notif-item .notif-subject {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--sb-text);
+            margin-bottom: 0;
+            line-height: 1.3;
+        }
+
+        .notif-message-preview-sent {
+            font-size: 12px;
+            color: var(--sb-icon);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            line-height: 1.3;
+            margin: 0;
+        }
+
+        .sent-notif-item .notif-time {
+            font-size: 10.5px;
+            color: var(--sb-icon);
+            opacity: 0.85;
+        }
+
+        /* ==============================================================
+           INBOX — TOAST-STYLE CARDS (mirrors Sent History styling)
+        ============================================================== */
+
+        /* The li.notif-item itself becomes the card wrapper — same as .sent-notif-item */
+        #notifPanelList .notif-item {
+            display: block;
+            padding: 3px 14px;
+            margin: 3px 28px;
+            border-radius: 12px;
+            background-color: var(--sb-hover-bg);
+            border: 1px solid var(--sb-border);
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.15s;
+        }
+
+        #notifPanelList .notif-item:hover {
+            transform: translateY(-1px);
+            background-color: var(--sb-hover-bg);
+        }
+
+        /* Unread: keep same card look but show status dot */
+        #notifPanelList .notif-item.unread {
+            background-color: var(--sb-hover-bg);
+        }
+
+        /* Inner row — mirrors .sent-notif-item .notif-item */
+        #notifPanelList .notif-item-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0;
+        }
+
+        /* Paper-plane icon container — identical to .sent-toast-icon */
+        #notifPanelList .inbox-toast-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--sb-hover-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        #notifPanelList .inbox-toast-icon i {
+            font-size: 13px;
+            color: #ffffff;
+        }
+
+        /* Info column */
+        #notifPanelList .notif-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* Sender label — shown above subject (small caps, same style) */
+        #notifPanelList .notif-sender {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--sb-icon);
+            margin-bottom: 0;
+            line-height: 1.1;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Subject — matches sent card subject */
+        #notifPanelList .notif-subject {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--sb-text);
+            margin-bottom: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+            line-height: 1.1;
+        }
+
+        #notifPanelList .notif-item.unread .notif-subject {
+            color: #1e293b;
+        }
+
+        [data-theme="dark"] #notifPanelList .notif-item.unread .notif-subject {
+            color: #ffffff;
+        }
+
+        /* Message preview — single-line ellipsis, same as sent */
+        #notifPanelList .notif-message-preview {
+            font-size: 12px;
+            color: var(--sb-icon);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            line-height: 1.1;
+            margin: 0;
+            display: block;
+        }
+
+        /* Time row — matches sent card notif-time */
+        #notifPanelList .notif-time {
+            font-size: 10.5px;
+            color: var(--sb-icon);
+            opacity: 0.85;
+            display: block;
+        }
+
+        /* Status dot — vertically centered, right of icon col */
+        #notifPanelList .notif-status-dot {
+            margin-top: 0;
+            flex-shrink: 0;
+            align-self: center;
+        }
+
+        .notif-item-delete {
+            background: none;
+            border: none;
+            color: var(--sb-icon);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+            flex-shrink: 0;
+            opacity: 0.6;
+            transition: color 0.2s, opacity 0.2s;
+        }
+
+        .notif-item-delete:hover {
+            color: #ef4444;
+            opacity: 1;
+        }
+
+        .notif-time {
+            font-size: 11px;
+            color: #94a3b8;
+            display: block;
+        }
+
+        .notif-status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #22c55e;
+            /* Bright Green */
+            border-radius: 50%;
+            margin-top: 15px;
+            flex-shrink: 0;
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+            align-self: center;
+        }
+
+        .notif-item.read .notif-status-dot {
+            display: none !important;
+        }
+
+        .notif-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--sb-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--sb-sub-bg);
+            font-size: 12px;
+        }
+
+        .notif-footer a {
+            color: var(--sb-hover-text);
+            font-weight: 600;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .notif-footer a:hover {
+            opacity: 0.8;
+        }
+
+        /* ==============================================================
+           7. ZEN CUSTOM OVERLAY MODALS
+        ============================================================== */
+        .zen-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .zen-modal-overlay.show {
+            display: flex !important;
+            opacity: 1;
+        }
+
+        .zen-modal {
+            background-color: var(--sb-bg);
+            border: 1px solid var(--sb-border);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 520px;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .zen-modal-overlay.show .zen-modal {
+            transform: scale(1);
+        }
+
+        .zen-modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--sb-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .zen-modal-header h5 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--sb-text);
+        }
+
+        .zen-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--sb-icon);
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .zen-modal-close:hover {
+            color: var(--sb-hover-text);
+        }
+
+        .zen-modal-body {
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .zen-modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--sb-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            background-color: var(--sb-sub-bg);
+        }
+
+        .zen-form-group {
+            margin-bottom: 18px;
+        }
+
+        .zen-form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--sb-icon);
+        }
+
+        .zen-form-control {
+            width: 100%;
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid var(--sb-border);
+            background-color: var(--sb-sub-bg);
+            color: var(--sb-text);
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .zen-form-control:focus {
+            border-color: var(--sb-hover-text);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .zen-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zen-btn-secondary {
+            background-color: var(--sb-sub-bg);
+            color: var(--sb-text);
+            border: 1px solid var(--sb-border);
+        }
+
+        .zen-btn-secondary:hover {
+            background-color: var(--sb-border);
+        }
+
+        .zen-btn-primary {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+
+        .zen-btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        .zen-audience-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .zen-audience-btn {
+            background-color: var(--sb-sub-bg);
+            border: 1px solid var(--sb-border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--sb-text);
+            transition: all 0.2s;
+            margin-bottom: 0;
+            user-select: none;
+        }
+
+        .zen-audience-btn.active {
+            background-color: rgba(37, 99, 235, 0.08);
+            border-color: var(--sb-hover-text);
+            color: var(--sb-hover-text);
+        }
+    </style>
+    <style>
+        /* ==========================================================================
+   STAYZEN ADMIN — UNIFIED THEME LAYER
+   ==========================================================================
+   WHY THIS FILE EXISTS
+   Right now the project has 3 separate places deciding colors:
+     1. custom.css's :root variables (which are actually dark-mode values
+        with no neutral default)
+     2. custom.css's html[data-theme="light"] patches (67 of them, added
+        one component at a time after the fact)
+     3. base.html's inline <style> blocks (--sb-* tokens, then a "green
+        skin" override, then a "collapse override" — three more passes
+        on the same elements)
+   Any component that isn't explicitly named in all the right places
+   (e.g. .panel, .modal-content, .dropdown-menu, .list-group, .nav-tabs)
+   falls through to Bootstrap's plain white styling in BOTH themes —
+   that's the white card you saw on the Add Staff User page in dark mode.
+
+   HOW THIS FILE FIXES IT
+   One semantic token set, defined once for light and once for dark,
+   sitting at the very end of <head> so it wins the cascade without
+   needing new !important wars. Every themed surface — cards, panels,
+   inputs, tables, dropdowns, modals, the sidebar — reads from these
+   tokens. Nothing about layout (widths/paddings/animations) changes.
+
+   HOW TO INSTALL
+   Paste this entire file into a new <style> block placed as the LAST
+   thing before </head> in base.html (after the existing theme-toggle
+   script reference, after the "green skin" blocks). Loading order is
+   what makes this win — last in the cascade, no extra !important needed
+   beyond what's already required to beat Bootstrap defaults.
+   ========================================================================== */
+
+        /* --------------------------------------------------------------------------
+   1. SEMANTIC TOKENS — defined once for each theme, used everywhere below
+   -------------------------------------------------------------------------- */
+        :root,
+        html[data-theme="light"] {
+            /* Page-level surfaces */
+            --t-bg-page: #f4f6fb;
+            --t-bg-card: #ffffff;
+            --t-bg-card-soft: #f8fafc;
+            --t-bg-card-header: #f1f5f9;
+            --t-bg-input: #ffffff;
+            --t-bg-input-focus: #ffffff;
+            --t-bg-row-hover: rgba(37, 99, 235, 0.06);
+            --t-bg-row-alt: rgba(15, 23, 42, 0.02);
+            --t-bg-overlay: rgba(15, 23, 42, 0.55);
+
+            /* Text */
+            --t-text-heading: #0f172a;
+            --t-text-body: #334155;
+            --t-text-muted: #64748b;
+            --t-text-on-accent: #ffffff;
+
+            /* Borders / dividers */
+            --t-border: rgba(15, 23, 42, 0.12);
+            --t-border-soft: rgba(15, 23, 42, 0.06);
+
+            /* Sidebar (dark navy-indigo identity, matches new admin skin) */
+            --t-sidebar-grad-start: #7c82ea;
+            --t-sidebar-grad-end: #344d7e;
+            --t-sidebar-text: rgba(255, 255, 255, 0.9);
+            --t-sidebar-text-muted: rgba(255, 255, 255, 0.7);
+            --t-sidebar-active-bg: rgba(255, 255, 255, 0.18);
+            --t-sidebar-submenu-bg: rgba(0, 0, 0, 0.12);
+
+            /* Accent stays constant across themes on purpose — brand color */
+            --t-accent: #2563eb;
+            --t-accent-hover: #1d4ed8;
+            --t-focus-ring: rgba(37, 99, 235, 0.18);
+        }
+
+        html[data-theme="dark"] {
+            /* Page-level surfaces */
+            --t-bg-page: #0a0d1a;
+            --t-bg-card: rgba(18, 24, 47, 0.85);
+            --t-bg-card-soft: rgba(255, 255, 255, 0.03);
+            --t-bg-card-header: rgba(255, 255, 255, 0.04);
+            --t-bg-input: rgba(255, 255, 255, 0.04);
+            --t-bg-input-focus: rgba(255, 255, 255, 0.06);
+            --t-bg-row-hover: rgba(59, 130, 246, 0.08);
+            --t-bg-row-alt: rgba(255, 255, 255, 0.02);
+            --t-bg-overlay: rgba(2, 4, 12, 0.7);
+
+            /* Text */
+            --t-text-heading: #f1f5f9;
+            --t-text-body: #e2e8f0;
+            --t-text-muted: #8493a8;
+            --t-text-on-accent: #ffffff;
+
+            /* Borders / dividers */
+            --t-border: rgba(255, 255, 255, 0.09);
+            --t-border-soft: rgba(255, 255, 255, 0.06);
+
+            /* Sidebar (same indigo identity, deeper variant for dark mode) */
+            --t-sidebar-grad-start: #2e1065;
+            --t-sidebar-grad-end: #1e0a45;
+            --t-sidebar-text: rgba(255, 255, 255, 0.85);
+            --t-sidebar-text-muted: rgba(255, 255, 255, 0.65);
+            --t-sidebar-active-bg: rgba(255, 255, 255, 0.14);
+            --t-sidebar-submenu-bg: rgba(0, 0, 0, 0.22);
+
+            --t-accent: #3b82f6;
+            --t-accent-hover: #60a5fa;
+            --t-focus-ring: rgba(59, 130, 246, 0.25);
+        }
+
+        /* --------------------------------------------------------------------------
+   2. PAGE BACKGROUND
+   -------------------------------------------------------------------------- */
+        html,
+        body,
+        html[data-theme="light"] body,
+        html[data-theme="dark"] body {
+            background-color: var(--t-bg-page) !important;
+            color: var(--t-text-body) !important;
+        }
+
+        /* --------------------------------------------------------------------------
+   3. SIDEBAR — moved to mediline-theme.css. It consumes the --t-sidebar-*
+   tokens defined above, so this file stays the only place those tokens
+   are declared, and mediline-theme.css stays the only place sidebar
+   selectors are declared.
+   -------------------------------------------------------------------------- */
+
+        /* --------------------------------------------------------------------------
+   4. CARDS / PANELS — covers every wrapper class the templates use,
+   not just .box/.card. This is what fixes the white "Staff Profile" /
+   "Access Permissions" panels in dark mode.
+   -------------------------------------------------------------------------- */
+        .box,
+        .card,
+        .panel,
+        .section-box,
+        .dashboard-task-item,
+        .modal-content,
+        .dropdown-menu,
+        .list-group,
+        .tab-content,
+        .nav-tabs,
+        html[data-theme="light"] .dashboard-task-item,
+        html[data-theme="dark"] .dashboard-task-item {
+            background: var(--t-bg-card) !important;
+            border-color: var(--t-border) !important;
+            color: var(--t-text-body) !important;
+        }
+
+        .card-header,
+        .panel_header,
+        .modal-header,
+        .list-group-item {
+            background: var(--t-bg-card-header) !important;
+            border-color: var(--t-border) !important;
+            color: var(--t-text-heading) !important;
+        }
+
+        .card-header h4,
+        .panel_header h2.title,
+        .modal-title {
+            color: var(--t-text-heading) !important;
+        }
+
+        .card-body,
+        .content-body,
+        .panel-body,
+        .modal-body {
+            background: transparent !important;
+            color: var(--t-text-body) !important;
+        }
+
+        .list-group-item {
+            color: var(--t-text-body) !important;
+        }
+
+        /* Generic headings/labels inside any panel pick up the right color
+   even if a template author forgot a class entirely */
+        .panel h1,
+        .panel h2,
+        .panel h3,
+        .panel h4,
+        .panel h5,
+        .box h1,
+        .box h2,
+        .box h3,
+        .box h4,
+        .box h5,
+        .card h1,
+        .card h2,
+        .card h3,
+        .card h4,
+        .card h5 {
+            color: var(--t-text-heading) !important;
+        }
+
+        .panel label,
+        .box label,
+        .card label,
+        .form-label {
+            color: var(--t-text-body) !important;
+        }
+
+        .panel small,
+        .box small,
+        .card small,
+        .panel .text-muted,
+        .box .text-muted,
+        .card .text-muted {
+            color: var(--t-text-muted) !important;
+        }
+
+        /* --------------------------------------------------------------------------
+   5. FORM CONTROLS — single definition, no duplicate blocks
+   -------------------------------------------------------------------------- */
+        .form-control,
+        .form-select,
+        select,
+        input[type="text"],
+        input[type="number"],
+        input[type="password"],
+        input[type="email"],
+        input[type="file"],
+        input[type="tel"],
+        input[type="search"],
+        input[type="date"],
+        textarea,
+        html[data-theme="light"] textarea,
+        html[data-theme="dark"] textarea {
+            background: var(--t-bg-input) !important;
+            color: var(--t-text-heading) !important;
+            border: 1px solid var(--t-border) !important;
+        }
+
+        .form-control::placeholder,
+        input::placeholder,
+        textarea::placeholder {
+            color: var(--t-text-muted) !important;
+            opacity: 1 !important;
+        }
+
+        .form-control:focus,
+        .form-select:focus,
+        select:focus,
+        input:focus,
+        textarea:focus,
+        html[data-theme="light"] textarea:focus,
+        html[data-theme="dark"] textarea:focus {
+            background: var(--t-bg-input-focus) !important;
+            border-color: var(--t-accent) !important;
+            box-shadow: 0 0 0 3px var(--t-focus-ring) !important;
+            outline: none;
+        }
+
+        select option,
+        html[data-theme="light"] select option {
+            background-color: var(--t-bg-card) !important;
+            color: var(--t-text-heading) !important;
+        }
+
+        .bg-light,
+        .border.rounded.bg-light,
+        html[data-theme="light"] .border.rounded.bg-light {
+            background-color: var(--t-bg-card-soft) !important;
+            border-color: var(--t-border) !important;
+        }
+
+        /* Disabled / auto-filled fields (the grayed-out "Select to Auto-Fill"
+   state seen in the Add Staff User screenshots) */
+        .form-control:disabled,
+        .form-control[readonly],
+        select:disabled,
+        input:disabled {
+            background: var(--t-bg-card-soft) !important;
+            color: var(--t-text-muted) !important;
+            border-color: var(--t-border-soft) !important;
+            opacity: 1 !important;
+        }
+
+        /* --------------------------------------------------------------------------
+   6. TABLES & SUBMODULE LIST ROWS (Access Permissions grid)
+   -------------------------------------------------------------------------- */
+        .table thead th {
+            background: var(--t-bg-card-header) !important;
+            color: var(--t-text-heading) !important;
+        }
+
+        .table tbody tr,
+        .table tbody td,
+        html[data-theme="light"] .table tbody tr,
+        html[data-theme="dark"] .table tbody tr {
+            background: transparent !important;
+            color: var(--t-text-body) !important;
+            border-color: var(--t-border-soft) !important;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background: var(--t-bg-row-alt) !important;
+        }
+
+        .table tbody tr:hover,
+        .table-hover tbody tr:hover,
+        .table-hover tbody tr:hover td,
+        .table-hover tbody tr:hover th,
+        .table-hover>tbody>tr:hover>*,
+        html[data-theme="light"] .table-hover>tbody>tr:hover>*,
+        html[data-theme="dark"] .table-hover>tbody>tr:hover>* {
+            background-color: var(--t-bg-row-hover) !important;
+            background: var(--t-bg-row-hover) !important;
+        }
+
+        .table tbody td small,
+        .table tbody td .text-muted {
+            color: var(--t-text-muted) !important;
+        }
+
+        /* --------------------------------------------------------------------------
+   7. PROFILE / TOPBAR DROPDOWN
+   The old code has html[data-theme="light"] versions of every one of
+   these (.profile-hover-dropdown, .dropdown-divider, .dropdown-hover-item,
+   etc). A plain class selector here loses to those on specificity even
+   though this file loads last, so every rule below is duplicated under
+   both html[data-theme="..."] prefixes to guarantee it wins.
+   -------------------------------------------------------------------------- */
+        .profile-hover-dropdown,
+        html[data-theme="light"] .profile-hover-dropdown,
+        html[data-theme="dark"] .profile-hover-dropdown {
+            background: var(--t-bg-card) !important;
+            border-color: var(--t-border) !important;
+        }
+
+        .dropdown-user-header .user-name,
+        html[data-theme="light"] .dropdown-user-header .user-name,
+        html[data-theme="dark"] .dropdown-user-header .user-name {
+            color: var(--t-text-heading) !important;
+        }
+
+        .dropdown-user-header .user-role,
+        html[data-theme="light"] .dropdown-user-header .user-role,
+        html[data-theme="dark"] .dropdown-user-header .user-role {
+            color: var(--t-accent) !important;
+        }
+
+        .dropdown-divider,
+        html[data-theme="light"] .dropdown-divider,
+        html[data-theme="dark"] .dropdown-divider {
+            background: var(--t-border) !important;
+        }
+
+        .dropdown-hover-item,
+        html[data-theme="light"] .dropdown-hover-item,
+        html[data-theme="dark"] .dropdown-hover-item,
+        .dropdown-hover-item span,
+        .dropdown-hover-item i {
+            color: var(--t-text-heading) !important;
+        }
+
+        .dropdown-hover-item:hover,
+        html[data-theme="light"] .dropdown-hover-item:hover,
+        html[data-theme="dark"] .dropdown-hover-item:hover {
+            background: var(--t-bg-row-hover) !important;
+            color: var(--t-text-heading) !important;
+        }
+
+        /* --------------------------------------------------------------------------
+   8. PAGINATION
+   -------------------------------------------------------------------------- */
+        .pagination .page-item .page-link,
+        html[data-theme="light"] .pagination .page-item .page-link,
+        html[data-theme="dark"] .pagination .page-item .page-link {
+            background: var(--t-bg-card) !important;
+            color: var(--t-text-body) !important;
+            border-color: var(--t-border) !important;
+        }
+
+        .pagination .page-item:hover .page-link,
+        html[data-theme="light"] .pagination .page-item:hover .page-link,
+        html[data-theme="dark"] .pagination .page-item:hover .page-link {
+            background: var(--t-bg-row-hover) !important;
+            color: var(--t-text-heading) !important;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--t-accent) !important;
+            color: #ffffff !important;
+            border-color: var(--t-accent) !important;
+        }
+
+        /* --------------------------------------------------------------------------
+   9. SWEETALERT / MODALS
+   -------------------------------------------------------------------------- */
+        .stayzen-swal-popup,
+        html[data-theme="light"] .stayzen-swal-popup,
+        html[data-theme="dark"] .stayzen-swal-popup {
+            background: var(--t-bg-card) !important;
+            color: var(--t-text-body) !important;
+        }
+
+        .stayzen-swal-title,
+        html[data-theme="light"] .stayzen-swal-title,
+        html[data-theme="dark"] .stayzen-swal-title {
+            color: var(--t-text-heading) !important;
+        }
+
+        .stayzen-swal-text,
+        html[data-theme="light"] .stayzen-swal-text,
+        html[data-theme="dark"] .stayzen-swal-text {
+            color: var(--t-text-muted) !important;
+        }
+
+        .modal-backdrop.show {
+            background: var(--t-bg-overlay) !important;
+        }
+
+        /* --------------------------------------------------------------------------
+   10. PAGE TOPBAR
+   -------------------------------------------------------------------------- */
+        .page-topbar,
+        html[data-theme="light"] .page-topbar,
+        html[data-theme="dark"] .page-topbar {
+            background: var(--t-bg-card) !important;
+            border-color: var(--t-border) !important;
+        }
+
+        /* --------------------------------------------------------------------------
+   11. BREADCRUMB / HEADER TITLES
+   -------------------------------------------------------------------------- */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            color: var(--t-text-heading);
+        }
+
+        .dashboard-hero-title,
+        .breadcrumb-title {
+            color: var(--t-text-heading) !important;
+        }
+
+        /* --------------------------------------------------------------------------
+   12. PAGE-LEVEL TEMPLATES WITH THEIR OWN HARDCODED LIGHT <style> BLOCKS
+   Some pages (Add Staff User, Manage Permissions, and likely others built
+   the same way) ship a local <style> block using .dashboard-card /
+   .card-header-modern with hardcoded white backgrounds and Bootstrap's
+   .text-dark utility — written before dark mode existed, and never
+   touched since. These rules never got folded into the global theme
+   system at all, so this is a separate fix from the cascade/specificity
+   issues above: it's just giving these two (and any future page reusing
+   the same classes) the same tokens everything else already uses.
+   -------------------------------------------------------------------------- */
+        .dashboard-card,
+        .card-header-modern {
+            background: var(--t-bg-card) !important;
+            color: var(--t-text-body) !important;
+        }
+
+        .card-header-modern {
+            border-bottom: 1px solid var(--t-border) !important;
+        }
+
+        .dashboard-card .text-dark,
+        .card-header-modern .text-dark,
+        h5.text-dark {
+            color: var(--t-text-heading) !important;
+        }
+
+        .dashboard-card .text-muted,
+        .card-header-modern .text-muted {
+            color: var(--t-text-muted) !important;
+        }
+
+        /* Hover state on permission grid rows (.perm-row) */
+        .perm-row:hover {
+            background-color: var(--t-bg-row-hover) !important;
+        }
+
+        /* Sticky save/cancel action bar at the bottom of the permissions panel */
+        .sticky-footer-panel {
+            background: var(--t-bg-card) !important;
+            border-top: 1px solid var(--t-border) !important;
+        }
+
+        /* Submodule header row inside each accordion section (Submodule Name /
+   eye / plus / pencil / trash column labels) — currently styled with
+   Bootstrap's .bg-light + .text-muted utility classes */
+        .bg-light.text-muted,
+        .dashboard-card .bg-light {
+            background: var(--t-bg-card-header) !important;
+            color: var(--t-text-muted) !important;
+        }
+
+        /* --------------------------------------------------------------------------
+   13. FLOATING TOPBAR OVERLAP FIX
+   .page-topbar-floating is taken out of normal flow (fixed/absolute,
+   defined in style.css / mediline-theme.css), so it sits visually on top
+   of the page content instead of pushing it down. The page wrapper below
+   it was never given matching top clearance, so card headers (e.g.
+   "Access Permissions" + its Select All / Clear All / Expand All /
+   Collapse All row) render partly underneath the pill. Fix: give the
+   topbar a known height + raise its stacking order, and push the content
+   wrapper down to match so nothing renders underneath it.
+   -------------------------------------------------------------------------- */
+        .page-topbar.page-topbar-floating {
+            min-height: 64px !important;
+            z-index: 998 !important;
+        }
+
+        .page-wrapper {
+            padding-top: 80px !important;
+        }
+
+        @media (max-width: 767px) {
+            .page-wrapper {
+                padding-top: 88px !important;
+            }
+        }
+    </style>
+
+
+</head>
+
+<body>
+
+
+    <script>
+    // Notification Center endpoints differ for staff vs admin-panel users:
+    // adminapp's login_required redirects (302) staff sessions that try
+    // to hit its API URLs, so staff gets its own equivalent routes.
+    const NOTIF_URLS = {
+        {% if request.user.is_superuser %}
+        list: '{% url "api_get_notifications" %}',
+        markRead: `{% url 'api_mark_notification_read' 0 %}`,
+        delete: `{% url 'api_delete_notification' 0 %}`,
+        clear: '{% url "api_clear_notifications" %}',
+        sentList: '{% url "api_get_sent_notifications" %}',
+        sentDelete: `{% url 'api_delete_sent_notification' 0 %}`,
+        sentClear: '{% url "api_clear_sent_notifications" %}',
+        activeStaff: '{% url "api_active_staff" %}',
+        compose: '{% url "api_compose_notification" %}',
+        {% else %}
+        list: '{% url "staff_api_get_notifications" %}',
+        markRead: `{% url 'staff_api_mark_notification_read' 0 %}`,
+        delete: `{% url 'staff_api_delete_notification' 0 %}`,
+        clear: '{% url "staff_api_clear_notifications" %}',
+        sentList: '{% url "staff_api_get_sent_notifications" %}',
+        sentDelete: `{% url 'staff_api_delete_sent_notification' 0 %}`,
+        sentClear: '{% url "staff_api_clear_sent_notifications" %}',
+        activeStaff: '{% url "staff_api_active_staff" %}',
+        compose: '{% url "staff_api_compose_notification" %}',
+        {% endif %}
+    };
+</script>
+
+{% if messages %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let errorMessages = "";
+        let successMessages = "";
+        let infoMessages = "";
+        let warningMessages = "";
+
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                successMessages += "{{ message|escapejs }}<br>";
+            {% elif message.tags == 'error' or message.tags == 'danger' %}
+                errorMessages += "{{ message|escapejs }}<br>";
+            {% elif message.tags == 'warning' %}
+                warningMessages += "{{ message|escapejs }}<br>";
+            {% else %}
+                infoMessages += "{{ message|escapejs }}<br>";
+            {% endif %}
+        {% endfor %}
+
+        if (errorMessages) {
+            Swal.fire({
+                title: 'Error',
+                html: errorMessages,
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        } else if (warningMessages) {
+            Swal.fire({
+                title: 'Warning',
+                html: warningMessages,
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            });
+        } else if (successMessages) {
+            Swal.fire({
+                title: 'Success',
+                html: successMessages,
+                icon: 'success',
+                confirmButtonText: 'OK'
+            });
+        } else if (infoMessages) {
+            Swal.fire({
+                title: 'Info',
+                html: infoMessages,
+                icon: 'info',
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+</script>
+{% endif %}
+
+    <div class='page-topbar page-topbar-floating'>
+        <div class='quick-area'>
+            <div class='float-left'>
+                <ul class="info-menu left-links list-inline list-unstyled">
+                    <li class="sidebar-toggle-wrap list-inline-item">
+                        <a href="#" class="sidebar_toggle_custom"><i class="fa fa-bars"></i></a>
+                    </li>
+                </ul>
+            </div>
+            <div class='float-right'>
+                <ul class="info-menu right-links list-inline list-unstyled">
+
+                    <li class="list-inline-item" style="margin-right: 15px;">
+                        <a href="{% url 'calendar_dashboard' %}" aria-label="Calendar Dashboard"
+                            title="Calendar Dashboard"
+                            style="color: var(--sb-icon); font-size: 20px; padding: 5px; text-decoration: none;">
+                            <i class="fa fa-calendar"></i>
+                        </a>
+                    </li>
+
+                    <li class="notification-container list-inline-item" style="margin-right: 15px; position: relative;">
+                        <a href="javascript:;" id="notificationBell" aria-label="Notifications"
+                            style="position: relative; display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">
+                            <i class="fa fa-bell" style="font-size: 20px;"></i>
+                            {% if unread_count > 0 %}
+                            <span class="notification-badge" id="bellBadge">{{ unread_count }}</span>
+                            {% endif %}
+                        </a>
+                        <div class="notification-dropdown">
+                            <!-- SHARED TABS HEADER -->
+                            <div class="notif-dropdown-header" id="notifDropdownHeader"
+                                style="flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 16px; display: flex; border-bottom: 1px solid var(--sb-border); background-color: var(--sb-sub-bg);">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h6
+                                        style="margin: 0; font-size: 11px; font-weight: 700; color: var(--sb-text); text-transform: uppercase; letter-spacing: 0.5px;">
+                                        Notification Center</h6>
+                                    <button type="button" id="btnNotifCloseX"
+                                        style="background: none; border: none; color: var(--sb-icon); font-size: 18px; cursor: pointer; padding: 0; line-height: 1; transition: color 0.2s;"
+                                        onmouseover="this.style.color='var(--sb-hover-text)'"
+                                        onmouseout="this.style.color='var(--sb-icon)'">&times;</button>
+                                </div>
+                                <div
+                                    style="display: flex; background: var(--sb-bg); border-radius: 8px; padding: 2px; border: 1px solid var(--sb-border); gap: 2px;">
+                                    <button type="button" class="tab-btn active" id="tabInbox"
+                                        style="flex: 1; padding: 6px; border: none; border-radius: 6px; background: transparent; font-size: 11px; font-weight: 700; color: var(--sb-text); cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                                        <i class="fa fa-envelope-o"></i> Inbox <span class="notif-unread-count"
+                                            id="inboxTabBadge"
+                                            style="background: rgba(37, 99, 235, 0.1); color: var(--sb-hover-text); font-size: 9px; padding: 1px 5px; border-radius: 10px; font-weight: 700; {% if unread_count == 0 %}display: none;{% endif %}">{{ unread_count }}</span>
+                                    </button>
+                                    <button type="button" class="tab-btn" id="tabSent"
+                                        style="flex: 1; padding: 6px; border: none; border-radius: 6px; background: transparent; font-size: 11px; font-weight: 700; color: var(--sb-text); cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                                        <i class="fa fa-paper-plane-o"></i> Sent History
+                                    </button>
+                                    <button type="button" class="tab-btn" id="tabCompose"
+                                        style="flex: 1; padding: 6px; border: none; border-radius: 6px; background: transparent; font-size: 11px; font-weight: 700; color: var(--sb-text); cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                                        <i class="fa fa-pencil"></i> Compose
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- PANEL 1: INBOX LIST -->
+                            <div class="notif-panel active" id="notifPanelList">
+                                <div style="display: flex; justify-content: flex-end; align-items: center; padding: 8px 20px 4px; border-bottom: 1px solid var(--sb-border);">
+                                    <button type="button" id="btnClearAllInbox"
+                                        style="background: none; border: none; color: var(--sb-icon); font-size: 11px; font-weight: 600; cursor: pointer; padding: 2px 4px; display: inline-flex; align-items: center; gap: 4px; transition: color 0.2s;"
+                                        onmouseover="this.style.color='#ef4444'"
+                                        onmouseout="this.style.color='var(--sb-icon)'">
+                                        <i class="fa fa-trash-o"></i> Clear All
+                                    </button>
+                                </div>
+                                <ul class="notif-list">
+                                    {% if recent_notifications %}
+                                    {% for n in recent_notifications %}
+                                    <li class="notif-item {% if n.is_read %}read{% else %}unread{% endif %}"
+                                        data-id="{{ n.id }}"
+                                        data-sender="{% if n.broadcast.sender.is_superuser %}Administrator{% elif n.broadcast.sender.staff_profile.role.name %}{{ n.broadcast.sender.username|title }} • {{ n.broadcast.sender.staff_profile.role.name }}{% else %}{{ n.broadcast.sender.username|title }}{% endif %}"
+                                        data-title="{{ n.broadcast.title }}" data-message="{{ n.broadcast.message }}"
+                                        data-date="{{ n.broadcast.created_at|date:'M d, Y h:i A' }}"
+                                        data-attachment="{% if n.broadcast.attachment %}{{ n.broadcast.attachment.url }}{% endif %}"
+                                        data-read="{% if n.is_read %}true{% else %}false{% endif %}">
+                                        <div class="notif-item-row">
+                                            <div
+                                                class="notif-avatar {% if forloop.counter|divisibleby:4 %}bg-purple{% elif forloop.counter|divisibleby:3 %}bg-orange{% elif forloop.counter|divisibleby:2 %}bg-green{% else %}bg-blue{% endif %}">
+                                                {{ n.broadcast.sender.username|slice:":1"|upper }}
+                                            </div>
+                                            <div class="notif-info">
+                                                <span class="notif-sender">{% if n.broadcast.sender.is_superuser %}Administrator{% elif n.broadcast.sender.staff_profile.role.name %}{{ n.broadcast.sender.username|title }} • {{ n.broadcast.sender.staff_profile.role.name }}{% else %}{{ n.broadcast.sender.username|title }}{% endif %}</span>
+                                                <span class="notif-subject">{{ n.broadcast.title }}</span>
+                                                <div class="notif-message-preview">{{ n.broadcast.message|truncatechars:70 }}</div>
+                                                <span class="notif-time">{{ n.broadcast.created_at|date:'M d, Y' }}</span>
+                                            </div>
+                                            <div class="notif-status-dot"></div>
+                                            <button type="button" class="notif-item-delete" title="Remove">
+                                                <i class="fa fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+                                    {% else %}
+                                    <li
+                                        style="padding: 30px 20px; text-align: center; color: var(--sb-icon); font-size: 13px;">
+                                        <i class="fa fa-envelope-o"
+                                            style="font-size: 24px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
+                                        No notifications yet.
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+
+                            <!-- PANEL 2: SENT HISTORY LIST -->
+                            <div class="notif-panel" id="notifPanelSent">
+                                <div style="display: flex; justify-content: flex-end; align-items: center; padding: 8px 20px 4px; border-bottom: 1px solid var(--sb-border);">
+                                    <button type="button" id="btnClearAllSent"
+                                        style="background: none; border: none; color: var(--sb-icon); font-size: 11px; font-weight: 600; cursor: pointer; padding: 2px 4px; display: inline-flex; align-items: center; gap: 4px; transition: color 0.2s;"
+                                        onmouseover="this.style.color='#ef4444'"
+                                        onmouseout="this.style.color='var(--sb-icon)'">
+                                        <i class="fa fa-trash-o"></i> Clear All
+                                    </button>
+                                </div>
+                                <ul class="notif-list" id="sentNotifList">
+                                    <!-- Populated dynamically via AJAX -->
+                                </ul>
+                            </div>
+
+                            <!-- PANEL 3: COMPOSE FORM -->
+                            <div class="notif-panel" id="notifPanelCompose">
+                                <form id="zenComposeFormDropdown" enctype="multipart/form-data"
+                                    style="margin: 0; display: flex; flex-direction: column; flex: 1; min-height: 0;">
+                                    {% csrf_token %}
+                                    <div class="notif-compose-body" style="padding: 16px 20px;">
+                                        <div class="zen-form-group" style="margin-bottom: 6px;">
+                                            <label style="font-size: 10px; margin-bottom: 2px;">Target Audience</label>
+                                            <div class="zen-audience-group" style="gap: 4px;">
+                                                {% if request.user.is_superuser %}
+                                                <div class="zen-audience-btn active" data-value="all">
+                                                    <input type="radio" name="broadcast_type" value="all" checked
+                                                        style="display:none;"> All
+                                                </div>
+                                                <div class="zen-audience-btn" data-value="department">
+                                                    <input type="radio" name="broadcast_type" value="department"
+                                                        style="display:none;"> Dept
+                                                </div>
+                                                <div class="zen-audience-btn" data-value="role">
+                                                    <input type="radio" name="broadcast_type" value="role"
+                                                        style="display:none;"> Role
+                                                </div>
+                                                <div class="zen-audience-btn" data-value="specific">
+                                                    <input type="radio" name="broadcast_type" value="specific"
+                                                        style="display:none;"> Staff
+                                                </div>
+{% elif staff.role and staff.role.name|lower == 'manager' %}
+<div class="zen-audience-btn active" data-value="admin">
+    <input type="radio" name="broadcast_type" value="admin" checked
+        style="display:none;"> Admin
+</div>
+
+<div class="zen-audience-btn" data-value="my_department">
+    <input type="radio" name="broadcast_type" value="my_department"
+        style="display:none;"> Dept
+</div>
+
+<div class="zen-audience-btn" data-value="specific">
+    <input type="radio" name="broadcast_type" value="specific"
+        style="display:none;"> Staff
+</div>
+                                                {% else %}
+                                                <div class="zen-audience-btn active" data-value="my_manager">
+                                                    <input type="radio" name="broadcast_type" value="my_manager" checked
+                                                        style="display:none;"> Managers
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <!-- Dynamic sections based on target audience -->
+                                        <div class="zen-form-group" id="dropdown-dept-section"
+                                            style="display:none; margin-bottom: 6px;">
+                                            <div
+                                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                                                <label style="font-size: 10px; margin-bottom: 0;">Select
+                                                    Departments</label>
+                                                <button type="button" id="btnSelectAllDepts"
+                                                    style="background: none; border: none; color: var(--sb-hover-text); font-size: 10px; font-weight: 700; cursor: pointer; padding: 0;">Select
+                                                    All</button>
+                                            </div>
+                                            <div id="dynamic-dept-container"
+                                                style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; max-height: 180px; overflow-y: auto; padding: 6px; border: 1px solid var(--sb-border); border-radius: 6px; background-color: var(--sb-sub-bg);">
+                                                <!-- Populated dynamically via AJAX -->
+                                            </div>
+                                        </div>
+
+                                        <div class="zen-form-group" id="dropdown-role-section"
+                                            style="display:none; margin-bottom: 6px;">
+                                            <div
+                                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                                                <label style="font-size: 10px; margin-bottom: 0;">Select Roles</label>
+                                                <button type="button" id="btnSelectAllRoles"
+                                                    style="background: none; border: none; color: var(--sb-hover-text); font-size: 10px; font-weight: 700; cursor: pointer; padding: 0;">Select
+                                                    All</button>
+                                            </div>
+                                            <div id="dynamic-role-container"
+                                                style="display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; border: 1px solid var(--sb-border); border-radius: 6px; background-color: var(--sb-sub-bg); max-height: 180px; overflow-y: auto;">
+                                                <!-- Populated dynamically via AJAX -->
+                                            </div>
+                                        </div>
+
+                                        <div class="zen-form-group" id="dropdown-staff-section"
+                                            style="display:none; margin-bottom: 6px;">
+                                            <label style="font-size: 10px; margin-bottom: 2px;">Select Staff
+                                                Members</label>
+                                            <select name="staff_members" class="zen-form-control" multiple
+                                                style="height: 120px; font-size: 11px; padding: 4px;">
+                                                <!-- Populated dynamically via AJAX -->
+                                            </select>
+                                            <small
+                                                style="color: var(--sb-icon); font-size: 9px; margin-top: 2px; display: block;">Ctrl
+                                                + click to select multiple</small>
+                                        </div>
+
+                                        <div class="zen-form-group" style="margin-bottom: 6px;">
+                                            <label style="font-size: 10px; margin-bottom: 2px;">Title</label>
+                                            <input type="text" name="title" class="zen-form-control"
+                                                placeholder="Enter title" required
+                                                style="padding: 4px 8px; font-size: 11px; height: 28px; line-height: normal;">
+                                        </div>
+
+                                        <div class="zen-form-group" style="margin-bottom: 6px;">
+                                            <label style="font-size: 10px; margin-bottom: 2px;">Message</label>
+                                            <textarea name="message" class="zen-form-control" rows="4"
+                                                placeholder="Type message..." required
+                                                style="padding: 4px 8px; font-size: 11px; line-height: normal; resize: vertical; min-height: 80px;"></textarea>
+                                        </div>
+
+                                        <div class="zen-form-group" style="margin-bottom: 6px;">
+                                            <label style="font-size: 10px; margin-bottom: 2px;">Attach File</label>
+                                            <input type="file" name="attachment" class="zen-form-control"
+                                                style="padding: 2px 4px; font-size: 10px; height: 24px; line-height: normal;">
+                                        </div>
+                                    </div>
+                                    <div class="zen-modal-footer" style="padding: 6px 16px;">
+                                        <button type="submit" class="zen-btn zen-btn-primary"
+                                            style="width: 100%; justify-content: center; padding: 6px 12px; font-size: 12px; border-radius: 4px; height: 32px; display: flex; align-items: center;">Send
+                                            Notification</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- PANEL 4: DETAIL (WITH BACK BUTTON) -->
+                            <div class="notif-panel" id="notifPanelDetail">
+                                <div class="notif-header">
+                                    <div class="notif-title-wrap"
+                                        style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                                        <button type="button" class="btn-notif-back" id="btnDetailBack">
+                                            <i class="fa fa-arrow-left"></i> Back
+                                        </button>
+                                        <h6
+                                            style="margin: 0; font-size: 11px; font-weight: 700; color: var(--sb-text); text-transform: uppercase; letter-spacing: 0.5px;">
+                                            Detail View</h6>
+                                    </div>
+                                </div>
+                                <div class="notif-detail-body" style="padding: 20px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--sb-border);">
+                                        <div>
+                                            <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--sb-icon);"
+                                                id="detailFromLabel">From</div>
+                                            <div style="font-size: 13px; font-weight: 700; color: var(--sb-text);"
+                                                id="notifDetailSender"></div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div
+                                                style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--sb-icon);">
+                                                Date</div>
+                                            <div style="font-size: 12px; color: var(--sb-icon);" id="notifDetailDate">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <h5 style="font-size: 14px; font-weight: 700; color: var(--sb-text); margin-bottom: 12px; line-height: 1.4;"
+                                        id="notifDetailTitle"></h5>
+                                    <p style="font-size: 13px; color: var(--sb-text); line-height: 1.5; white-space: pre-wrap; margin-bottom: 0;"
+                                        id="notifDetailMessage"></p>
+
+                                    <!-- Sent Read Status Stats -->
+                                    <div id="notifDetailSentStatsWrap"
+                                        style="margin-top: 16px; padding: 10px 12px; background-color: rgba(37, 99, 235, 0.05); border-radius: 8px; border: 1px solid rgba(37, 99, 235, 0.1); display: none;">
+                                        <i class="fa fa-info-circle" style="color: var(--sb-hover-text);"></i>
+                                        <span
+                                            style="font-size: 12px; color: var(--sb-text); font-weight: 600; margin-left: 4px;">Recipients
+                                            Read Status:</span>
+                                        <div style="margin-top: 4px; font-size: 12px; color: var(--sb-text);"
+                                            id="notifDetailSentStats"></div>
+                                    </div>
+
+                                    <div id="notifDetailAttachmentWrap"
+                                        style="margin-top: 16px; padding: 12px; background-color: var(--sb-sub-bg); border: 1px solid var(--sb-border); border-radius: 8px; display: none;">
+                                        <span style="font-size: 11px; color: var(--sb-icon); font-weight: 600;"><i
+                                                class="fa fa-paperclip"></i> Attachment included</span>
+                                        <div style="margin-top: 6px;">
+                                            <a href="#" id="notifDetailAttachmentLink" class="zen-btn zen-btn-primary"
+    download
+    style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; padding: 5px 10px; font-size: 11px;">
+    <i class="fa fa-download"></i> Download
+</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-inline-item" style="margin-right: 15px;">
+                        <button class="admin-theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+                            <span class="sun-icon">☀️</span><span class="moon-icon">🌙</span>
+                        </button>
+                    </li>
+                    <li class="profile-hover-container list-inline-item">
+                        <div class="profile-trigger-avatar">
+                            <div class="admin-avatar-img default-avatar-placeholder">
+                                {% if staff and staff.profile_image %}
+                                {% now "U" as cache_bust %}
+                                <img src="{{ staff.profile_image.url }}?{{ cache_bust }}" alt="Profile"
+                                    class="navbar-avatar" />
+                                {% else %}
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="profile-hover-dropdown">
+                            <div class="dropdown-user-header">
+                                {% if request.user.is_authenticated %}
+                                <span class="user-name">{% if request.user.first_name %}{{ request.user.first_name }}{% else %}{{ request.user.username }}{% endif %}</span>
+                                {% else %}
+                                <span class="user-name">Guest</span>
+                                {% endif %}
+                                <span class="user-role">{% if request.user.is_superuser %}Administrator{% else %}{{ staff.get_role_display|default:staff.role|title }}{% endif %}</span>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="{% if request.user.is_superuser %}{% url 'admin_profile' %}{% else %}{% url 'staff_profile' %}{% endif %}"
+                                class="dropdown-hover-item">
+                                <i class="fa fa-user"></i> <span>Update Profile</span>
+                            </a>
+                            <a href="{% url 'logout_view' %}" class="dropdown-hover-item">
+                                <i class="fa fa-sign-out"></i> <span>Logout</span>
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-container row-fluid">
+        <div class="page-sidebar">
+            <div class="sidebar-brand-wrapper">
+                <div class="sidebar-brand-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                        <path d="M2 17l10 5 10-5"></path>
+                        <path d="M2 12l10 5 10-5"></path>
+                    </svg>
+                </div>
+                <span class="sidebar-brand-text">StayZen Admin</span>
+            </div>
+            <div class="sidebar-profile">
+                {% if staff and staff.profile_image %}
+                {% now "U" as cache_bust %}
+                <img src="{{ staff.profile_image.url }}?{{ cache_bust }}" alt="Profile" class="profile-img" />
+                {% else %}
+                <img src="https://ui-avatars.com/api/?name={{ request.user.first_name|default:request.user.username }}&background=3b82f6&color=fff"
+                    alt="Profile" class="profile-img" />
+                {% endif %}
+                <div class="profile-info-text">
+                    <span class="profile-name">{% if staff.user.first_name %}{{ staff.user.first_name }}{% else %}{{ request.user.first_name|default:request.user.username }}{% endif %}</span>
+                    {% if not request.user.is_superuser and staff %}
+                    <span class="profile-role" style="margin-bottom: 3px;">{{ staff.get_department_display|default:staff.department|title }}</span>
+                    {% endif %}
+                    <span class="profile-role">{% if request.user.is_superuser %}Administrator{% else %}{{ staff.get_role_display|default:staff.role|title }}{% endif %}</span>
+                </div>
+            </div>
+
+            <div class="page-sidebar-wrapper" id="main-menu-wrapper">
+                <ul class="wraplist">
+                    <li>
+                        <a
+                            href="{% if request.user.is_superuser %}{% url 'admin_dashboard' %}{% else %}{% url 'staff_dashboard' %}{% endif %}">
+                            <i class="fa fa-dashboard"></i><span class="title">Dashboard</span>
+                        </a>
+                    </li>
+
+                    {% if request.user.is_superuser %}
+                    <li>
+                        <a href="javascript:;">
+                            <i class="fa fa-users"></i><span class="title">Master</span><span class="arrow"></span>
+                        </a>
+                        <ul class="sub-menu">
+                            <li><a href="{% url 'add_staff_user' %}">Add Staff User</a></li>
+                            <li><a href="{% url 'staff_user_list' %}">View Staff Users</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+
+                    {% for item in menus %}
+                    <li>
+                        <a href="javascript:;">
+                            <i class="fa {{ item.menu.icon }}"></i><span class="title">{{ item.menu.name }}</span><span
+                                class="arrow"></span>
+                        </a>
+                        <ul class="sub-menu">
+                            {% for sub in item.submenus %}
+                            <li><a href="{% url sub.url_name %}">{{ sub.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    {% endfor %}
+
+                    <!-- <li>
+                        <a href="{% url 'admin_feedback_list' %}">
+                            <i class="fa fa-comments"></i><span class="title">Guest Feedback</span>
+                        </a>
+                    </li> -->
+                    {% if request.user.is_superuser or staff.role == 'admin' or staff.role == 'manager' %}
+                    <li class="{% if request.resolver_match.url_name == 'site_settings' %}open active{% endif %}">
+                        <a href="{% url 'site_settings' %}">
+                            <i class="fa fa-cogs"></i><span class="title">Site Settings</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <a href="{% url 'logout_view' %}">
+                            <i class="fa fa-sign-out"></i><span class="title">Log out</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="project-info">
+                <div class="block1">
+                    <div class="data">
+                        <span class='title'>Users</span>
+                        <span class='total'>7745</span>
+                    </div>
+                    <div class="graph">
+                        <span class="sidebar_orders">...</span>
+                    </div>
+                </div>
+                <div class="block2">
+                    <div class="data">
+                        <span class='title'>Uptime</span>
+                        <span class='total'>99%</span>
+                    </div>
+                    <div class="graph">
+                        <span class="sidebar_visitors">...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-main-content">
+            {% block content %}
+            {% endblock %}
+        </div>
+
+        <div class="page-chatapi hideit">
+            <div class="search-bar">
+                <input type="text" placeholder="Search" class="form-control">
+            </div>
+            <div class="chat-wrapper">
+                <h4 class="group-head">Groups</h4>
+                <ul class="group-list list-unstyled">
+                    <li class="group-row">
+                        <div class="group-status available">
+                            <i class="fa fa-circle"></i>
+                        </div>
+                        <div class="group-info">
+                            <h4><a href="#">Work</a></h4>
+                        </div>
+                    </li>
+                    <li class="group-row">
+                        <div class="group-status away">
+                            <i class="fa fa-circle"></i>
+                        </div>
+                        <div class="group-info">
+                            <h4><a href="#">Friends</a></h4>
+                        </div>
+                    </li>
+                </ul>
+
+                <h4 class="group-head">Favourites</h4>
+                <ul class="contact-list">
+                    <li class="user-row" id='chat_user_1' data-user-id='1'>
+                        <div class="user-img">
+                            <a href="#"><img src="{% static 'admin/data/profile/avatar-1.png' %}" alt=""></a>
+                        </div>
+                        <div class="user-info">
+                            <h4><a href="#">Clarine Vassar</a></h4>
+                            <span class="status available" data-status="available"> Available</span>
+                        </div>
+                        <div class="user-status available">
+                            <i class="fa fa-circle"></i>
+                        </div>
+                    </li>
+                    <li class="user-row" id='chat_user_2' data-user-id='2'>
+                        <div class="user-img">
+                            <a href="#"><img src="{% static 'admin/data/profile/avatar-2.png' %}" alt=""></a>
+                        </div>
+                        <div class="user-info">
+                            <h4><a href="#">Brooks Latshaw</a></h4>
+                            <span class="status away" data-status="away"> Away</span>
+                        </div>
+                        <div class="user-status away">
+                            <i class="fa fa-circle"></i>
+                        </div>
+                    </li>
+                    <li class="user-row" id='chat_user_3' data-user-id='3'>
+                        <div class="user-img">
+                            <a href="#"><img src="{% static 'admin/data/profile/avatar-3.png' %}" alt=""></a>
+                        </div>
+                        <div class="user-info">
+                            <h4><a href="#">Clementina Brodeur</a></h4>
+                            <span class="status busy" data-status="busy"> Busy</span>
+                        </div>
+                        <div class="user-status busy">
+                            <i class="fa fa-circle"></i>
+                        </div>
+                    </li>
+                </ul>
+
+                <h4 class="group-head">More Contacts</h4>
+                <ul class="contact-list">
+                    <li class="user-row" id='chat_user_4' data-user-id='4'>
+                        <div class="user-img">
+                            <a href="#"><img src="{% static 'admin/data/profile/avatar-4.png' %}" alt=""></a>
+                        </div>
+                        <div class="user-info">
+                            <h4><a href="#">Carri Busey</a></h4>
+                            <span class="status offline" data-status="offline"> Offline</span>
+                        </div>
+                        <div class="user-status offline">
+                            <i class="fa fa-circle"></i>
+                        </div>
+                    </li>
+                    <li class="user-row" id='chat_user_5' data-user-id='5'>
+                        <div class="user-img">
+                            <a href="#"><img src="{% static 'admin/data/profile/avatar-5.png' %}" alt=""></a>
+                        </div>
+                        <div class="user-info">
+                            <h4><a href="#">Melissa Dock</a></h4>
+                            <span class="status offline" data-status="offline"> Offline</span>
+                        </div>
+                        <div class="user-status offline">
+                            <i class="fa fa-circle"></i>
+                        </div>
+                    </li>
+                    <li class="user-row" id='chat_user_6' data-user-id='6'>
+                        <div class="user-img">
+                            <a href="#"><img src="{% static 'admin/data/profile/avatar-1.png' %}" alt=""></a>
+                        </div>
+                        <div class="user-info">
+                            <h4><a href="#">Verdell Rea</a></h4>
+                            <span class="status available" data-status="available"> Available</span>
+                        </div>
+                        <div class="user-status available">
+                            <i class="fa fa-circle"></i>
+                        </div>
+                    </li>
+                    <li class="user-row" id='chat_user_7' data-user-id='7'>
+                        <div class="user-img">
+                            <a href="#"><img src="{% static 'admin/data/profile/avatar-2.png' %}" alt=""></a>
+                        </div>
+                        <div class="user-info">
+                            <h4><a href="#">Linette Lheureux</a></h4>
+                            <span class="status busy" data-status="busy"> Busy</span>
+                        </div>
+                        <div class="user-status busy">
+                            <i class="fa fa-circle"></i>
+                        </div>
+                    </li>
+                    <li class="user-row" id='chat_user_8' data-user-id='8'>
+                        <div class="user-img">
+                            <a href="#"><img src="{% static 'admin/data/profile/avatar-3.png' %}" alt=""></a>
+                        </div>
+                        <div class="user-info">
+                            <h4><a href="#">Araceli Boatright</a></h4>
+                            <span class="status away" data-status="away"> Away</span>
+                        </div>
+                        <div class="user-status away">
+                            <i class="fa fa-circle"></i>
+                        </div>
+                    </li>
+                    <li class="user-row" id='chat_user_9' data-user-id='9'>
+                        <div class="user-img">
+                            <a href="#"><img src="{% static 'admin/data/profile/avatar-4.png' %}" alt=""></a>
+                        </div>
+                        <div class="user-info">
+                            <h4><a href="#">Clay Peskin</a></h4>
+                            <span class="status busy" data-status="busy"> Busy</span>
+                        </div>
+                        <div class="user-status busy">
+                            <i class="fa fa-circle"></i>
+                        </div>
+                    </li>
+                    <li class="user-row" id='chat_user_10' data-user-id='10'>
+                        <div class="user-img">
+                            <a href="#"><img src="{% static 'admin/data/profile/avatar-5.png' %}" alt=""></a>
+                        </div>
+                        <div class="user-info">
+                            <h4><a href="#">Loni Tindall</a></h4>
+                            <span class="status away" data-status="away"> Away</span>
+                        </div>
+                        <div class="user-status away">
+                            <i class="fa fa-circle"></i>
+                        </div>
+                    </li>
+                    <li class="user-row" id='chat_user_11' data-user-id='11'>
+                        <div class="user-img">
+                            <a href="#"><img src="{% static 'admin/data/profile/avatar-1.png' %}" alt=""></a>
+                        </div>
+                        <div class="user-info">
+                            <h4><a href="#">Tanisha Kimbro</a></h4>
+                            <span class="status idle" data-status="idle"> Idle</span>
+                        </div>
+                        <div class="user-status idle">
+                            <i class="fa fa-circle"></i>
+                        </div>
+                    </li>
+                    <li class="user-row" id='chat_user_12' data-user-id='12'>
+                        <div class="user-img">
+                            <a href="#"><img src="{% static 'admin/data/profile/avatar-2.png' %}" alt=""></a>
+                        </div>
+                        <div class="user-info">
+                            <h4><a href="#">Jovita Tisdale</a></h4>
+                            <span class="status idle" data-status="idle"> Idle</span>
+                        </div>
+                        <div class="user-status idle">
+                            <i class="fa fa-circle"></i>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chatapi-windows ">
+
+        </div>
+    </div>
+
+    <!-- CORE JS FRAMEWORK - START -->
+    <script src="{% static 'admin/assets/js/jquery-3.4.1.min.js' %}" type="text/javascript"></script>
+    <script src="{% static 'admin/assets/js/popper.min.js' %}" type="text/javascript"></script>
+    <script src="{% static 'admin/assets/plugins/bootstrap/js/bootstrap.min.js' %}" type="text/javascript"></script>
+    <script src="{% static 'admin/assets/plugins/pace/pace.min.js' %}" type="text/javascript"></script>
+    <script src="{% static 'admin/assets/plugins/perfect-scrollbar/perfect-scrollbar.min.js' %}"
+        type="text/javascript"></script>
+    <script src="{% static 'admin/assets/plugins/viewport/viewportchecker.js' %}" type="text/javascript"></script>
+    <!-- CORE JS FRAMEWORK - END -->
+
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - START -->
+    <script src="{% static 'admin/assets/plugins/jquery-ui/smoothness/jquery-ui.min.js' %}"
+        type="text/javascript"></script>
+    <script src="{% static 'admin/assets/plugins/sparkline-chart/jquery.sparkline.min.js' %}"
+        type="text/javascript"></script>
+    <script src="{% static 'admin/assets/plugins/jvectormap/jquery-jvectormap-2.0.1.min.js' %}"
+        type="text/javascript"></script>
+    <script src="{% static 'admin/assets/plugins/jvectormap/jquery-jvectormap-world-mill-en.js' %}"
+        type="text/javascript"></script>
+    <script src="{% static 'admin/assets/js/soc-dashboard.js' %}" type="text/javascript"></script>
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - END -->
+
+    <!-- CORE TEMPLATE JS - START -->
+    <script src="{% static 'admin/assets/js/scripts.js' %}" type="text/javascript"></script>
+    <!-- END CORE TEMPLATE JS - END -->
+    <!-- Sidebar Graph - START -->
+    <script src="{% static 'admin/assets/plugins/sparkline-chart/jquery.sparkline.min.js' %}"
+        type="text/javascript"></script>
+    <script src="{% static 'admin/assets/js/chart-sparkline.js' %}" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Sidebar Graph - END -->
+
+    <!-- General section box modal start -->
+    <div class="modal" id="section-settings" tabindex="-1" role="dialog" aria-labelledby="ultraModal-Label"
+        aria-hidden="true">
+        <div class="modal-dialog animated bounceInDown">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Section Settings</h4>
+                </div>
+                <div class="modal-body">
+                    Body goes here...
+                </div>
+                <div class="modal-footer">
+                    <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                    <button class="btn btn-success" type="button">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- modal end -->
+    <!-- Custom JS Confirmation Modal -->
+    <div class="modal fade" id="zenConfirmModal" tabindex="-1" role="dialog" aria-hidden="true"
+        style="z-index: 999999;">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px; margin: 30px auto;">
+            <div class="modal-content"
+                style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.15); background-color: var(--sb-bg, #fff); color: var(--sb-text, #333);">
+                <div class="modal-header"
+                    style="border-bottom: 1px solid var(--sb-border, #eee); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;">
+                    <h5 class="modal-title"
+                        style="margin: 0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa fa-exclamation-triangle text-danger" style="font-size: 18px; color: #dc2626;"></i>
+                        Confirm Action
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                        style="background: none; border: none; font-size: 22px; color: var(--sb-icon, #666); padding: 0; line-height: 1;">&times;</button>
+                </div>
+                <div class="modal-body"
+                    style="padding: 20px; font-size: 14px; color: var(--sb-text, #333); line-height: 1.5;"
+                    id="zenConfirmModalMessage">
+                    Are you sure you want to proceed?
+                </div>
+                <div class="modal-footer"
+                    style="border-top: 1px solid var(--sb-border, #eee); padding: 12px 20px; background-color: var(--sb-sub-bg, #f9f9f9); display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-default btn-sm" data-dismiss="modal"
+                        style="padding: 6px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; border: 1px solid var(--sb-border, #ccc); background-color: var(--sb-bg, #fff); color: var(--sb-text, #333);">Cancel</button>
+                    <button type="button" class="btn btn-danger btn-sm" id="zenConfirmModalConfirmBtn"
+                        style="padding: 6px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; background-color: #dc2626; border-color: #dc2626; color: #fff;">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    {% block modals %}{% endblock %}
+    {% block extra_scripts %}{% endblock %}
+
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // --- 0. CUSTOM GLOBAL CONFIRMATION MODAL INTERCEPTOR ---
+            document.addEventListener('click', function (e) {
+                let element = e.target;
+                while (element && element !== document) {
+                    const onclickAttr = element.getAttribute ? element.getAttribute('onclick') : null;
+                    if (onclickAttr && onclickAttr.includes('confirm(')) {
+                        // Extract confirm message
+                        let message = 'Are you sure you want to proceed?';
+                        const match = onclickAttr.match(/confirm\(['"](.*?)['"]\)/);
+                        if (match && match[1]) {
+                            message = match[1];
+                        }
+
+                        // Prevent default onclick prompt behavior
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        // Temporarily disable the inline handler
+                        const origOnclick = element.onclick;
+                        element.onclick = null;
+                        element.setAttribute('onclick', '');
+
+                        // Load and trigger the custom Bootstrap modal
+                        $('#zenConfirmModalMessage').text(message);
+                        $('#zenConfirmModalConfirmBtn').off('click').on('click', function () {
+                            $('#zenConfirmModal').modal('hide');
+
+                            // Re-apply and trigger click / submit
+                            const form = element.closest('form');
+                            if (form) {
+                                form.submit();
+                            } else {
+                                const linkUrl = element.getAttribute('href');
+                                if (linkUrl) {
+                                    window.location.href = linkUrl;
+                                } else {
+                                    element.click();
+                                }
+                            }
+                        });
+
+                        $('#zenConfirmModal').modal('show');
+
+                        // Restore original onclick handler
+                        setTimeout(() => {
+                            element.onclick = origOnclick;
+                            element.setAttribute('onclick', onclickAttr);
+                        }, 100);
+
+                        return;
+                    }
+                    element = element.parentNode;
+                }
+            }, true); // useCapture = true is key to intercept before native inline execution!
+
+            // --- 1. TOAST LOGIC ---
+            const toasts = document.querySelectorAll('.toast-item');
+            toasts.forEach(toast => {
+                const closeBtn = toast.querySelector('.toast-close');
+                if (closeBtn) closeBtn.addEventListener('click', () => dismissToast(toast));
+                setTimeout(() => dismissToast(toast), 5000);
+            });
+
+            function dismissToast(toast) {
+                toast.style.animation = 'toastFadeOut 0.3s forwards';
+                setTimeout(() => {
+                    toast.remove();
+                    const container = document.querySelector('.global-toast-container');
+                    if (container && container.children.length === 0) container.remove();
+                }, 300);
+            }
+
+            // --- 2. SIDEBAR COLLAPSE/HIDE LOGIC ---
+            const body = document.body;
+            const toggleBtn = document.querySelector('.sidebar_toggle_custom');
+            const sidebarEl = document.querySelector('.page-sidebar');
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    if (window.innerWidth >= 992) {
+                        // Desktop: collapse to icon-only rail. Single class,
+                        // single system — mediline-theme.css owns every
+                        // collapsed-state rule off body.sidebar-collapsed.
+                        body.classList.toggle('sidebar-collapsed');
+                    } else {
+                        body.classList.toggle('sidebar-visible');
+                        if (mobileBackdrop) mobileBackdrop.classList.toggle('active', body.classList.contains('sidebar-visible'));
+                    }
+                });
+            }
+
+            // Mobile overlay backdrop — inserted once, toggled alongside
+            // body.sidebar-visible. Tapping it closes the sidebar.
+            let mobileBackdrop = document.querySelector('.sidebar-mobile-backdrop');
+            if (!mobileBackdrop && sidebarEl) {
+                mobileBackdrop = document.createElement('div');
+                mobileBackdrop.className = 'sidebar-mobile-backdrop';
+                sidebarEl.insertAdjacentElement('afterend', mobileBackdrop);
+                mobileBackdrop.addEventListener('click', function () {
+                    body.classList.remove('sidebar-visible');
+                    mobileBackdrop.classList.remove('active');
+                });
+            }
+
+            // Collapsed-state tooltips — copy each link's existing label
+            // text into data-tooltip once; mediline-theme.css renders it
+            // only while body.sidebar-collapsed and the item is hovered.
+            document.querySelectorAll('.page-sidebar ul.wraplist > li > a').forEach(function (a) {
+                const titleSpan = a.querySelector('span.title');
+                if (titleSpan && titleSpan.textContent.trim()) {
+                    a.setAttribute('data-tooltip', titleSpan.textContent.trim());
+                }
+            });
+
+            // Close mobile sidebar if clicking outside of it
+            document.addEventListener('click', function (e) {
+                const sidebar = document.querySelector('.page-sidebar');
+                if (window.innerWidth < 992 && body.classList.contains('sidebar-visible')) {
+                    if (sidebar && !sidebar.contains(e.target) && (!toggleBtn || !toggleBtn.contains(e.target))) {
+                        body.classList.remove('sidebar-visible');
+                        if (mobileBackdrop) mobileBackdrop.classList.remove('active');
+                    }
+                }
+            });
+
+            // --- 2.5 AUTO-OPEN ACTIVE DROPDOWN ON PAGE LOAD ---
+            // Whichever sub-menu link matches the current URL gets marked
+            // active, and its parent dropdown stays open/highlighted —
+            // instead of resetting closed on every page navigation.
+            (function () {
+                const currentPath = window.location.pathname.replace(/\/$/, '');
+                $('.page-sidebar ul.wraplist li ul.sub-menu > li > a').each(function () {
+                    const href = $(this).attr('href');
+                    if (!href) return;
+                    const linkPath = href.split('?')[0].replace(/\/$/, '');
+                    if (linkPath && linkPath === currentPath) {
+                        const $li = $(this).parent('li');
+                        $li.addClass('active');
+                        const $parentLi = $li.closest('ul.sub-menu').parent('li');
+                        $parentLi.addClass('open active');
+                        $parentLi.children('.sub-menu').show();
+                    }
+                });
+            })();
+
+            // --- 3. BULLETPROOF ACCORDION (DROPDOWN) LOGIC ---
+            $('.page-sidebar ul.wraplist > li > a').on('click', function (e) {
+                const $this = $(this);
+                const $parentLi = $this.parent();
+                const $subMenu = $parentLi.children('.sub-menu');
+
+                if ($subMenu.length > 0) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+
+                    if ($parentLi.hasClass('open')) {
+                        $subMenu.slideUp(250);
+                        $parentLi.removeClass('open');
+                    } else {
+                        $('.page-sidebar ul.wraplist > li.open').find('.sub-menu').slideUp(250);
+                        $('.page-sidebar ul.wraplist > li.open').removeClass('open');
+
+                        $subMenu.slideDown(250);
+                        $parentLi.addClass('open');
+                    }
+                } else {
+                    $('.page-sidebar ul.wraplist > li.open').removeClass('open');
+                    $parentLi.addClass('open');
+                }
+            });
+
+            // --- 4. THEME SWITCHER LOGIC ---
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => {
+                    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                });
+            }
+
+            // --- 5. TABLE PAGINATION ---
+            const tables = document.querySelectorAll('.table');
+            tables.forEach(table => {
+                const tbody = table.querySelector('tbody');
+                if (!tbody) return;
+                const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => !row.querySelector('td[colspan]'));
+                const rowsPerPage = 10;
+                if (rows.length <= rowsPerPage) return;
+
+                const paginationWrapper = document.createElement('div');
+                paginationWrapper.className = 'd-flex justify-content-between align-items-center mt-3 flex-wrap gap-2 pagination-container';
+                const info = document.createElement('span');
+                info.className = 'text-muted text-sm';
+                const pagination = document.createElement('ul');
+                pagination.className = 'pagination pagination-sm mb-0';
+
+                paginationWrapper.appendChild(info);
+                paginationWrapper.appendChild(pagination);
+                const parentWrapper = table.closest('.table-responsive') || table;
+                parentWrapper.parentNode.insertBefore(paginationWrapper, parentWrapper.nextSibling);
+
+                const totalPages = Math.ceil(rows.length / rowsPerPage);
+                let currentPage = 1;
+
+                function showPage(page) {
+                    currentPage = page;
+                    const start = (page - 1) * rowsPerPage;
+                    const end = start + rowsPerPage;
+
+                    rows.forEach((row, index) => {
+                        row.style.display = (index >= start && index < end) ? '' : 'none';
+                    });
+
+                    info.textContent = `Showing ${start + 1} to ${Math.min(end, rows.length)} of ${rows.length} rows`;
+                    pagination.innerHTML = '';
+
+                    const prevLi = document.createElement('li');
+                    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+                    prevLi.innerHTML = `<a class="page-link" href="#">Prev</a>`;
+                    prevLi.querySelector('a').addEventListener('click', (e) => { e.preventDefault(); if (currentPage > 1) showPage(currentPage - 1); });
+                    pagination.appendChild(prevLi);
+
+                    for (let i = 1; i <= totalPages; i++) {
+                        const li = document.createElement('li');
+                        li.className = `page-item ${currentPage === i ? 'active' : ''}`;
+                        li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                        li.querySelector('a').addEventListener('click', (e) => { e.preventDefault(); showPage(i); });
+                        pagination.appendChild(li);
+                    }
+
+                    const nextLi = document.createElement('li');
+                    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+                    nextLi.innerHTML = `<a class="page-link" href="#">Next</a>`;
+                    nextLi.querySelector('a').addEventListener('click', (e) => { e.preventDefault(); if (currentPage < totalPages) showPage(currentPage + 1); });
+                    pagination.appendChild(nextLi);
+                }
+                showPage(1);
+            });
+
+            // --- 6. ZEN NOTIFICATION POPUP & MODAL LOGIC ---
+            const bell = document.getElementById('notificationBell');
+            const dropdown = document.querySelector('.notification-dropdown');
+
+            // Toggle dropdown on bell click
+            if (bell && dropdown) {
+                bell.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const isShowing = dropdown.classList.contains('show');
+                    if (!isShowing) {
+                        selectTab('inbox');
+                    }
+                    dropdown.classList.toggle('show');
+                });
+
+                // Close when clicking outside of the entire notification container
+                document.addEventListener('click', function (e) {
+                    const container = document.querySelector('.notification-container');
+                    if (container && !container.contains(e.target)) {
+                        dropdown.classList.remove('show');
+                    }
+                });
+
+                // Close X button listener
+                setTimeout(() => {
+                    const closeX = document.getElementById('btnNotifCloseX');
+                    if (closeX) {
+                        closeX.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            dropdown.classList.remove('show');
+                        });
+                    }
+                }, 50);
+            }
+
+            // Tab selection handler
+            function selectTab(tabName) {
+                // Remove active classes
+                document.querySelectorAll('.notification-dropdown .tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+
+                // Show shared header
+                document.getElementById('notifDropdownHeader').style.display = 'flex';
+
+                // Toggle active tab button
+                const activeBtn = document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+                if (activeBtn) activeBtn.classList.add('active');
+
+                // Hide all panels
+                document.querySelectorAll('.notification-dropdown .notif-panel').forEach(p => {
+                    p.classList.remove('active');
+                });
+
+                // Show matching panel
+                if (tabName === 'inbox') {
+                    document.getElementById('notifPanelList').classList.add('active');
+                    loadNotificationsList();
+                } else if (tabName === 'sent') {
+                    document.getElementById('notifPanelSent').classList.add('active');
+                    loadSentNotifications();
+                } else if (tabName === 'compose') {
+                    document.getElementById('notifPanelCompose').classList.add('active');
+                    loadStaffList();
+                }
+            }
+
+            // Bind tab button click listeners
+            ['inbox', 'sent', 'compose'].forEach(tab => {
+                const btn = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+                if (btn) {
+                    btn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectTab(tab);
+                    });
+                }
+            });
+
+            // Back button on detail view handler
+            const btnDetailBack = document.getElementById('btnDetailBack');
+            if (btnDetailBack) {
+                btnDetailBack.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const source = document.getElementById('notifPanelDetail').getAttribute('data-source-tab') || 'inbox';
+                    selectTab(source);
+                });
+            }
+
+            // Show Detail View helper
+            function showDetailView(data, isSent = false) {
+                // Hide tabs header
+                document.getElementById('notifDropdownHeader').style.display = 'none';
+
+                // Hide all panels
+                document.querySelectorAll('.notification-dropdown .notif-panel').forEach(p => {
+                    p.classList.remove('active');
+                });
+
+                const detailPanel = document.getElementById('notifPanelDetail');
+                detailPanel.classList.add('active');
+
+                // Populate fields
+                document.getElementById('notifDetailDate').textContent = data.date;
+                document.getElementById('notifDetailTitle').textContent = data.title;
+                document.getElementById('notifDetailMessage').textContent = data.message;
+
+                const fromLabel = document.getElementById('detailFromLabel');
+                const senderEl = document.getElementById('notifDetailSender');
+                const statsWrap = document.getElementById('notifDetailSentStatsWrap');
+
+                if (isSent) {
+                    fromLabel.textContent = "To";
+                    senderEl.textContent = "Staff Broadcast";
+
+                    statsWrap.style.display = 'block';
+                    document.getElementById('notifDetailSentStats').innerHTML = `
+                        <strong>${data.read_recipients}</strong> of <strong>${data.total_recipients}</strong> recipient(s) read this.
+                    `;
+                } else {
+                    fromLabel.textContent = "From";
+                    senderEl.textContent = data.sender;
+                    statsWrap.style.display = 'none';
+                }
+
+                const attachWrap = document.getElementById('notifDetailAttachmentWrap');
+                if (data.attachment && data.attachment !== 'null' && data.attachment !== 'undefined' && data.attachment !== '') {
+                    document.getElementById('notifDetailAttachmentLink').setAttribute('href', data.attachment);
+                    attachWrap.style.display = 'block';
+                } else {
+                    attachWrap.style.display = 'none';
+                }
+
+                // Remember source panel
+                detailPanel.setAttribute('data-source-tab', isSent ? 'sent' : 'inbox');
+            }
+
+            // Click the X button on an individual inbox card to remove just that one
+            $(document).on('click', '#notifPanelList .notif-item-delete', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const card = this.closest('.notif-item');
+                if (!card) return;
+
+                const id = card.getAttribute('data-id');
+                const wasUnread = card.getAttribute('data-read') === 'false';
+
+                $.ajax({
+                    url: NOTIF_URLS.delete.replace('0', id),
+                    type: 'GET',
+                    success: function (res) {
+                        if (res && res.success) {
+                            card.remove();
+
+                            // If it was unread, decrement badge counts
+                            if (wasUnread) {
+                                const badges = document.querySelectorAll('.notification-badge, #inboxTabBadge');
+                                badges.forEach(b => {
+                                    let val = parseInt(b.textContent) || 0;
+                                    if (val > 1) {
+                                        b.textContent = val - 1;
+                                    } else {
+                                        b.style.display = 'none';
+                                        b.textContent = '0';
+                                    }
+                                });
+                            }
+
+                            const listContainer = document.querySelector('#notifPanelList .notif-list');
+                            if (listContainer && listContainer.children.length === 0) {
+                                listContainer.innerHTML = `
+                                    <li style="padding: 30px 20px; text-align: center; color: var(--sb-icon); font-size: 13px;">
+                                        <i class="fa fa-envelope-o" style="font-size: 24px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
+                                        No notifications yet.
+                                    </li>
+                                `;
+                            }
+                        } else {
+                            showZenToast('error', 'Failed to remove notification.');
+                        }
+                    },
+                    error: function () {
+                        showZenToast('error', 'Error removing notification.');
+                    }
+                });
+            });
+
+            // Click notification item to show detail
+            $(document).on('click', '#notifPanelList .notif-item', function () {
+                const id = this.getAttribute('data-id');
+                const sender = this.getAttribute('data-sender');
+                const title = this.getAttribute('data-title');
+                const message = this.getAttribute('data-message');
+                const date = this.getAttribute('data-date');
+                const attachment = this.getAttribute('data-attachment');
+                const read = this.getAttribute('data-read');
+
+                const data = { sender, title, message, date, attachment };
+                showDetailView(data, false);
+
+                // Mark as read via AJAX if unread
+                if (read === 'false') {
+                    this.setAttribute('data-read', 'true');
+                    this.classList.remove('unread');
+                    this.classList.add('read');
+                    const statusDot = this.querySelector('.notif-status-dot');
+                    if (statusDot) statusDot.style.display = 'none';
+
+                    // Decrement badge counts
+                    const badges = document.querySelectorAll('.notification-badge, #inboxTabBadge');
+                    badges.forEach(b => {
+                        let val = parseInt(b.textContent) || 0;
+                        if (val > 1) {
+                            b.textContent = val - 1;
+                        } else {
+                            b.style.display = 'none';
+                            b.textContent = '0';
+                        }
+                    });
+
+                    $.ajax({
+                        url: NOTIF_URLS.markRead.replace('0', id),
+                        type: 'GET',
+                        success: function (res) {
+                            console.log('Marked as read successfully');
+                        }
+                    });
+                }
+            });
+
+            // Clear All inbox notifications
+            const btnClearAllInbox = document.getElementById('btnClearAllInbox');
+            if (btnClearAllInbox) {
+                btnClearAllInbox.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    Swal.fire({
+                        title: 'Clear all inbox notifications?',
+                        text: 'This will remove all notifications from your inbox. This cannot be undone.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, clear all',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#ef4444'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: NOTIF_URLS.clear,
+                                type: 'GET',
+                                success: function (res) {
+                                    if (res && res.success) {
+                                        const listContainer = document.querySelector('#notifPanelList .notif-list');
+                                        if (listContainer) {
+                                            listContainer.innerHTML = `
+                                                <li style="padding: 30px 20px; text-align: center; color: var(--sb-icon); font-size: 13px;">
+                                                    <i class="fa fa-envelope-o" style="font-size: 24px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
+                                                    No notifications yet.
+                                                </li>
+                                            `;
+                                        }
+                                        // Reset badge counts since the inbox is now empty
+                                        const badge = document.getElementById('bellBadge');
+                                        const unreadHeader = document.getElementById('inboxTabBadge');
+                                        if (badge) badge.style.display = 'none';
+                                        if (unreadHeader) unreadHeader.style.display = 'none';
+                                        showZenToast('success', 'Inbox cleared.');
+                                    } else {
+                                        showZenToast('error', 'Failed to clear inbox.');
+                                    }
+                                },
+                                error: function () {
+                                    showZenToast('error', 'Error clearing inbox.');
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+
+            // Click handler on sent history items
+            $(document).on('click', '.sent-notif-item', function () {
+                const sentId = this.getAttribute('data-id');
+                const data = {
+                    title: this.getAttribute('data-title'),
+                    message: this.getAttribute('data-message'),
+                    date: this.getAttribute('data-date'),
+                    attachment: this.getAttribute('data-attachment'),
+                    read_recipients: this.getAttribute('data-read-count'),
+                    total_recipients: this.getAttribute('data-total-count')
+                };
+                showDetailView(data, true);
+
+                // Auto-clear: permanently delete this sent broadcast now that it's been opened
+                if (sentId) {
+                    const rowEl = this;
+                    $.ajax({
+                        url: NOTIF_URLS.sentDelete.replace('0', sentId),
+                        type: 'GET',
+                        success: function (res) {
+                            if (res && res.success) {
+                                rowEl.remove();
+                                const sentListEl = document.getElementById('sentNotifList');
+                                if (sentListEl && sentListEl.children.length === 0) {
+                                    sentListEl.innerHTML = `
+                                        <li style="padding: 30px 20px; text-align: center; color: var(--sb-icon); font-size: 13px;">
+                                            <i class="fa fa-paper-plane-o" style="font-size: 24px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
+                                            No sent notifications.
+                                        </li>
+                                    `;
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Clear All sent notifications
+            const btnClearAllSent = document.getElementById('btnClearAllSent');
+            if (btnClearAllSent) {
+                btnClearAllSent.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Clear all sent history?',
+                        text: 'This will permanently delete all your sent notifications. This cannot be undone.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, clear all',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#ef4444'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: NOTIF_URLS.sentClear,
+                                type: 'GET',
+                                success: function (res) {
+                                    if (res && res.success) {
+                                        const sentListEl = document.getElementById('sentNotifList');
+                                        if (sentListEl) {
+                                            sentListEl.innerHTML = `
+                                                <li style="padding: 30px 20px; text-align: center; color: var(--sb-icon); font-size: 13px;">
+                                                    <i class="fa fa-paper-plane-o" style="font-size: 24px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
+                                                    No sent notifications.
+                                                </li>
+                                            `;
+                                        }
+                                        showZenToast('success', 'Sent history cleared.');
+                                    } else {
+                                        showZenToast('error', 'Failed to clear sent history.');
+                                    }
+                                },
+                                error: function () {
+                                    showZenToast('error', 'Error clearing sent history.');
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+
+            // Load sent history notifications via AJAX
+            function loadSentNotifications() {
+                const sentList = document.getElementById('sentNotifList');
+                if (!sentList) return;
+
+                sentList.innerHTML = `<li style="padding: 30px 20px; text-align: center; color: var(--sb-icon); font-size: 13px;">Loading sent history...</li>`;
+
+                $.ajax({
+                    url: NOTIF_URLS.sentList,
+                    type: 'GET',
+                    success: function (res) {
+                        if (res.success && res.sent_notifications) {
+                            if (res.sent_notifications.length > 0) {
+                                sentList.innerHTML = '';
+                                res.sent_notifications.forEach((item, idx) => {
+                                    const li = document.createElement('li');
+                                    li.className = 'sent-notif-item';
+                                    li.setAttribute('data-id', item.id);
+                                    li.setAttribute('data-title', item.title);
+                                    li.setAttribute('data-message', item.message);
+                                    li.setAttribute('data-date', item.date_str);
+                                    li.setAttribute('data-attachment', item.attachment || '');
+                                    li.setAttribute('data-read-count', item.read_recipients);
+                                    li.setAttribute('data-total-count', item.total_recipients);
+
+                                    li.innerHTML = `
+                                        <div class="notif-item">
+                                            <div class="sent-toast-icon">
+                                                <i class="fa fa-paper-plane"></i>
+                                            </div>
+                                            <div class="notif-info">
+                                                <span class="notif-subject">${item.title}</span>
+                                                <div class="notif-message-preview-sent">${item.message}</div>
+                                                <span class="notif-time" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                                    <span>${item.date_short}</span>
+                                                    <span style="font-weight: 700; color: var(--sb-hover-text);">Read: ${item.read_recipients}/${item.total_recipients}</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    `;
+                                    sentList.appendChild(li);
+                                });
+                            } else {
+                                sentList.innerHTML = `
+                                    <li style="padding: 30px 20px; text-align: center; color: var(--sb-icon); font-size: 13px;">
+                                        <i class="fa fa-paper-plane-o" style="font-size: 24px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
+                                        No sent notifications.
+                                    </li>
+                                `;
+                            }
+                        } else {
+                            sentList.innerHTML = `<li style="padding: 30px 20px; text-align: center; color: #ef4444; font-size: 13px;">Failed to load sent notifications.</li>`;
+                        }
+                    },
+                    error: function () {
+                        sentList.innerHTML = `<li style="padding: 30px 20px; text-align: center; color: #ef4444; font-size: 13px;">Error loading sent notifications.</li>`;
+                    }
+                });
+            }
+
+            // Fetch active staff list for specific staff selection
+            let staffListLoaded = false;
+            function loadStaffList() {
+                if (staffListLoaded) return;
+                const selectElement = document.querySelector('#notifPanelCompose select[name="staff_members"]');
+                if (!selectElement) return;
+
+                $.ajax({
+                    url: NOTIF_URLS.activeStaff,
+                    type: 'GET',
+                    success: function (res) {
+                        if (res.success) {
+                            if (res.staff) {
+                                selectElement.innerHTML = '';
+                                res.staff.forEach(s => {
+                                    const opt = document.createElement('option');
+                                    opt.value = s.id;
+                                    opt.textContent = `${s.name} (${s.role} - ${s.department})`;
+                                    selectElement.appendChild(opt);
+                                });
+                            }
+                            if (res.departments) {
+                                const deptContainer = document.getElementById('dynamic-dept-container');
+                                if (deptContainer) {
+                                    deptContainer.innerHTML = '';
+                                    res.departments.forEach(d => {
+                                        deptContainer.innerHTML += `<label style="font-weight: normal; margin-bottom: 0; cursor: pointer; display: flex; align-items: center; gap: 4px; color: var(--sb-text); font-size: 12px;"><input type="checkbox" name="departments" value="${d.id}"> ${d.name}</label>`;
+                                    });
+                                }
+                            }
+                            if (res.roles) {
+                                const roleContainer = document.getElementById('dynamic-role-container');
+                                if (roleContainer) {
+                                    roleContainer.innerHTML = '';
+                                    res.roles.forEach(r => {
+                                        roleContainer.innerHTML += `<label style="font-weight: normal; margin-bottom: 0; cursor: pointer; display: flex; align-items: center; gap: 4px; color: var(--sb-text); font-size: 12px;"><input type="checkbox" name="roles" value="${r.id}"> ${r.name}</label>`;
+                                    });
+                                }
+                            }
+                            staffListLoaded = true;
+                        }
+                    }
+                });
+            }
+
+            // Radio button audience toggles in compose view
+            function updateComposeVisibility() {
+                const checkedRadio = document.querySelector('#notifPanelCompose input[name="broadcast_type"]:checked');
+                const val = checkedRadio ? checkedRadio.value : '';
+
+                const sections = {
+                    'department': document.getElementById('dropdown-dept-section'),
+                    'role': document.getElementById('dropdown-role-section'),
+                    'specific': document.getElementById('dropdown-staff-section')
+                };
+
+                Object.keys(sections).forEach(key => {
+                    const section = sections[key];
+                    if (section) {
+                        if (val === key) {
+                            section.style.display = 'block';
+                        } else {
+                            section.style.display = 'none';
+                            // Clear inputs
+                            if (key === 'specific') {
+                                const select = section.querySelector('select');
+                                if (select) select.selectedIndex = -1;
+                            } else {
+                                const checkboxes = section.querySelectorAll('input[type="checkbox"]');
+                                checkboxes.forEach(cb => cb.checked = false);
+
+                                // Reset button texts
+                                if (key === 'department') {
+                                    const btn = document.getElementById('btnSelectAllDepts');
+                                    if (btn) btn.textContent = 'Select All';
+                                } else if (key === 'role') {
+                                    const btn = document.getElementById('btnSelectAllRoles');
+                                    if (btn) btn.textContent = 'Select All';
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Handle audience buttons styling and selection
+            $(document).on('click', '#notifPanelCompose .zen-audience-btn', function () {
+                const group = this.closest('.zen-audience-group');
+                group.querySelectorAll('.zen-audience-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
+                    updateComposeVisibility();
+                }
+            });
+
+            // AJAX Dynamic Notifications List Loading
+            function loadNotificationsList() {
+                const listContainer = document.querySelector('#notifPanelList .notif-list');
+                if (!listContainer) return;
+
+                $.ajax({
+                    url: NOTIF_URLS.list,
+                    type: 'GET',
+                    success: function (res) {
+                        if (res.success && res.notifications) {
+                            // Update badge counts
+                            const badge = document.getElementById('bellBadge');
+                            const unreadHeader = document.getElementById('inboxTabBadge');
+
+                            if (res.unread_count > 0) {
+                                if (badge) {
+                                    badge.textContent = res.unread_count;
+                                    badge.style.display = 'inline-block';
+                                } else if (bell) {
+                                    const newBadge = document.createElement('span');
+                                    newBadge.className = 'notification-badge';
+                                    newBadge.id = 'bellBadge';
+                                    newBadge.textContent = res.unread_count;
+                                    bell.appendChild(newBadge);
+                                }
+
+                                if (unreadHeader) {
+                                    unreadHeader.textContent = res.unread_count;
+                                    unreadHeader.style.display = 'inline-block';
+                                }
+                            } else {
+                                if (badge) badge.style.display = 'none';
+                                if (unreadHeader) unreadHeader.style.display = 'none';
+                            }
+
+                            if (res.notifications.length > 0) {
+                                listContainer.innerHTML = '';
+                                res.notifications.forEach((n, idx) => {
+                                    const readClass = n.is_read ? 'read' : 'unread';
+                                    const avatarClass = ['bg-blue', 'bg-green', 'bg-orange', 'bg-purple'][idx % 4];
+                                    const initials = (n.username || 'A').substring(0, 1).toUpperCase();
+
+                                    // Build the sender label with designation, e.g. "John • Manager" or "Administrator"
+                                    const senderLabel = n.sender_role ? `${n.sender} • ${n.sender_role}` : n.sender;
+
+                                    const li = document.createElement('li');
+                                    li.className = `notif-item ${readClass}`;
+                                    li.setAttribute('data-id', n.id);
+                                    li.setAttribute('data-sender', senderLabel);
+                                    li.setAttribute('data-title', n.title);
+                                    li.setAttribute('data-message', n.message);
+                                    li.setAttribute('data-date', n.date_str);
+                                    li.setAttribute('data-attachment', n.attachment || '');
+                                    li.setAttribute('data-read', n.is_read ? 'true' : 'false');
+
+                                    li.innerHTML = `
+                                        <div class="notif-item-row">
+                                            <div class="inbox-toast-icon">
+                                                <i class="fa fa-paper-plane"></i>
+                                            </div>
+                                            <div class="notif-info">
+                                                <span class="notif-sender">${senderLabel}</span>
+                                                <span class="notif-subject">${n.title}</span>
+                                                <div class="notif-message-preview">${n.message}</div>
+                                                <span class="notif-time">${n.date_short}</span>
+                                            </div>
+                                            <div class="notif-status-dot"></div>
+                                            <button type="button" class="notif-item-delete" title="Remove">
+                                                <i class="fa fa-times"></i>
+                                            </button>
+                                        </div>
+                                    `;
+                                    listContainer.appendChild(li);
+                                });
+                            } else {
+                                listContainer.innerHTML = `
+                                    <li style="padding: 30px 20px; text-align: center; color: var(--sb-icon); font-size: 13px;">
+                                        <i class="fa fa-envelope-o" style="font-size: 24px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
+                                        No notifications yet.
+                                    </li>
+                                `;
+                            }
+                        }
+                    }
+                });
+            }
+
+            updateComposeVisibility();
+
+            // Submit Compose Form via AJAX
+            const composeForm = document.getElementById('zenComposeFormDropdown');
+            if (composeForm) {
+                composeForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(this);
+
+                    // Disable submit button
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.textContent;
+                    submitBtn.textContent = 'Sending...';
+                    submitBtn.disabled = true;
+
+                    $.ajax({
+                        url: NOTIF_URLS.compose,
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (res) {
+                            submitBtn.textContent = originalText;
+                            submitBtn.disabled = false;
+
+                            if (res.success) {
+                                // Reset form
+                                composeForm.reset();
+                                // Set first button active again
+                                const firstBtn = document.querySelector('#notifPanelCompose .zen-audience-btn');
+                                if (firstBtn) {
+                                    firstBtn.click();
+                                }
+                                updateComposeVisibility();
+
+                                // Return to inbox tab
+                                selectTab('inbox');
+
+                                // Show success toast
+                                showZenToast('success', res.message || 'Notification sent successfully.');
+                            } else {
+                                // Show errors
+                                if (res.errors) {
+                                    let errMsgs = Object.values(res.errors).join('<br>');
+                                    showZenToast('error', errMsgs);
+                                } else {
+                                    showZenToast('error', res.error || 'Failed to send notification.');
+                                }
+                            }
+                        },
+                        error: function () {
+                            submitBtn.textContent = originalText;
+                            submitBtn.disabled = false;
+                            showZenToast('error', 'An error occurred while sending notification.');
+                        }
+                    });
+                });
+            }
+
+            function showZenToast(type, text) {
+                let swalType = 'info';
+                if (type === 'success') swalType = 'success';
+                else if (type === 'error' || type === 'danger') swalType = 'error';
+                else if (type === 'warning') swalType = 'warning';
+
+                Swal.fire({
+                    title: swalType.charAt(0).toUpperCase() + swalType.slice(1),
+                    html: text,
+                    icon: swalType,
+                    confirmButtonText: 'OK'
+                });
+            }
+
+            // Select/Deselect All Departments
+            const btnSelectAllDepts = document.getElementById('btnSelectAllDepts');
+            if (btnSelectAllDepts) {
+                btnSelectAllDepts.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const checkboxes = document.querySelectorAll('#dropdown-dept-section input[type="checkbox"]');
+                    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                    checkboxes.forEach(cb => cb.checked = !allChecked);
+                    btnSelectAllDepts.textContent = allChecked ? 'Select All' : 'Deselect All';
+                });
+            }
+
+            // Select/Deselect All Roles
+            const btnSelectAllRoles = document.getElementById('btnSelectAllRoles');
+            if (btnSelectAllRoles) {
+                btnSelectAllRoles.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const checkboxes = document.querySelectorAll('#dropdown-role-section input[type="checkbox"]');
+                    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                    checkboxes.forEach(cb => cb.checked = !allChecked);
+                    btnSelectAllRoles.textContent = allChecked ? 'Select All' : 'Deselect All';
+                });
+            }
+
+            // Initialize notifications fetch and poll every 30 seconds
+            loadNotificationsList();
+            setInterval(loadNotificationsList, 30000);
+
+            // Auto-open notification dropdown if URL query param notif_tab is present
+            const urlParams = new URLSearchParams(window.location.search);
+            const notifTab = urlParams.get('notif_tab');
+            if (notifTab && bell && dropdown) {
+                // Open dropdown
+                dropdown.classList.add('show');
+                selectTab(notifTab);
+
+                const notifId = urlParams.get('notif_id');
+                const sentId = urlParams.get('sent_id');
+
+                if (notifId) {
+                    let attempts = 0;
+                    const clickInterval = setInterval(() => {
+                        const item = document.querySelector(`#notifPanelList .notif-item[data-id="${notifId}"]`);
+                        if (item) {
+                            item.click();
+                            clearInterval(clickInterval);
+                        }
+                        attempts++;
+                        if (attempts > 20) clearInterval(clickInterval);
+                    }, 100);
+                } else if (sentId) {
+                    let attempts = 0;
+                    const clickInterval = setInterval(() => {
+                        const item = document.querySelector(`#sentNotifList .sent-notif-item[data-id="${sentId}"]`);
+                        if (item) {
+                            item.click();
+                            clearInterval(clickInterval);
+                        }
+                        attempts++;
+                        if (attempts > 20) clearInterval(clickInterval);
+                    }, 100);
+                }
+            }
+        });
+
+        // Dashboard Session Logic
+        sessionStorage.setItem('on_dashboard', 'true');
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                window.location.reload();
+            }
+        });
+    </script>
+    <script src="{% static 'js/form_preservation.js' %}"></script>
+</body>
+
+</html>

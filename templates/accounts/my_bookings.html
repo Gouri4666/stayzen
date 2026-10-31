@@ -1,0 +1,658 @@
+{% extends 'accounts/dashboard_base.html' %}
+
+{% block title %}My Bookings - StayZen{% endblock %}
+
+{% block extra_css %}
+.page-header { margin-bottom: 28px; text-align: center; }
+.page-header h2 {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--text-primary), #6c5ce7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+.page-header p { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+
+/* ---------- Filter bar ---------- */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding: 10px;
+}
+.filter-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.filter-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--border-color);
+    flex-shrink: 0;
+}
+.filter-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .03em; margin-right: 2px; }
+.chip-btn {
+    border: none;
+    background: var(--card-hover-bg);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 11px 24px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all .18s ease;
+    white-space: nowrap;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+.chip-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(0,0,0,0.1); }
+.chip-btn.active {
+    background: var(--text-primary);
+    color: var(--card-bg);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+}
+.date-filter-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card-hover-bg);
+    border-radius: 30px;
+    padding: 7px 8px 7px 18px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    transition: box-shadow .18s ease;
+}
+.date-filter-pill:hover { box-shadow: 0 5px 14px rgba(0,0,0,0.1); }
+.date-filter-pill .cal-icon { font-size: 14px; line-height: 1; flex-shrink: 0; }
+.date-input {
+    border: none;
+    background: none;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 0;
+    cursor: pointer;
+    max-width: 118px;
+}
+.date-input::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    width: 100%;
+    cursor: pointer;
+}
+.clear-date-btn {
+    border: none;
+    background: var(--text-highlight);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 7px 14px;
+    border-radius: 30px;
+    text-decoration: none;
+    display: none;
+}
+
+/* ---------- Section ---------- */
+.section-block { margin-bottom: 12px; }
+.section-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 38px 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    letter-spacing: -0.01em;
+    position: relative;
+    padding-left: 14px;
+}
+.section-title::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 2px;
+    bottom: 2px;
+    width: 4px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #f5c542, #f5a623);
+}
+.section-title .st-icon {
+    font-size: 18px;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1a1d23, #3a3f4b);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+}
+.section-title .count-badge {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #f5c542, #f5a623);
+    border-radius: 12px;
+    padding: 3px 11px;
+    margin-left: 2px;
+    box-shadow: 0 2px 8px rgba(245,166,35,0.3);
+}
+
+/* ---------- Card grid ---------- */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 22px;
+    margin-bottom: 8px;
+}
+.booking-card {
+    background: var(--card-bg);
+    border: none;
+    border-radius: 22px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease;
+    position: relative;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.12);
+    aspect-ratio: 3 / 4;
+}
+.booking-card:hover { transform: translateY(-4px); box-shadow: 0 18px 38px rgba(0,0,0,0.18); }
+
+/* ---------- Card image (full-bleed background) ---------- */
+.card-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--card-hover-bg);
+    overflow: hidden;
+}
+.card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.card-media-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    background: var(--card-hover-bg);
+    color: var(--text-muted);
+}
+.card-media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.35) 65%, rgba(0,0,0,0.75) 100%);
+    pointer-events: none;
+}
+.card-media .status-pill {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 2;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+/* ---------- Card body (glass overlay pinned to bottom of photo) ---------- */
+.card-body {
+    position: relative;
+    z-index: 1;
+    margin-top: auto;
+    padding: 14px 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.card-title-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.card-emoji {
+    width: 32px; height: 32px; flex-shrink: 0;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(6px);
+}
+.card-title { font-size: 17px; font-weight: 700; color: #fff; line-height: 1.25; text-shadow: 0 1px 6px rgba(0,0,0,0.3); }
+.card-subtitle { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.85); margin-top: 1px; display: flex; align-items: center; gap: 5px; }
+.card-subtitle .verified-dot {
+    width: 13px; height: 13px; border-radius: 50%;
+    background: #f5a623; color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 8px; flex-shrink: 0;
+}
+
+.card-divider { display: none; }
+
+.card-stats {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: rgba(20,20,20,0.45);
+    backdrop-filter: blur(10px);
+}
+.card-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; gap: 6px; }
+.card-row .label { color: rgba(255,255,255,0.65); font-size: 11px; font-weight: 600; }
+.card-row .value { color: #fff; font-weight: 600; text-align: right; }
+.card-row .value.highlight { color: #f5c542; font-weight: 700; }
+.card-stats .stat-block { display: flex; flex-direction: column; gap: 3px; }
+.card-stats .stat-block:last-child { align-items: flex-end; text-align: right; }
+.card-stats .stat-label { color: rgba(255,255,255,0.65); font-size: 10.5px; font-weight: 600; }
+.card-stats .stat-value { color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+.card-stats .stat-value.timer::before {
+    content: "";
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #f5c542;
+    display: inline-block;
+}
+.card-stats .divider-v { width: 1px; background: rgba(255,255,255,0.18); align-self: stretch; }
+
+.card-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+
+.status-pill { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+.status-pending { background: rgba(251, 191, 36, 0.85); color: #fff; }
+.status-booked { background: rgba(34, 197, 94, 0.85); color: #fff; }
+.status-confirmed { background: rgba(59, 130, 246, 0.85); color: #fff; }
+.status-checkedin { background: rgba(16, 185, 129, 0.85); color: #fff; }
+.status-cancelled { background: rgba(239, 68, 68, 0.85); color: #fff; }
+.status-completed { background: rgba(139, 92, 246, 0.85); color: #fff; }
+
+.card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; font-size: 10.5px; color: rgba(255,255,255,0.6); }
+
+.toggle-btn { background: none; border: none; color: var(--text-highlight); font-size: 13px; font-weight: 600; cursor: pointer; margin: 4px 0 8px; padding: 0; }
+.no-data { text-align: center; padding: 36px 20px; color: var(--text-muted); font-size: 14px; background: var(--card-bg); border: 1px dashed var(--border-color); border-radius: 14px; }
+.section-hidden { display: none !important; }
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>My Bookings</h2>
+</div>
+
+<!-- ===================== FILTER BAR ===================== -->
+<div class="filter-bar">
+    <div class="filter-group">
+        <span class="filter-label">Show</span>
+        <button class="chip-btn active" data-filter-type="all" onclick="filterByType('all', this)">All</button>
+        <button class="chip-btn" data-filter-type="room" onclick="filterByType('room', this)">🛏️ Rooms</button>
+        <button class="chip-btn" data-filter-type="event" onclick="filterByType('event', this)">🏛️ Events</button>
+        <button class="chip-btn" data-filter-type="table" onclick="filterByType('table', this)">🍽️ Tables</button>
+        <button class="chip-btn" data-filter-type="food" onclick="filterByType('food', this)">🍕 Food</button>
+    </div>
+    <div class="filter-divider"></div>
+    <div class="filter-group">
+        <div class="date-filter-pill">
+            <span class="cal-icon">📅</span>
+            <input type="date" class="date-input" id="dateFilter" onchange="filterByDate(this.value)">
+        </div>
+        <button class="clear-date-btn" id="clearDateBtn" onclick="clearDateFilter()">Clear</button>
+    </div>
+</div>
+
+<!-- ===================== ROOM BOOKINGS ===================== -->
+<div class="section-block" data-section="room">
+    <h3 class="section-title">
+        <span class="st-icon">🛏️</span> Room Bookings
+        {% if room_bookings %}<span class="count-badge">{{ room_bookings|length }}</span>{% endif %}
+    </h3>
+    {% if room_bookings %}
+    <div class="card-grid" id="roomGrid">
+        {% for b in room_bookings %}
+        <div class="booking-card data-card {% if forloop.counter > 4 %}section-hidden{% endif %}"
+             data-type="room"
+             data-date="{{ b.check_in|date:'Y-m-d' }}">
+            <div class="card-media">
+                {% if b.room.image %}
+                    <img src="{{ b.room.image.url }}" alt="Room {{ b.room.room_number }}" loading="lazy">
+                {% else %}
+                    <div class="card-media-fallback">🛏️</div>
+                {% endif %}
+                <span class="status-pill {% if b.status == 'Pending' %}status-pending{% elif b.status == 'Cancelled' %}status-cancelled{% elif b.status == 'Confirmed' %}status-confirmed{% elif b.status == 'Checked In' or b.status == 'CheckedIn' %}status-checkedin{% elif b.status == 'Completed' %}status-completed{% else %}status-booked{% endif %}">{{ b.status }}</span>
+            </div>
+
+            <div class="card-body">
+                <div class="card-top">
+                    <div class="card-title-wrap">
+                        <div>
+                            <div class="card-subtitle"><span class="verified-dot">✓</span> {{ b.check_in|date:"d M Y" }} → {{ b.check_out|date:"d M Y" }}</div>
+                            <div class="card-title">Room {{ b.room.room_number }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-stats">
+                    <div class="stat-block">
+                        <span class="stat-label">Total Amount</span>
+                        <span class="stat-value">₹{{ b.total_amount }}</span>
+                    </div>
+                    <div class="divider-v"></div>
+                    <div class="stat-block">
+                        <span class="stat-label">Pending Payment</span>
+                        <span class="stat-value" style="color:#f5c542;">₹{{ b.pending_payment }}</span>
+                    </div>
+                </div>
+
+                <div class="card-row" style="margin-top:2px;">
+                    <span class="label">Activities</span>
+                    <span class="value">
+                        {% if b.activitybooking_set.all %}
+                            {% for ab in b.activitybooking_set.all %}
+                                {{ ab.activity.activity_name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            None
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="card-pills">
+                    {% if b.is_resumable %}
+                        <a href="{% url 'resume_payment' booking_type='room' booking_id=b.id %}" class="status-pill" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; font-weight:600; cursor:pointer; background:#10b981; color:#ffffff;">
+                            Resume Payment 💳
+                        </a>
+                    {% else %}
+                        <span class="status-pill {% if b.payment_status == 'Pending' %}status-pending{% else %}status-booked{% endif %}">{{ b.payment_status }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="card-footer">
+                    <span>Booked on {{ b.created_at|date:"d M Y" }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% if room_bookings|length > 4 %}<button class="toggle-btn" onclick="toggleCards('roomGrid', this)">View More ▾</button>{% endif %}
+    {% else %}<div class="no-data">No room bookings.</div>{% endif %}
+</div>
+
+<!-- ===================== EVENT BOOKINGS ===================== -->
+<div class="section-block" data-section="event">
+    <h3 class="section-title">
+        <span class="st-icon">🏛️</span> Event Bookings
+        {% if event_bookings %}<span class="count-badge">{{ event_bookings|length }}</span>{% endif %}
+    </h3>
+    {% if event_bookings %}
+    <div class="card-grid" id="eventGrid">
+        {% for b in event_bookings %}
+        <div class="booking-card data-card {% if forloop.counter > 4 %}section-hidden{% endif %}"
+             data-type="event"
+             data-date="{{ b.start_date|date:'Y-m-d' }}">
+            <div class="card-media">
+                {% if b.hall.hall_image %}
+                    <img src="{{ b.hall.hall_image.url }}" alt="{{ b.hall.hall_name }}" loading="lazy">
+                {% else %}
+                    <div class="card-media-fallback">🏛️</div>
+                {% endif %}
+                <span class="status-pill {% if b.status == 'Pending' %}status-pending{% elif b.status == 'Cancelled' %}status-cancelled{% elif b.status == 'Confirmed' %}status-confirmed{% elif b.status == 'Checked In' or b.status == 'CheckedIn' %}status-checkedin{% elif b.status == 'Completed' %}status-completed{% else %}status-booked{% endif %}">{{ b.status }}</span>
+            </div>
+
+            <div class="card-body">
+                <div class="card-top">
+                    <div class="card-title-wrap">
+                        <div>
+                            <div class="card-subtitle"><span class="verified-dot">✓</span> {{ b.hall.hall_name }}</div>
+                            <div class="card-title">{{ b.event_name }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-stats">
+                    <div class="stat-block">
+                        <span class="stat-label">Date Range</span>
+                        <span class="stat-value">{{ b.start_date|date:"d M y" }} - {{ b.end_date|date:"d M y" }}</span>
+                    </div>
+                    <div class="divider-v"></div>
+                    <div class="stat-block">
+                        <span class="stat-label">Guests</span>
+                        <span class="stat-value">{{ b.guest_count }}</span>
+                    </div>
+                </div>
+
+                <div class="card-pills">
+                    {% if b.is_resumable %}
+                        <a href="{% url 'resume_payment' booking_type='event' booking_id=b.id %}" class="status-pill" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; font-weight:600; cursor:pointer; background:#10b981; color:#ffffff;">
+                            Resume Payment 💳
+                        </a>
+                    {% else %}
+                        <span class="status-pill {% if b.payment_status == 'Pending' %}status-pending{% else %}status-booked{% endif %}">{{ b.payment_status }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="card-footer">
+                    <span>Booked on {{ b.created_at|date:"d M Y" }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% if event_bookings|length > 4 %}<button class="toggle-btn" onclick="toggleCards('eventGrid', this)">View More ▾</button>{% endif %}
+    {% else %}<div class="no-data">No event bookings.</div>{% endif %}
+</div>
+
+<!-- ===================== TABLE RESERVATIONS ===================== -->
+<div class="section-block" data-section="table">
+    <h3 class="section-title">
+        <span class="st-icon">🍽️</span> Table Reservations
+        {% if table_reservations %}<span class="count-badge">{{ table_reservations|length }}</span>{% endif %}
+    </h3>
+    {% if table_reservations %}
+    <div class="card-grid" id="tableGrid">
+        {% for r in table_reservations %}
+        <div class="booking-card data-card {% if forloop.counter > 4 %}section-hidden{% endif %}"
+             data-type="table"
+             data-date="{{ r.reservation_date|date:'Y-m-d' }}">
+            <div class="card-media">
+                {% if r.table.table_image %}
+                    <img src="{{ r.table.table_image.url }}" alt="Table {{ r.table.table_number }}" loading="lazy">
+                {% else %}
+                    <div class="card-media-fallback">🍽️</div>
+                {% endif %}
+                <span class="status-pill {% if r.status == 'Pending' %}status-pending{% elif r.status == 'Cancelled' %}status-cancelled{% elif r.status == 'Confirmed' %}status-confirmed{% elif r.status == 'Checked In' or r.status == 'CheckedIn' %}status-checkedin{% elif r.status == 'Completed' %}status-completed{% else %}status-booked{% endif %}">{{ r.status }}</span>
+            </div>
+
+            <div class="card-body">
+                <div class="card-top">
+                    <div class="card-title-wrap">
+                        <div>
+                            <div class="card-subtitle"><span class="verified-dot">✓</span> {{ r.reservation_date|date:"d M Y" }} · {{ r.reservation_time|time:"H:i" }}</div>
+                            <div class="card-title">Table {{ r.table.table_number }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-stats">
+                    <div class="stat-block">
+                        <span class="stat-label">Guests</span>
+                        <span class="stat-value">{{ r.guests }}</span>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <span>Booked on {{ r.created_at|date:"d M Y" }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% if table_reservations|length > 4 %}<button class="toggle-btn" onclick="toggleCards('tableGrid', this)">View More ▾</button>{% endif %}
+    {% else %}<div class="no-data">No table reservations.</div>{% endif %}
+</div>
+
+<!-- ===================== FOOD & BEVERAGE ===================== -->
+<div class="section-block" data-section="food">
+    <h3 class="section-title">
+        <span class="st-icon">🍕</span> Food & Beverage
+        {% if food_orders %}<span class="count-badge">{{ food_orders|length }}</span>{% endif %}
+    </h3>
+    {% if food_orders %}
+    <div class="card-grid" id="foodGrid">
+        {% for order in food_orders %}
+        <div class="booking-card data-card {% if forloop.counter > 4 %}section-hidden{% endif %}"
+             data-type="food"
+             data-date="{{ order.order_date|date:'Y-m-d' }}">
+            <div class="card-media">
+                {% if order.items.first.food.image %}
+                    <img src="{{ order.items.first.food.image.url }}" alt="{{ order.items.first.food.item_name }}" loading="lazy">
+                {% else %}
+                    <div class="card-media-fallback">🍕</div>
+                {% endif %}
+                <span class="status-pill {% if order.status == 'Pending' %}status-pending{% elif order.status == 'Cancelled' %}status-cancelled{% elif order.status == 'Confirmed' %}status-confirmed{% elif order.status == 'Checked In' or order.status == 'CheckedIn' %}status-checkedin{% elif order.status == 'Completed' %}status-completed{% else %}status-booked{% endif %}">{{ order.status }}</span>
+            </div>
+
+            <div class="card-body">
+                <div class="card-top">
+                    <div class="card-title-wrap">
+                        <div>
+                            <div class="card-subtitle"><span class="verified-dot">✓</span> {{ order.order_type }}</div>
+                            <div class="card-title">Order #{{ order.id }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-stats">
+                    <div class="stat-block">
+                        <span class="stat-label">Total</span>
+                        <span class="stat-value">₹{{ order.total_amount }}</span>
+                    </div>
+                </div>
+
+                <div class="card-pills">
+                    <span class="status-pill {% if order.serving_status == 'Preparing' %}status-pending{% else %}status-booked{% endif %}">{{ order.serving_status|default:"Preparing" }}</span>
+                </div>
+
+                <div class="card-footer">
+                    <span>Ordered on {{ order.order_date|date:"d M Y" }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% if food_orders|length > 4 %}<button class="toggle-btn" onclick="toggleCards('foodGrid', this)">View More ▾</button>{% endif %}
+    {% else %}<div class="no-data">No food orders.</div>{% endif %}
+</div>
+
+<div class="no-data" id="noResultsMsg" style="display:none;">No bookings match the selected filters.</div>
+
+<script>
+let currentType = 'all';
+let currentDate = '';
+
+function applyFilters() {
+    const sections = document.querySelectorAll('.section-block');
+    let anyVisible = false;
+
+    sections.forEach(section => {
+        const sectionType = section.getAttribute('data-section');
+        const sectionMatchesType = (currentType === 'all' || currentType === sectionType);
+        const cards = section.querySelectorAll('.data-card');
+        const grid = section.querySelector('.card-grid');
+        const toggleBtn = section.querySelector('.toggle-btn');
+        const isExpanded = !!(toggleBtn && toggleBtn.innerText.includes('Show Less'));
+        let visibleInSection = 0;
+
+        cards.forEach((card, index) => {
+            const cardDate = card.getAttribute('data-date');
+            const matchesDate = (!currentDate || cardDate === currentDate);
+            const matchesFilters = sectionMatchesType && matchesDate;
+
+            // Cards beyond the first 4 stay hidden unless this grid is
+            // currently expanded ("Show Less" showing) — keep View More's
+            // expand/collapse state intact instead of fighting it.
+            const withinDefaultLimit = index < 4;
+            const show = matchesFilters && (withinDefaultLimit || isExpanded);
+
+            card.classList.toggle('section-hidden', !show);
+            card.style.display = show ? 'flex' : 'none';
+            if (show) visibleInSection++;
+        });
+
+        const noDataEl = section.querySelector('.no-data');
+
+        if (!sectionMatchesType) {
+            section.classList.add('section-hidden');
+        } else {
+            section.classList.remove('section-hidden');
+            if (visibleInSection === 0 && cards.length > 0) {
+                if (noDataEl) noDataEl.style.display = 'none';
+                if (grid) grid.insertAdjacentHTML('afterend', '');
+            }
+            if (toggleBtn) {
+                // Hide the toggle button while a date filter is active, or
+                // when there are 4 or fewer matching cards to expand.
+                const matchingCount = Array.from(cards).filter(card => {
+                    const cardDate = card.getAttribute('data-date');
+                    const matchesDate = (!currentDate || cardDate === currentDate);
+                    return sectionMatchesType && matchesDate;
+                }).length;
+                toggleBtn.style.display = (currentDate || matchingCount <= 4) ? 'none' : '';
+            }
+            if (visibleInSection > 0) anyVisible = true;
+        }
+    });
+
+    document.getElementById('noResultsMsg').style.display = anyVisible ? 'none' : 'block';
+}
+
+function filterByType(type, btn) {
+    currentType = type;
+    document.querySelectorAll('.chip-btn[data-filter-type]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilters();
+}
+
+function filterByDate(value) {
+    currentDate = value;
+    document.getElementById('clearDateBtn').style.display = value ? 'inline-block' : 'none';
+    applyFilters();
+}
+
+function clearDateFilter() {
+    currentDate = '';
+    document.getElementById('dateFilter').value = '';
+    document.getElementById('clearDateBtn').style.display = 'none';
+    applyFilters();
+}
+
+function toggleCards(gridId, btn) {
+    const grid = document.getElementById(gridId);
+    const cards = grid.querySelectorAll('.data-card');
+    const isExpanding = btn.innerText.includes('View More');
+
+    cards.forEach((card, index) => {
+        if (index >= 4) {
+            const matchesType = (currentType === 'all' || currentType === card.getAttribute('data-type'));
+            const matchesDate = (!currentDate || card.getAttribute('data-date') === currentDate);
+            const show = isExpanding && matchesType && matchesDate;
+
+            // Toggle the hidden class first so the !important display:none
+            // rule no longer overrides the inline style, then set the
+            // inline display to put the card back into the grid's normal
+            // flow (so it wraps into rows instead of leaving stale state).
+            card.classList.toggle('section-hidden', !show);
+            card.style.display = show ? 'flex' : 'none';
+        }
+    });
+
+    btn.innerHTML = isExpanding ? 'Show Less ▴' : 'View More ▾';
+}
+</script>
+{% endblock %}
+

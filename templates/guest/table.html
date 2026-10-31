@@ -1,0 +1,1004 @@
+{% extends 'guest/base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'guest/css/event.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<style>
+    /* ==========================================================================
+       Premium Hero Banner Setup with Navbar Protection Overlay
+       ========================================================================== */
+    .restaurant-hero {
+        position: relative;
+        width: 100%;
+        min-height: 420px;
+        background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.1) 30%, rgba(0, 0, 0, 0.55) 100%),
+        url('{% static "guest/images/table2.jpeg" %}');
+        background-size: cover;
+        background-position: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 120px 20px 140px 20px;
+    }
+
+    .restaurant-hero-content {
+        max-width: 750px;
+        color: #ffffff;
+        z-index: 2;
+    }
+
+    .restaurant-hero-title {
+        font-family: 'Gilda Display', 'Playfair Display', serif;
+        font-size: 52px;
+        font-weight: 500;
+        line-height: 1.2;
+        margin-bottom: 15px;
+        color: #c5a880;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .restaurant-hero-subtitle {
+        font-size: 16px;
+        font-weight: 300;
+        letter-spacing: 1px;
+        opacity: 0.95;
+        text-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+    }
+
+    /* ==========================================================================
+       Adaptive Overlaid Filter Box Layout Configuration
+       ========================================================================== */
+    .overlapping-filter-container {
+        margin-top: -65px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .field-error {
+        display: block;
+        margin-top: 2px;
+        font-size: 12px;
+        color: #ef4444;
+        min-height: 14px;
+    }
+
+    .field-invalid {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08) !important;
+    }
+
+    .filter-box {
+        background: #ffffff;
+        padding: 28px;
+        border-radius: 18px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .filter-box select,
+    .filter-box input {
+        height: 52px;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        padding: 10px 16px;
+        width: 100%;
+        background-color: #f9fafb;
+        font-size: 14px;
+        font-weight: 500;
+        color: #111827;
+        box-sizing: border-box;
+        transition: all 0.2s ease;
+    }
+
+    .filter-box select:focus,
+    .filter-box input:focus {
+        border-color: #1c1d1f;
+        background-color: #ffffff;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(28, 29, 31, 0.08);
+    }
+
+    .filter-label-luxury {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #374151;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .filter-btn {
+        background: #1c1d1f !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 10px !important;
+        font-size: 14px;
+        font-weight: 600;
+        height: 52px;
+        padding: 0 24px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .filter-btn:hover {
+        background: #000000 !important;
+    }
+
+    .reset-btn {
+        background: #f87171 !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 10px !important;
+        font-size: 14px;
+        font-weight: 600;
+        height: 52px;
+        padding: 0 24px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        transition: background-color 0.2s ease;
+    }
+
+    .reset-btn:hover {
+        background: #ef4444 !important;
+        color: #ffffff !important;
+    }
+
+    /* ==========================================================================
+       Premium Content Table Cards System styling
+       ========================================================================== */
+    .table-luxury-card {
+        border-radius: 16px !important;
+        overflow: hidden;
+        background: #ffffff;
+        border: none !important;
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.04) !important;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .table-luxury-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .table-card-title {
+        font-family: 'Gilda Display', 'Playfair Display', serif;
+        font-size: 28px;
+        color: #1c1d1f;
+        margin-bottom: 15px;
+    }
+
+    .table-details-text {
+        font-size: 14px;
+        color: #555555;
+        margin-bottom: 8px;
+    }
+
+    .table-details-text strong {
+        color: #1c1d1f;
+        font-weight: 600;
+    }
+
+    .btn-reserve-action {
+        background: #2563eb !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        padding: 12px 20px !important;
+        border-radius: 8px !important;
+        border: none !important;
+        transition: background-color 0.3s ease !important;
+    }
+
+    .btn-reserve-action:hover {
+        background: #1d4ed8 !important;
+    }
+
+    .show-more-btn {
+        background: transparent;
+        color: #1c1d1f;
+        border: 2px solid #1c1d1f;
+        font-weight: 600;
+        padding: 12px 40px;
+        border-radius: 30px;
+        transition: all 0.3s ease;
+    }
+
+    .show-more-btn:hover {
+        background: #1c1d1f;
+        color: #ffffff;
+    }
+
+    /* Flatpickr Calendar Fixes & Overrides */
+    .flatpickr-day.flatpickr-disabled.date-reserved {
+        opacity: 0.85;
+        text-decoration: line-through !important;
+    }
+
+    .flatpickr-calendar {
+        z-index: 99999 !important;
+        background: #ffffff !important;
+        border: 1px solid #e0e0e0 !important;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .flatpickr-month {
+        height: 40px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .flatpickr-calendar .flatpickr-current-month {
+        position: relative !important;
+        left: 0 !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        height: 34px !important;
+        padding: 0 40px !important;
+        box-sizing: border-box !important;
+    }
+
+    .flatpickr-calendar .flatpickr-monthDropdown-months {
+        padding: 4px 24px 4px 8px !important;
+        height: 30px !important;
+        font-size: 14px !important;
+        color: #1c1d1f !important;
+        background-color: #ffffff !important;
+        border: 1px solid rgba(197, 168, 128, 0.3) !important;
+        border-radius: 6px !important;
+        width: auto !important;
+        display: inline-block !important;
+        cursor: pointer !important;
+    }
+
+    .flatpickr-calendar .numInputWrapper {
+        width: 75px !important;
+        display: inline-block !important;
+        position: relative !important;
+    }
+
+    .flatpickr-calendar .numInputWrapper input.cur-year {
+        padding: 4px 6px !important;
+        height: 30px !important;
+        font-size: 14px !important;
+        color: #1c1d1f !important;
+        background-color: #ffffff !important;
+        width: 100% !important;
+        display: inline-block !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Guests hint text under the field in the booking sidebar */
+    #guestsHint {
+        display: block !important;
+        margin-top: 4px;
+        font-size: 12px;
+        color: #6b7280 !important;
+    }
+
+    @media (max-width: 767px) {
+        .overlapping-filter-container {
+            margin-top: -30px;
+        }
+
+        .restaurant-hero-title {
+            font-size: 36px;
+        }
+    }
+</style>
+
+<div class="restaurant-hero">
+    <div class="restaurant-hero-content">
+        <h1 class="restaurant-hero-title">Restaurant Tables</h1>
+        <p class="restaurant-hero-subtitle">Comfortable accommodations designed to enhance every stay.</p>
+    </div>
+</div>
+
+<div class="container overlapping-filter-container mb-5">
+    <div class="filter-box">
+        <form method="GET" class="d-flex align-items-end gap-3 flex-wrap" id="tableFilterForm">
+
+            <div style="flex:1; min-width:180px;">
+                <label class="filter-label-luxury">Table Type</label>
+                <select name="table_type">
+                    <option value="">All Types</option>
+                    <option value="Indoor" {% if request.GET.table_type == 'Indoor' %}selected{% endif %}>Indoor</option>
+                    <option value="Outdoor" {% if request.GET.table_type == 'Outdoor' %}selected{% endif %}>Outdoor</option>
+                    <option value="VIP" {% if request.GET.table_type == 'VIP' %}selected{% endif %}>VIP</option>
+                    <option value="Pool Side" {% if request.GET.table_type == 'Pool Side' %}selected{% endif %}>Pool Side</option>
+                    <option value="Window Side" {% if request.GET.table_type == 'Window Side' %}selected{% endif %}>Window Side</option>
+                    <option value="Garden Side" {% if request.GET.table_type == 'Garden Side' %}selected{% endif %}>Garden Side</option>
+                    <option value="Rooftop" {% if request.GET.table_type == 'Pool Side' %}selected{% endif %}>Rooftop</option>
+                    <option value="Private Dining" {% if request.GET.table_type == 'Pool Side' %}selected{% endif %}>Private Dining</option>
+                </select>
+            </div>
+
+            <div style="flex:1; min-width:160px;">
+                <label class="filter-label-luxury">Minimum Capacity</label>
+                <input type="number" name="capacity" placeholder="Enter Capacity" value="{{ request.GET.capacity }}">
+            </div>
+
+            <div style="flex:1; min-width:160px;">
+                <label class="filter-label-luxury">Date</label>
+                <input type="date" name="date" id="filterDate" placeholder="Select date" value="{{ request.GET.date }}" autocomplete="off" min="{% now 'Y-m-d' %}">
+            </div>
+
+            <div style="flex:1; min-width:140px;">
+                <label class="filter-label-luxury">Start Time</label>
+                <input type="time" name="time" id="filterTime" value="{{ request.GET.time }}">
+            </div>
+
+            <div style="flex:1; min-width:140px;">
+                <label class="filter-label-luxury">End Time</label>
+                <input type="time" name="end_time" id="filterEndTime" value="{{ request.GET.end_time }}">
+            </div>
+
+            <button type="submit" class="filter-btn" style="width:140px;">
+                Search
+            </button>
+
+            <a href="{% url 'table_list_guest' %}" class="reset-btn" style="width:120px;">
+                Reset
+            </a>
+
+        </form>
+    </div>
+</div>
+
+<div class="container mb-5">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-info rounded-3 shadow-sm border-0">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="row g-4" id="tableGridContainer">
+        {% for table in tables %}
+        <div class="col-lg-4 col-md-6 table-item-card">
+            <div class="card table-luxury-card h-100">
+
+                {% if table.table_image %}
+                <img src="{{ table.table_image.url }}" class="card-img-top" style="height: 260px; object-fit: cover;"
+                    alt="Table View">
+                {% else %}
+                <img src="{% static 'guest/images/default-table.jpg' %}" class="card-img-top"
+                    style="height: 260px; object-fit: cover;" alt="Default Table View">
+                {% endif %}
+
+                <div class="card-body p-4 d-flex flex-column">
+                    <h4 class="table-card-title">Table {{ table.table_number }}</h4>
+
+                    <div class="mb-4">
+                        <p class="table-details-text"><strong>Capacity:</strong> {{ table.table_capacity }}</p>
+                        <p class="table-details-text"><strong>Location:</strong> {{ table.location }}</p>
+                          <p class="table-details-text"><strong>Price:</strong> <span class="fw-bold" style="color: #6d28d9;">₹{{ table.price }}</span></p>
+                    
+                    </div>
+
+                    <div class="mt-auto pt-2">
+                        {% if table.status == 'Maintenance' %}
+                        <button class="btn btn-secondary w-100 py-2.5" disabled
+                            style="background-color: #cbd5e1 !important; color: #64748b !important; border: none !important; cursor: not-allowed !important; pointer-events: none; border-radius: 8px;">
+                            Maintenance
+                        </button>
+                        {% else %}
+                        <button class="btn btn-reserve-action w-100 openBooking" data-id="{{ table.id }}"
+                            data-table="{{ table.table_number }}" data-price="{{ table.price }}"
+                            data-capacity="{{ table.table_capacity }}">
+                            Reserve Now
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <p class="text-muted" style="font-size: 18px;">No premium tables match your current filtering adjustments.
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="text-center mt-5 d-none" id="showMoreWrapper">
+        <button type="button" class="btn show-more-btn" id="loadMoreBtn">Show More</button>
+    </div>
+</div>
+
+<div class="booking-sidebar" id="bookingSidebar">
+    <span class="close-btn" id="closeBooking">&times;</span>
+    <h3>Reserve Table</h3>
+
+    <form method="POST" id="tableBookingForm">
+        {% csrf_token %}
+        <input type="hidden" name="table_id" id="selectedTable">
+
+        <label>Table</label>
+        <input type="text" id="tableDisplay" readonly>
+
+        {% if not request.user.is_authenticated %}
+        <label>Name</label>
+        <input type="text" name="customer_name" id="customerName" placeholder="Enter your name" required>
+        <small class="field-error" id="nameError"></small>
+
+        <label>Phone</label>
+        <input type="text" name="phone" id="phoneInput" placeholder="10-digit phone number" maxlength="10" required>
+        <small class="field-error" id="phoneError"></small>
+
+        <label>Email</label>
+        <input type="email" name="email" id="emailInput" placeholder="Enter your email" required>
+        <small class="field-error" id="emailError"></small>
+        {% endif %}
+
+        <label>Date</label>
+        <input type="date" name="reservation_date" id="reservation_date" required>
+
+        <label>Start Time</label>
+        <input type="time" name="reservation_time" id="reservation_time" required>
+
+        <label>End Time</label>
+        <input type="time" name="end_time" id="end_time" required>
+        <small class="field-error" id="timeError"></small>
+
+        <label>Guests</label>
+        <input type="number" name="guests" id="guestsInput" min="1" required>
+        <small id="guestsHint"></small>
+
+        <div id="priceDisplayWrapper" class="mt-3 mb-3 p-3 bg-light rounded" style="display:none; border:1px solid #e2e8f0; font-size: 14px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="color: #64748b;">Table Price:</span>
+                <span id="formTablePrice" style="font-weight: 600; color: #1e293b;">₹0.00/hr</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="color: #64748b;">Duration:</span>
+                <span id="formDuration" style="font-weight: 600; color: #1e293b;">0 hrs</span>
+            </div>
+            <hr style="margin: 8px 0; border-top: 1px solid #cbd5e1;">
+            <div style="display: flex; justify-content: space-between;">
+                <span style="font-weight: 700; color: #2563eb;">Total Price:</span>
+                <span id="formTotalPrice" style="font-weight: 700; color: #2563eb; font-size: 16px;">₹0.00</span>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">
+            Confirm Reservation
+        </button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        // --- ELEMENT REFERENCES ---
+        const itemsPerPage = 6;
+        let currentItemCount = itemsPerPage;
+        const showMoreWrapper = document.getElementById("showMoreWrapper");
+        const loadMoreBtn = document.getElementById("loadMoreBtn");
+
+        const filterForm = document.getElementById("tableFilterForm");
+        const filterDateInput = document.getElementById("filterDate");
+        const filterTimeInput = document.getElementById("filterTime");
+        const filterEndTimeInput = document.getElementById("filterEndTime");
+        const tableTypeSelect = filterForm.querySelector('select[name="table_type"]');
+        const capacityInput = filterForm.querySelector('input[name="capacity"]');
+        const tableGridContainer = document.getElementById("tableGridContainer");
+
+        const sidebar = document.getElementById("bookingSidebar");
+        const reservationDateInput = document.getElementById("reservation_date");
+        const reservationTimeInput = document.getElementById("reservation_time");
+        const endTimeInput = document.getElementById("end_time");
+        const guestsInputEl = document.getElementById("guestsInput");
+
+        let tablePicker = null;
+        let selectedTablePrice = 0;
+
+        // --- PAGINATION (re-queries DOM live, safe after filter swaps) ---
+        function updatePaginationVisibility() {
+            const liveCards = document.querySelectorAll(".table-item-card");
+            liveCards.forEach((card, index) => {
+                card.style.setProperty("display", index < currentItemCount ? "block" : "none", "important");
+            });
+            if (liveCards.length > currentItemCount) {
+                showMoreWrapper.classList.remove("d-none");
+            } else {
+                showMoreWrapper.classList.add("d-none");
+            }
+        }
+
+        function resetPagination() {
+            currentItemCount = itemsPerPage;
+            updatePaginationVisibility();
+        }
+
+        if (document.querySelectorAll(".table-item-card").length > 0) {
+            updatePaginationVisibility();
+        }
+
+        loadMoreBtn.addEventListener("click", function () {
+            currentItemCount += itemsPerPage;
+            updatePaginationVisibility();
+        });
+
+        // --- FLATPICKR FOR FILTER DATE ---
+        // Native date picker used instead of flatpickr for the filter date.
+
+
+        // --- DYNAMIC AVAILABILITY FILTER (no page reload) ---
+        let filterDebounceTimer = null;
+
+        function fetchFilteredTables() {
+            const d = filterDateInput ? filterDateInput.value : '';
+            const t = filterTimeInput ? filterTimeInput.value : '';
+            const e = filterEndTimeInput ? filterEndTimeInput.value : '';
+
+            if (t && e && e <= t) {
+                alert("End time must be after start time.");
+                filterEndTimeInput.value = '';
+                return;
+            }
+            if ((t && !e) || (e && !t)) return;   // half-filled time range, wait
+            if ((t || e) && !d) return;           // time without date, wait
+
+            const params = new URLSearchParams(new FormData(filterForm));
+            const url = `${window.location.pathname}?${params.toString()}`;
+
+            tableGridContainer.style.opacity = "0.5";
+
+            fetch(url)
+                .then(r => r.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, "text/html");
+                    const newGrid = doc.getElementById("tableGridContainer");
+
+                    if (newGrid) {
+                        tableGridContainer.innerHTML = newGrid.innerHTML;
+                    }
+                    tableGridContainer.style.opacity = "1";
+
+                    window.history.replaceState(null, '', url);
+
+                    bindOpenBookingButtons();
+                    resetPagination();
+                })
+                .catch(err => {
+                    console.error("Filter fetch failed:", err);
+                    tableGridContainer.style.opacity = "1";
+                });
+        }
+
+        function debouncedFilter() {
+            clearTimeout(filterDebounceTimer);
+            filterDebounceTimer = setTimeout(fetchFilteredTables, 350);
+        }
+
+        filterForm.addEventListener("submit", function (ev) {
+            ev.preventDefault();
+            fetchFilteredTables();
+        });
+
+        if (filterDateInput) filterDateInput.addEventListener("change", debouncedFilter);
+        if (filterTimeInput) filterTimeInput.addEventListener("change", debouncedFilter);
+        if (filterEndTimeInput) filterEndTimeInput.addEventListener("change", debouncedFilter);
+        if (tableTypeSelect) tableTypeSelect.addEventListener("change", debouncedFilter);
+        if (capacityInput) capacityInput.addEventListener("input", debouncedFilter);
+
+        // --- LIVE FIELD VALIDATION ---
+        const customerNameInput = document.getElementById("customerName");
+        const phoneInputEl = document.getElementById("phoneInput");
+        const emailInputEl = document.getElementById("emailInput");
+        const nameError = document.getElementById("nameError");
+        const phoneError = document.getElementById("phoneError");
+        const emailError = document.getElementById("emailError");
+        const timeError = document.getElementById("timeError");
+        const bookingForm = sidebar.querySelector("form");
+
+        // function validateName() {
+        //     if (!customerNameInput) return true;
+        //     const val = customerNameInput.value.trim();
+        //     if (!val) {
+        //         nameError.textContent = "Name is required.";
+        //         customerNameInput.classList.add("field-invalid");
+        //         return false;
+        //     }
+        //     if (val.length < 2) {
+        //         nameError.textContent = "Name must be at least 2 characters.";
+        //         customerNameInput.classList.add("field-invalid");
+        //         return false;
+        //     }
+        //     nameError.textContent = "";
+        //     customerNameInput.classList.remove("field-invalid");
+        //     return true;
+        // }
+
+        function validateName() {
+            if (!customerNameInput) return true;
+            const val = customerNameInput.value.trim();
+            const nameRegex = /^[A-Za-z\s]+$/;
+
+            if (!val) {
+                nameError.textContent = "Name is required.";
+                customerNameInput.classList.add("field-invalid");
+                return false;
+            }
+            if (val.length < 2) {
+                nameError.textContent = "Name must be at least 2 characters.";
+                customerNameInput.classList.add("field-invalid");
+                return false;
+            }
+            if (!nameRegex.test(val)) {
+                nameError.textContent = "Name can only contain alphabets.";
+                customerNameInput.classList.add("field-invalid");
+                return false;
+            }
+            nameError.textContent = "";
+            customerNameInput.classList.remove("field-invalid");
+            return true;
+        }
+        function validatePhone() {
+            if (!phoneInputEl) return true;
+            const val = phoneInputEl.value.trim();
+            if (!/^\d{10}$/.test(val)) {
+                phoneError.textContent = "Enter a valid 10-digit phone number.";
+                phoneInputEl.classList.add("field-invalid");
+                return false;
+            }
+            phoneError.textContent = "";
+            phoneInputEl.classList.remove("field-invalid");
+            return true;
+        }
+
+        function validateEmail() {
+            if (!emailInputEl) return true;
+            const val = emailInputEl.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(val)) {
+                emailError.textContent = "Enter a valid email address.";
+                emailInputEl.classList.add("field-invalid");
+                return false;
+            }
+            emailError.textContent = "";
+            emailInputEl.classList.remove("field-invalid");
+            return true;
+        }
+
+        function validateTimes() {
+            const start = reservationTimeInput ? reservationTimeInput.value : '';
+            const end = endTimeInput ? endTimeInput.value : '';
+            if (start && end && end <= start) {
+                timeError.textContent = "End time must be after start time.";
+                if (endTimeInput) endTimeInput.classList.add("field-invalid");
+                return false;
+            }
+            timeError.textContent = "";
+            if (endTimeInput) endTimeInput.classList.remove("field-invalid");
+            return true;
+        }
+
+        function validateAllFields() {
+            const validName = validateName();
+            const validPhone = validatePhone();
+            const validEmail = validateEmail();
+            const validTimes = validateTimes();
+            return validName && validPhone && validEmail && validTimes;
+        }
+
+        // if (customerNameInput) customerNameInput.addEventListener("input", validateName);
+        
+        if (customerNameInput) {
+            customerNameInput.addEventListener("input", function () {
+                this.value = this.value.replace(/[^A-Za-z\s]/g, "");
+                validateName();
+            });
+        }
+        
+        if (phoneInputEl) {
+            phoneInputEl.addEventListener("input", function () {
+                this.value = this.value.replace(/\D/g, "").slice(0, 10);
+                validatePhone();
+            });
+            {% if not request.user.is_authenticated %}
+            phoneInputEl.addEventListener("blur", function () {
+                const val = this.value.trim();
+                if (val && /^\d{10}$/.test(val)) {
+                    fetch("{% url 'api_check_phone' %}?phone=" + encodeURIComponent(val))
+                        .then(response => response.json())
+                        .then(data => {
+                            const submitBtn = bookingForm.querySelector("button[type='submit']");
+                            if (data.exists) {
+                                phoneError.textContent = "please login for booking in guest side";
+                                phoneInputEl.classList.add("field-invalid");
+                                if (submitBtn) submitBtn.disabled = true;
+                            } else {
+                                phoneError.textContent = "";
+                                phoneInputEl.classList.remove("field-invalid");
+                                if (submitBtn) submitBtn.disabled = false;
+                            }
+                        });
+                }
+            });
+            {% endif %}
+        }
+        if (emailInputEl) {
+            emailInputEl.addEventListener("input", validateEmail);
+            {% if not request.user.is_authenticated %}
+            emailInputEl.addEventListener("blur", function () {
+                const val = this.value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (val && emailRegex.test(val)) {
+                    fetch("{% url 'api_check_email' %}?email=" + encodeURIComponent(val))
+                        .then(response => response.json())
+                        .then(data => {
+                            const submitBtn = bookingForm.querySelector("button[type='submit']");
+                            if (data.exists) {
+                                emailError.textContent = "please login for booking in guest side";
+                                emailInputEl.classList.add("field-invalid");
+                                if (submitBtn) submitBtn.disabled = true;
+                            } else {
+                                emailError.textContent = "";
+                                emailInputEl.classList.remove("field-invalid");
+                                if (submitBtn) submitBtn.disabled = false;
+                            }
+                        });
+                }
+            });
+            {% endif %}
+        }
+        if (reservationTimeInput) reservationTimeInput.addEventListener("change", validateTimes);
+        if (endTimeInput) endTimeInput.addEventListener("change", validateTimes);
+
+        bookingForm.addEventListener("submit", function (ev) {
+            if (!validateAllFields()) {
+                ev.preventDefault();
+            }
+        });
+
+        // --- BOOKING SIDEBAR HELPERS ---
+        function formatDate(date) {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1);
+            let day = '' + d.getDate();
+            const year = d.getFullYear();
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+            return [year, month, day].join('-');
+        }
+
+        function initPicker(booked) {
+            if (tablePicker) {
+                tablePicker.destroy();
+            }
+            tablePicker = flatpickr(reservationDateInput, {
+                minDate: 'today',
+                disable: booked,
+                dateFormat: 'Y-m-d',
+                monthSelectorType: 'dropdown',
+                onDayCreate: function (dObj, dStr, fp, dayElem) {
+                    if (!dayElem.dateObj) return;
+                    const dateStr = formatDate(dayElem.dateObj);
+                    if (booked.includes(dateStr)) {
+                        dayElem.classList.add('date-reserved');
+                    }
+                }
+            });
+        }
+
+        function updateGuestPricePreview() {
+            const priceWrapper = document.getElementById("priceDisplayWrapper");
+            if (!priceWrapper) return;
+
+            if (selectedTablePrice > 0) {
+                priceWrapper.style.display = "block";
+            } else {
+                priceWrapper.style.display = "none";
+                return;
+            }
+
+            const startTime = reservationTimeInput ? reservationTimeInput.value : '';
+            const endTime = endTimeInput ? endTimeInput.value : '';
+
+            let duration = 1;
+            if (startTime && endTime) {
+                const [startH, startM] = startTime.split(':').map(Number);
+                const [endH, endM] = endTime.split(':').map(Number);
+                let diffMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+                if (diffMinutes <= 0) diffMinutes += 24 * 60;
+                duration = Math.max(1, Math.ceil(diffMinutes / 60.0));
+            }
+
+            const total = selectedTablePrice * duration;
+
+            document.getElementById("formTablePrice").innerText = `₹${selectedTablePrice.toFixed(2)}/hr`;
+            document.getElementById("formDuration").innerText = `${duration} hrs`;
+            document.getElementById("formTotalPrice").innerText = `₹${total.toFixed(2)}`;
+        }
+
+        function updateTimeMin() {
+            const selectedDate = reservationDateInput.value;
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            if (selectedDate === todayStr) {
+                const now = new Date(Date.now() + 10 * 60 * 1000);
+                const hh = String(now.getHours()).padStart(2, '0');
+                const mm = String(now.getMinutes()).padStart(2, '0');
+                const minTime = `${hh}:${mm}`;
+                if (reservationTimeInput) reservationTimeInput.setAttribute('min', minTime);
+                if (endTimeInput) endTimeInput.setAttribute('min', minTime);
+            } else {
+                if (reservationTimeInput) reservationTimeInput.removeAttribute('min');
+                if (endTimeInput) endTimeInput.removeAttribute('min');
+            }
+        }
+
+        // Live-clamp guests input to the table's max capacity while typing
+        if (guestsInputEl) {
+            guestsInputEl.addEventListener("input", function () {
+                const max = parseInt(this.getAttribute("max") || "0", 10);
+                if (max > 0 && parseInt(this.value || "0", 10) > max) {
+                    this.value = max;
+                }
+            });
+        }
+
+        // --- BIND "RESERVE NOW" BUTTONS (callable repeatedly, after every filter swap) ---
+        function bindOpenBookingButtons() {
+            document.querySelectorAll(".openBooking").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const tableId = this.dataset.id;
+                    selectedTablePrice = parseFloat(this.dataset.price || '0');
+                    const tableCapacity = parseInt(this.dataset.capacity || '0', 10);
+
+                    document.getElementById("selectedTable").value = tableId;
+                    document.getElementById("tableDisplay").value = "Table " + this.dataset.table;
+
+                    // Show/enforce max guests based on this table's capacity
+                    const guestsInput = document.getElementById("guestsInput");
+                    const guestsHint = document.getElementById("guestsHint");
+                    if (guestsInput) {
+                        if (tableCapacity > 0) {
+                            guestsInput.setAttribute("max", tableCapacity);
+                            guestsInput.setAttribute("placeholder", `Max ${tableCapacity} guests`);
+
+                            // NEW: prefill with the filtered capacity value, clamped to this table's max
+                            const filteredCapacity = capacityInput ? parseInt(capacityInput.value || "0", 10) : 0;
+                            if (filteredCapacity > 0) {
+                                guestsInput.value = Math.min(filteredCapacity, tableCapacity);
+                            } else {
+                                guestsInput.value = "";
+                            }
+
+                            if (guestsHint) {
+                                guestsHint.textContent = `Max ${tableCapacity} guests for this table`;
+                            }
+                        } else {
+                            guestsInput.removeAttribute("max");
+                            guestsInput.removeAttribute("placeholder");
+                            guestsInput.value = "";
+                            if (guestsHint) guestsHint.textContent = '';
+                        }
+                    }
+
+                    sidebar.classList.add("active");
+
+                    const fDate = filterDateInput ? filterDateInput.value : '';
+                    const fTime = filterTimeInput ? filterTimeInput.value : '';
+                    const fEndTime = filterEndTimeInput ? filterEndTimeInput.value : '';
+
+                    fetch(`/booking/booked-dates/table/${tableId}/`)
+                        .then(r => r.json())
+                        .then(data => {
+                            const booked = data.booked || [];
+                            initPicker(booked);
+
+                            if (fDate && !booked.includes(fDate)) {
+                                tablePicker.setDate(fDate, true);
+                            } else if (fDate) {
+                                reservationDateInput.value = '';
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Error fetching booked dates:', err);
+                            initPicker([]);
+                            if (fDate) tablePicker.setDate(fDate, true);
+                        })
+                        .finally(() => {
+                            if (fTime && reservationTimeInput) {
+                                reservationTimeInput.value = fTime;
+                            }
+                            if (fEndTime && endTimeInput) {
+                                endTimeInput.value = fEndTime;
+                                endTimeInput.setAttribute('min', fTime || '');
+                            }
+                            updateTimeMin();
+                            updateGuestPricePreview();
+                        });
+                });
+            });
+        }
+
+        bindOpenBookingButtons(); // initial bind on page load
+
+        document.getElementById("closeBooking").addEventListener("click", function () {
+            sidebar.classList.remove("active");
+        });
+
+        if (reservationDateInput) {
+            reservationDateInput.addEventListener('change', updateTimeMin);
+        }
+        if (reservationTimeInput && endTimeInput) {
+            reservationTimeInput.addEventListener('change', function () {
+                endTimeInput.setAttribute('min', this.value || '');
+                updateGuestPricePreview();
+                validateTimes();
+            });
+            endTimeInput.addEventListener('change', function () {
+                updateGuestPricePreview();
+                validateTimes();
+            });
+        }
+
+        // Duplicate phoneInput validation removed to fix form ReferenceError
+    });
+
+    // Form persistence using sessionStorage for table booking
+    document.addEventListener("DOMContentLoaded", function() {
+        const form = document.getElementById("tableBookingForm");
+        if (!form) return;
+        
+        const storageKey = "stayzen_tableBookingForm";
+        const storedData = sessionStorage.getItem(storageKey);
+        
+        if (storedData) {
+            try {
+                const data = JSON.parse(storedData);
+                for (const key in data) {
+                    const field = form.elements[key];
+                    if (field) {
+                        if (field.type === 'checkbox' || field.type === 'radio') {
+                            field.checked = data[key] === 'on' || data[key] === true;
+                        } else {
+                            if (!field.value || field.value === '') {
+                                field.value = data[key];
+                            }
+                        }
+                        field.dispatchEvent(new Event('change', { bubbles: true }));
+                        field.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+            } catch (e) {
+                console.error("Error restoring form data", e);
+            }
+        }
+        
+        function saveFormData() {
+            const data = {};
+            const formData = new FormData(form);
+            for (let [key, val] of formData.entries()) {
+                if (key !== 'csrfmiddlewaretoken' && key !== 'table_id') { // don't persist table_id across entirely different sessions if they change mind
+                    const field = form.elements[key];
+                    if (field && field.type === 'checkbox') {
+                        data[key] = field.checked;
+                    } else {
+                        data[key] = val;
+                    }
+                }
+            }
+            sessionStorage.setItem(storageKey, JSON.stringify(data));
+        }
+        
+        form.addEventListener("input", saveFormData);
+        form.addEventListener("change", saveFormData);
+        form.addEventListener("submit", saveFormData);
+    });
+</script>
+{% endblock %}

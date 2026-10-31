@@ -1,0 +1,64 @@
+:root{
+
+    /* Text Color */
+    --rts-para: #65676B;
+    --rts-heading: #1b1b1b;
+    --rts-black: #000000;
+    --rts-white: #FFFFFF;
+    --rts-gray: #F1F1F1;
+
+    /* Background Color */
+    --btn-1: #AB8A62;
+    --heading-color: #AB8A62;
+    --rts-border: rgba(125, 128, 135, 0.3);
+    --transparent: transparent;
+    
+    --transition: all .4s ease;
+    --color-success: #26CF4B;
+    --color-danger: #FF0003;
+    --color-warning: #FF8F3C;
+    --color-info: #1BA2DB;
+    --color-facebook: #3B5997;
+    --color-twitter: #1BA1F2;
+    --color-youtube: #ED4141;
+    --color-linkedin: #0077B5;
+    --color-pinterest: #E60022;
+    --color-instagram: #C231A1;
+    --color-vimeo: #00ADEF;
+    --color-twitch: #6441A3;
+    --color-discord: #7289da;
+
+
+    /* typhography */
+    --glida: "Gilda Display", serif;
+    --jost: "Jost", sans-serif;
+    --h1: 80px;
+    --h2: 60px;
+    --h3: 48px;
+    --h4: 40px;
+    --h5: 32px;
+    --h6: 24px;
+    --20: 20px;
+    --18: 18px;
+    --p: 16px;
+    --p-sm: 16px;
+    --p-xs: 14px;
+}
+
+[data-theme="dark"]{
+    /* Text Color */
+    --body-bg: #2B2B2B;
+    --rts-para: #f8eeeccc;
+    --rts-heading: #fafafa;
+    --rts-black: #000000;
+    --rts-white: #1B1B1B;
+    --rts-gray: #F1F1F1;
+
+    /* Background Color */
+    --btn-1: #AB8A62;
+    --heading-color: #AB8A62;
+    --rts-border: rgba(125, 128, 135, 0.3);
+    --transparent: transparent;
+
+    --transition: all .4s ease;
+}

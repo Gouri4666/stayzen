@@ -1,0 +1,410 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    /* Pure Red Border - strictly overriding Bootstrap's default and focus states */
+    .form-control.is-invalid, 
+    .form-control.is-invalid:focus,
+    input.is-invalid, 
+    input.is-invalid:focus,
+    select.is-invalid, 
+    select.is-invalid:focus,
+    textarea.is-invalid,
+    textarea.is-invalid:focus {
+        border-color: #ff0000 !important;
+        border-width: 2px !important;
+        /* Replaces the blue focus ring with a red focus ring */
+        box-shadow: 0 0 0 0.25rem rgba(255, 0, 0, 0.25) !important; 
+        outline: none !important;
+    }
+
+    /* Red Label Error State */
+    .label-invalid {
+        color: #ff0000 !important;
+        font-weight: 900 !important;
+    }
+    
+    /* Ensure default inputs have a transition for smooth color changing */
+    form input, form textarea, form label, form select {
+        transition: all 0.2s ease;
+    }
+
+    /* Centered Custom Modal Styles */
+    .custom-modal-overlay {
+        display: none; /* Hidden by default */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        z-index: 1050;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(3px);
+    }
+
+    .custom-modal-overlay.active {
+        display: flex;
+    }
+
+    .custom-modal-box {
+        background: #ffffff;
+        width: 100%;
+        max-width: 400px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        animation: modalFadeIn 0.3s ease-out forwards;
+        overflow: hidden;
+    }
+
+    /* Header for Error/Validation Alerts */
+    .custom-modal-header.error {
+        background: #fff5f5;
+        padding: 16px 20px;
+        border-bottom: 2px solid #ffcccc;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .custom-modal-header.error h5 {
+        color: #d32f2f;
+        margin: 0;
+        font-weight: bold;
+    }
+
+    .custom-modal-body {
+        padding: 20px;
+        color: #333;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    .custom-modal-footer {
+        padding: 12px 20px;
+        background: #f8f9fa;
+        text-align: right;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+</style>
+
+<div class="container-fluid mt-4">
+
+<div class="card border-0 shadow-lg">
+
+    <div class="card-header bg-warning text-white">
+        <h4 class="mb-0">✏️ Edit Room</h4>
+    </div>
+
+    <div class="card-body p-4">
+
+        <form method="POST" enctype="multipart/form-data" id="editRoomForm" novalidate>
+            {% csrf_token %}
+
+            <div class="row g-3">
+
+                <div class="col-md-6 form-group">
+                    <label class="form-label fw-semibold">Room Number *</label>
+                    {{ form.room_number }}
+                </div>
+
+                <div class="col-md-6 form-group">
+                    <label class="form-label fw-semibold">Room Type *</label>
+                    {{ form.room_type }}
+                </div>
+
+                <div class="col-md-4 form-group">
+                    <label class="form-label fw-semibold">Max Adults *</label>
+                    {{ form.max_adults }}
+                </div>
+
+                <div class="col-md-4 form-group">
+                    <label class="form-label fw-semibold">Max Children *</label>
+                    {{ form.max_children }}
+                </div>
+
+                <div class="col-md-4 form-group">
+                    <label class="form-label fw-semibold">Price *</label>
+                    {{ form.price }}
+                </div>
+
+                <div class="col-md-4 form-group">
+                    <label class="form-label fw-semibold">Room Image 1 *</label>
+                    {% if form.instance.image %}
+                        <div class="mb-2">
+                            <img src="{{ form.instance.image.url }}" alt="Current Image" style="max-height: 80px; border-radius: 4px;">
+                        </div>
+                    {% endif %}
+                    {{ form.image }}
+                </div>
+
+                <div class="col-md-4 form-group">
+                    <label class="form-label fw-semibold">Room Image 2 (Optional)</label>
+                    {% if form.instance.image2 %}
+                        <div class="mb-2">
+                            <img src="{{ form.instance.image2.url }}" alt="Current Image" style="max-height: 80px; border-radius: 4px;">
+                        </div>
+                    {% endif %}
+                    {{ form.image2 }}
+                </div>
+
+                <div class="col-md-4 form-group">
+                    <label class="form-label fw-semibold">Room Image 3 (Optional)</label>
+                    {% if form.instance.image3 %}
+                        <div class="mb-2">
+                            <img src="{{ form.instance.image3.url }}" alt="Current Image" style="max-height: 80px; border-radius: 4px;">
+                        </div>
+                    {% endif %}
+                    {{ form.image3 }}
+                </div>
+
+                <div class="col-md-6 form-group">
+                    <label class="form-label fw-semibold">Status *</label>
+                    {{ form.status }}
+                </div>
+
+                <div class="col-12 form-group">
+                    <label class="form-label fw-semibold">Description *</label>
+                    {{ form.description }}
+                </div>
+
+            </div>
+
+            <div class="mt-4 d-flex justify-content-between">
+
+                <a href="{% url 'room_list' %}"
+                   class="btn btn-secondary">
+                    Back
+                </a>
+
+                <button type="submit"
+                        class="btn btn-warning text-white px-4">
+                    Update Room
+                </button>
+
+            </div>
+
+        </form>
+
+        {% with instance=form.instance %}
+        <div class="card border-0 shadow-sm mt-4 bg-light text-dark">
+            <div class="card-header bg-secondary text-white py-2">
+                <h6 class="mb-0">📋 Auditing Metadata</h6>
+            </div>
+            <div class="card-body p-3">
+                <div class="row text-center text-md-start">
+                    <div class="col-md-4 border-end">
+                        <span class="text-muted small d-block">Created By & At</span>
+                        <strong>{{ instance.created_by.username|default:"System" }}</strong>
+                        <span class="text-muted small d-block">{{ instance.created_at|date:"Y-m-d H:i" }}</span>
+                    </div>
+                    <div class="col-md-4 border-end">
+                        <span class="text-muted small d-block">Last Edited By & At</span>
+                        <strong>{{ instance.edited_by.username|default:"System" }}</strong>
+                        <span class="text-muted small d-block">{{ instance.edited_at|date:"Y-m-d H:i" }}</span>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="text-muted small d-block">Status & Deletion Log</span>
+                        {% if instance.is_deleted %}
+                        <span class="badge bg-danger">Soft Deleted</span>
+                        <span class="text-muted small d-block mt-1">Deleted By: {{ instance.deleted_by.username }}</span>
+                        <span class="text-muted small d-block">{{ instance.deleted_at|date:"Y-m-d H:i" }}</span>
+                        {% else %}
+                        <span class="badge bg-success">Active</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+
+    </div>
+</div>
+
+</div>
+
+<div id="customValidationModal" class="custom-modal-overlay">
+    <div class="custom-modal-box">
+        <div class="custom-modal-header error">
+            <h5><i class="fa fa-exclamation-circle mr-2"></i>Validation Error</h5>
+        </div>
+        <div class="custom-modal-body" id="customModalMessage">
+            </div>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn btn-danger btn-sm px-4" onclick="closeValidationModal()" style="border-radius: 6px;">OK</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        
+        /* -------------------------------------------
+           ALERT/VALIDATION MODAL LOGIC 
+        ------------------------------------------- */
+        const alertModal = document.getElementById("customValidationModal");
+        const alertMessage = document.getElementById("customModalMessage");
+
+        window.showValidationModal = function(message) {
+            alertMessage.innerHTML = message;
+            alertModal.classList.add("active");
+        }
+
+        window.closeValidationModal = function() {
+            alertModal.classList.remove("active");
+        }
+
+        /* -------------------------------------------
+           FORM REAL-TIME VALIDATION LOGIC 
+        ------------------------------------------- */
+        const form = document.getElementById("editRoomForm");
+        if (!form) return;
+
+        // Target Django rendered form fields
+        const roomNumberInput = form.querySelector('[name="room_number"]');
+        const roomTypeInput = form.querySelector('[name="room_type"]');
+        const maxAdultsInput = form.querySelector('[name="max_adults"]');
+        const maxChildrenInput = form.querySelector('[name="max_children"]');
+        const priceInput = form.querySelector('[name="price"]');
+        const statusInput = form.querySelector('[name="status"]');
+        const descInput = form.querySelector('[name="description"]');
+        const image1Input = form.querySelector('input[name="image"]');
+        const image2Input = form.querySelector('input[name="image2"]');
+        const image3Input = form.querySelector('input[name="image3"]');
+
+        // Note: For the 'edit' form, the image1 input might be technically empty if they aren't uploading a *new* image.
+        // We only require image1 if there isn't already a saved image, but typically Django handles this via the model.
+        // We will validate formatting, but we won't strictly block submission if image1 file input is empty during edit.
+
+        const requiredInputs = [
+            { field: roomNumberInput, name: "Room Number" },
+            { field: roomTypeInput, name: "Room Type" },
+            { field: maxAdultsInput, name: "Max Adults" },
+            { field: maxChildrenInput, name: "Max Children" },
+            { field: priceInput, name: "Price" },
+            { field: statusInput, name: "Status" },
+            { field: descInput, name: "Description" }
+        ];
+
+        // Helper to toggle red state
+        const toggleErrorState = (input, isInvalid) => {
+            if (!input) return;
+            const labelWrapper = input.closest('.form-group') || input.closest('div[class^="col-"]');
+            const label = labelWrapper ? labelWrapper.querySelector('label') : null;
+            
+            if (isInvalid) {
+                input.classList.add("is-invalid");
+                if (label) label.classList.add("label-invalid");
+            } else {
+                input.classList.remove("is-invalid");
+                if (label) label.classList.remove("label-invalid");
+            }
+        };
+
+        // Real-time validation for generic required fields
+        requiredInputs.forEach(item => {
+            if (item.field) {
+                item.field.addEventListener("input", function () {
+                    toggleErrorState(this, this.value.trim() === '');
+                });
+            }
+        });
+
+        // Real-time File Validation (Check Extensions)
+        const validateFile = (input, allowedExtensions) => {
+            if (!input) return;
+            input.addEventListener("change", function () {
+                if (this.value) {
+                    const ext = this.value.split('.').pop().toLowerCase();
+                    toggleErrorState(this, !allowedExtensions.includes(ext));
+                } else {
+                    toggleErrorState(this, false); // If empty (and optional or already handled), clear error
+                }
+            });
+        };
+
+        const imageExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+        validateFile(image1Input, imageExtensions);
+        validateFile(image2Input, imageExtensions);
+        validateFile(image3Input, imageExtensions);
+
+        // Submit validation
+        form.addEventListener("submit", function (e) {
+            let isMissingFields = false;
+            let isValid = true;
+            let errorMessages = [];
+
+            // Reset all error states
+            form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            form.querySelectorAll('.label-invalid').forEach(el => el.classList.remove('label-invalid'));
+
+            // 1. Check all required text/number/select fields
+            requiredInputs.forEach(item => {
+                if (item.field && item.field.value.trim() === '') {
+                    isMissingFields = true;
+                    toggleErrorState(item.field, true);
+                }
+            });
+
+            if (isMissingFields) {
+                e.preventDefault();
+                showValidationModal("Please fill in all the required fields before updating.");
+                return;
+            }
+
+            // 2. Numeric validations
+            if (maxAdultsInput && parseInt(maxAdultsInput.value) < 1) {
+                isValid = false;
+                toggleErrorState(maxAdultsInput, true);
+                errorMessages.push("Max Adults must be at least 1.");
+            }
+
+            if (maxChildrenInput && parseInt(maxChildrenInput.value) < 0) {
+                isValid = false;
+                toggleErrorState(maxChildrenInput, true);
+                errorMessages.push("Max Children cannot be negative.");
+            }
+
+            if (priceInput && parseFloat(priceInput.value) <= 0) {
+                isValid = false;
+                toggleErrorState(priceInput, true);
+                errorMessages.push("Price must be greater than 0.");
+            }
+
+            // 3. File extension validations (only if a new file is selected)
+            const checkFileExt = (inputElement, fieldName) => {
+                if (inputElement && inputElement.value) {
+                    const ext = inputElement.value.split('.').pop().toLowerCase();
+                    if (!imageExtensions.includes(ext)) {
+                        isValid = false;
+                        toggleErrorState(inputElement, true);
+                        errorMessages.push(`${fieldName} must be a valid image format (.jpg, .jpeg, .png, .webp).`);
+                    }
+                }
+            };
+
+            checkFileExt(image1Input, "Room Image 1");
+            checkFileExt(image2Input, "Room Image 2");
+            checkFileExt(image3Input, "Room Image 3");
+
+            if (!isValid) {
+                e.preventDefault();
+                let formattedErrors = `Update cannot be completed. Please fix the following errors:<br><br><ul style="text-align: left; margin-bottom: 0;"><li>${errorMessages.join("</li><li>")}</li></ul>`;
+                showValidationModal(formattedErrors);
+            }
+        });
+    });
+</script>
+
+{% endblock %}

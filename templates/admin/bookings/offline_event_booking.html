@@ -1,0 +1,1541 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<style>
+    .offline-booking-card {
+        border-radius: 16px;
+        background: var(--bg-card, #ffffff);
+        border: none;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="dark"] .offline-booking-card {
+        background: #1e293b;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .gradient-header {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #ffffff;
+        padding: 24px 30px;
+    }
+
+    .form-section-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        font-size: 16px;
+        color: #059669;
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 8px;
+        margin-bottom: 20px;
+    }
+
+    [data-theme="dark"] .form-section-title {
+        color: #34d399;
+        border-bottom-color: #334155;
+    }
+
+    .billing-summary-box {
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px dashed #cbd5e1;
+        padding: 20px;
+    }
+
+    [data-theme="dark"] .billing-summary-box {
+        background: #0f172a;
+        border-color: #334155;
+    }
+
+    .btn-toggle-custom {
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 8px 20px;
+        transition: all 0.2s;
+    }
+
+    .badge-membership {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 12px;
+    }
+
+    /* --- Live Validation Styles --- */
+    .is-invalid-input {
+        border-color: #ef4444 !important;
+        color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+    
+    .is-invalid-label {
+        color: #ef4444 !important;
+        transition: color 0.2s;
+    }
+
+    .validation-message {
+        display: none;
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+        font-weight: 500;
+    }
+    
+    .is-invalid-input ~ .validation-message {
+        display: block;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="offline-booking-card">
+        <!-- Header -->
+        <div class="gradient-header d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="mb-1 font-weight-bold" style="font-family: 'Outfit', sans-serif;">New Event Booking</h3>
+                <p class="mb-0 text-white-50" style="font-size: 13px;">Reserve event halls and add packages for walk-in
+                    or registered clients</p>
+            </div>
+            <div>
+
+                <a href="{% url 'receptionist_hall_bookings' %}"
+                    class="btn btn-light btn-sm text-success font-weight-semibold"
+                    style="border-radius: 8px; padding: 8px 16px;">
+                    <i class="fa fa-arrow-left mr-1"></i> Back to List
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <form id="offlineEventForm" method="POST" action="{% url 'offline_event_booking' %}">
+                {% csrf_token %}
+
+                <input type="hidden" name="customer_id" id="customerId">
+
+                <div class="row">
+                    <!-- Left Form Section -->
+                    <div class="col-lg-12">
+
+                        <!-- CUSTOMER SELECTION -->
+                        <div class="mb-4">
+                            <h5 class="form-section-title"><i class="fa fa-user-circle mr-2"></i>Customer Information
+                            </h5>
+
+                            <div class="d-flex gap-3 mb-4">
+                                <button type="button" id="btnGuestType" class="btn btn-success btn-toggle-custom"
+                                    onclick="setCustomerType('guest')">
+                                    Guest Customer
+                                </button>
+                                <button type="button" id="btnRegisteredType"
+                                    class="btn btn-outline-secondary btn-toggle-custom"
+                                    onclick="setCustomerType('registered')">
+                                    Registered Customer
+                                </button>
+                                <input type="hidden" name="customer_type" id="customerType" value="guest">
+                            </div>
+
+                            <!-- Registered Customer Sub-form -->
+                            <div id="registeredCustomerSection" style="display: none;">
+                                <div class="row align-items-end mb-3">
+                                    <div class="col-md-8">
+                                        <label class="form-label font-weight-bold">Search Registered Phone
+                                            Number</label>
+                                        <div class="input-group">
+                                            <span class="input-group-addon"><i class="fa fa-phone"></i></span>
+                                            <input type="text" id="searchPhone" class="form-control"
+                                                placeholder="Enter customer phone..." style="height: 42px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-info w-100" onclick="searchCustomer()"
+                                            style="height: 42px; font-weight: 600; background: #06b6d4; border: none; color: #fff;">
+                                            <i class="fa fa-search mr-2"></i> Search Customer
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="customerDetailsCard" class="card p-3 mb-3"
+                                    style="display: none; border: 1px solid #10b981; background: rgba(16, 185, 129, 0.05); border-radius: 10px;">
+                                    <h6 class="text-success font-weight-bold mb-3"><i
+                                            class="fa fa-check-circle mr-1"></i> Customer Profile Verified</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted small d-block">Full Name</span>
+                                            <strong id="custName" class="text-dark">-</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted small d-block">Email Address</span>
+                                            <strong id="custEmail" class="text-dark">-</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted small d-block">Membership Status</span>
+                                            <span id="custMembership"
+                                                class="badge-membership bg-primary text-white">-</span>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted small d-block">Loyalty Points Available</span>
+                                            <strong id="custPoints" class="text-success">-</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3" id="pointsRedeemWrapper">
+                                        <label class="form-label font-weight-semibold">Redeem Loyalty Points</label>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <input type="number" name="redeem_points" id="redeemPoints"
+                                                    class="form-control" min="0" value="0"
+                                                    oninput="updateBillingSummary()">
+                                            </div>
+                                            <div class="col-md-6 align-self-center">
+                                                <span class="text-muted small">Max redeemable: <strong
+                                                        id="maxRedeemText">0</strong> points</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="customerSearchError" class="alert alert-danger"
+                                    style="display: none; border-radius: 8px;">
+                                    Customer not found. Check the number and try again.
+                                </div>
+                            </div>
+
+                            <!-- Guest Customer Sub-form -->
+                            <div id="guestCustomerSection">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">First Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="guest_first_name" id="guestFirstName" class="form-control" placeholder="John">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Last Name</label>
+                                        <input type="text" name="guest_last_name" id="guestLastName" class="form-control" placeholder="Doe">
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Guest Phone <span class="text-danger">*</span></label>
+                                        <input type="text" name="guest_phone" id="guestPhone" class="form-control" placeholder="1234567890">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Guest Email</label>
+                                        <input type="email" name="guest_email" id="guestEmail" class="form-control" placeholder="john@example.com">
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Gender <span class="text-danger">*</span></label>
+                                        <select name="guest_gender" id="guestGender" class="form-control" style="height: auto; padding: 10px;" required>
+                                            <option value="">Please Select</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Guest Address</label>
+                                        <input type="text" name="guest_address" id="guestAddress" class="form-control" placeholder="City, Country">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- EVENT DETAILS -->
+                        <div class="mb-4">
+                            <h5 class="form-section-title"><i class="fa fa-info-circle mr-2"></i>Event Information</h5>
+                            <div class="row">
+                                <div class="col-lg-5 mb-3">
+                                    <label class="form-label font-weight-semibold">Event Calendar <span
+                                            class="text-danger">*</span></label>
+                                    <!-- <input type="text" id="eventDateRange" class="form-control mb-2" placeholder="Select event dates" readonly> -->
+                                    <input type="text" id="eventDateCalendar" class="form-control"
+                                        placeholder="Select event dates" readonly>
+                                    <div class="text-muted small mt-2">Select the event dates from this calendar. Hall
+                                        availability updates automatically.</div>
+                                </div>
+                                <div class="col-lg-7">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label font-weight-semibold">Event Name <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" name="event_name" class="form-control"
+                                                placeholder="Corporate Conference / Marriage" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label font-weight-semibold">Event Type</label>
+                                            <select name="event_type" class="form-control">
+                                                <option value="Wedding">Wedding</option>
+                                                <option value="Corporate">Corporate</option>
+                                                <option value="Birthday">Birthday</option>
+                                                <option value="Reception">Reception</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label font-weight-semibold">Food Preference</label>
+                                            <select name="food_preference" class="form-control">
+                                                <option value="Vegetarian">Vegetarian</option>
+                                                <option value="Non-Vegetarian">Non-Vegetarian</option>
+                                                <option value="Both">Both</option>
+                                                <option value="None">None Required</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label font-weight-semibold">Expected Guest Count <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="number" name="guest_count" id="guestCount" class="form-control"
+                                                min="1" value="50" onchange="checkHallAvailability(); validateGuestCountForHall();" onkeyup="validateGuestCountForHall();" required>
+                                            <div class="validation-message" id="guestCountError">Guest count exceeds the selected hall's capacity.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label font-weight-semibold">Start Date <span
+                                            class="text-danger">*</span></label>
+                                    <input type="date" name="start_date" id="startDate" class="form-control" readonly
+                                        required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label font-weight-semibold">End Date <span
+                                            class="text-danger">*</span></label>
+                                    <input type="date" name="end_date" id="endDate" class="form-control" readonly
+                                        required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label font-weight-semibold">Start Time</label>
+                                    <input type="time" name="start_time" id="startTime" class="form-control"
+                                        onchange="checkHallAvailability()">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label font-weight-semibold">End Time</label>
+                                    <input type="time" name="end_time" id="endTime" class="form-control"
+                                        onchange="checkHallAvailability()">
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="small text-muted">Event duration: <strong id="eventDurationText"
+                                        class="text-dark">0 days</strong></div>
+                                <button type="button" class="btn btn-link btn-sm p-0"
+                                    onclick="resetEventSelection()">Change dates</button>
+                            </div>
+
+                            <div class="row" id="hallStatusSummary">
+                                <div class="col-12">
+                                    <div class="text-muted small">Select event dates to load live hall status counters.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label font-weight-semibold">Special Requests / Notes</label>
+                                <textarea name="special_request" class="form-control" rows="3"
+                                    placeholder="Stage settings, sound systems, etc."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- HALL SELECTION -->
+                        <div class="mb-4">
+                            <h5 class="form-section-title"><i class="fa fa-building mr-2"></i>Hall Selection</h5>
+                            <label class="form-label font-weight-bold">Select Available Hall <span
+                                    class="text-danger">*</span></label>
+                            <select name="hall_id" id="hallId" class="form-control" style="height: auto; padding: 10px;"
+                                onchange="onHallSelected()" disabled required>
+                                <option value="">-- Choose dates to check available halls --</option>
+                            </select>
+                            <div id="hallLoader" class="mt-2 text-success" style="display: none; font-size: 13px;">
+                                <i class="fa fa-spinner fa-spin mr-1"></i> Checking hall availability...
+                            </div>
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label font-weight-bold mb-0">Visual Event Hall List</label>
+                                    <div class="small">
+                                        <span class="badge badge-success">Available</span>
+                                        <span class="badge badge-danger">Booked</span>
+                                        <span class="badge badge-warning">Ongoing</span>
+                                        <span class="badge badge-info">Cleaning</span>
+                                        <span class="badge badge-secondary">Blocked</span>
+                                    </div>
+                                </div>
+                                <div id="hallCards" class="row">
+                                    <div class="col-12">
+                                        <div class="text-muted small">Select event dates and guest count from the
+                                            calendar to view hall availability.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PACKAGES -->
+                        <div class="mb-4">
+                            <h5 class="form-section-title"><i class="fa fa-gift mr-2"></i>Event Package (Optional)</h5>
+                            <label class="form-label font-weight-semibold">Choose a Catering / Event Package</label>
+                            <select name="package_id" id="packageId" class="form-control"
+                                style="height: auto; padding: 10px;" onchange="updateBillingSummary()" disabled>
+                                <option value="" data-price="0">-- Select a hall first / No package --</option>
+                                {% for p in packages %}
+                                <option value="{{ p.package_id }}" data-price="{{ p.services_price }}"
+                                    data-hall-id="{{ p.hall_id }}" hidden disabled>
+                                    {{ p.package_name }} ({{ p.package_type|title }}) - ${{ p.services_price }} - {{ p.package_description|truncatewords:8 }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Live Billing & Checkout Card -->
+                        <div class="card p-4 mt-4 shadow-sm"
+                            style="border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0); background: var(--bg-card, #ffffff);">
+                            <h5 class="form-section-title mb-3"><i class="fa fa-credit-card mr-2"></i>Booking & Payment
+                                Summary</h5>
+
+                            <!-- Hidden Booking Settings -->
+                            <input type="hidden" name="status" id="bookingStatus" value="Pending">
+                            <input type="hidden" name="payment_status" id="paymentStatus" value="Pending">
+
+                            <!-- Payment Method Selection -->
+                            <div class="mb-4">
+                                <label class="form-label font-weight-bold">Payment Method <span
+                                        class="text-danger">*</span></label>
+                                <select name="payment_method" id="paymentMethod" class="form-control"
+                                    style="height: auto; padding: 10px;" onchange="togglePaymentMethod()">
+                                    <option value="Razorpay">Card / Online Payment</option>
+                                    <option value="Cash">Cash at Reception</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4" id="cashAmountDiv" style="display: none;">
+                                <label class="form-label font-weight-bold text-success">Advance Amount Received <span
+                                        class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text font-weight-bold"
+                                            style="background: #f1f5f9; border: 1px solid #ced4da;">$</span>
+                                    </div>
+                                    <input type="number" name="advance_amount" id="advanceAmount" class="form-control"
+                                        value="0.00" min="0" step="0.01"
+                                        oninput="updateBillingSummary()">
+                                </div>
+                                <small class="text-muted">Enter the amount received in cash. Ensure it does not exceed the total.</small>
+                            </div>
+
+                            <!-- Billing Calculation -->
+                            <div class="billing-summary-box mb-4">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Hall Cost (<span id="eventDays">0</span> days):</span>
+                                    <span id="summaryHallPrice" class="font-weight-semibold text-dark">$0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Package Price:</span>
+                                    <span id="summaryPackagePrice" class="font-weight-semibold text-dark">$0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-danger" id="summaryRedeemRow"
+                                    style="display: none !important;">
+                                    <span>Points Redeemed:</span>
+                                    <span id="summaryRedeemPrice">-$0.00</span>
+                                </div>
+                                <hr style="border-top: 1px solid #cbd5e1; margin: 10px 0;">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="font-weight-bold text-dark">Total Amount:</span>
+                                    <span id="summaryTotalPrice" class="font-weight-bold text-dark"
+                                        style="font-size: 16px;">$0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-success">
+                                    <span class="font-weight-semibold">Required Advance (25%):</span>
+                                    <span id="summaryAdvancePrice" class="font-weight-semibold">$0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between pt-2 border-top border-dark"
+                                    style="border-top-width: 2px !important;">
+                                    <span class="font-weight-bold text-primary">Pending Balance (75%):</span>
+                                    <span id="summaryPendingPrice" class="font-weight-bold text-primary"
+                                        style="font-size: 18px;">$0.00</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="submitBtn" class="btn btn-primary btn-lg w-100 font-weight-bold"
+                                style="border-radius: 8px; background: #10b981; border: none; padding: 14px; color: #fff;">
+                                <span id="btnIcon"><i class="fa fa-credit-card mr-2"></i></span> <span id="btnText">Book Now</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let activeCustomerType = 'guest';
+    let loadedHalls = [];
+    let allHallStatuses = [];
+    let selectedHallPrice = 0;
+    let eventCalendarPicker = null;
+
+    function togglePaymentMethod() {
+        const method = document.getElementById('paymentMethod').value;
+        const cashDiv = document.getElementById('cashAmountDiv');
+        const btnText = document.getElementById('btnText');
+        const btnIcon = document.getElementById('btnIcon');
+        const submitBtn = document.getElementById('submitBtn');
+        const bookingStatusInput = document.getElementById('bookingStatus');
+        const paymentStatusInput = document.getElementById('paymentStatus');
+
+        if (method === 'Cash') {
+            if (cashDiv) cashDiv.style.display = 'block';
+            if (btnText) btnText.innerText = 'Confirm Booking';
+            if (btnIcon) btnIcon.innerHTML = '<i class="fa fa-money mr-2"></i>';
+            if (submitBtn) submitBtn.style.background = '#22c55e'; // Green
+            if (bookingStatusInput) bookingStatusInput.value = 'Confirmed';
+            if (paymentStatusInput) paymentStatusInput.value = 'Confirmed';
+        } else {
+            if (cashDiv) cashDiv.style.display = 'none';
+            if (btnText) btnText.innerText = 'Book Now';
+            if (btnIcon) btnIcon.innerHTML = '<i class="fa fa-credit-card mr-2"></i>';
+            if (submitBtn) submitBtn.style.background = '#10b981'; // Teal
+            if (bookingStatusInput) bookingStatusInput.value = 'Pending';
+            if (paymentStatusInput) paymentStatusInput.value = 'Pending';
+        }
+
+        updateBillingSummary();
+    }
+
+    const hallStatusMeta = {
+        available: { badge: 'badge-success', border: '#10b981', summaryClass: 'text-success' },
+        booked: { badge: 'badge-danger', border: '#ef4444', summaryClass: 'text-danger' },
+        ongoing: { badge: 'badge-warning', border: '#f59e0b', summaryClass: 'text-warning' },
+        cleaning: { badge: 'badge-info', border: '#06b6d4', summaryClass: 'text-info' },
+        blocked: { badge: 'badge-secondary', border: '#64748b', summaryClass: 'text-secondary' }
+    };
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function toYMD(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    function formatRangeText(startDate, endDate) {
+        if (!startDate || !endDate) return '';
+        return `${startDate} to ${endDate}`;
+    }
+
+    function validateTimeLogic() {
+        const startTimeInput = document.getElementById('startTime');
+        const endTimeInput = document.getElementById('endTime');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        
+        if (startTimeInput && endTimeInput && startDateInput && endDateInput) {
+            let timeErrorMsg = document.getElementById('timeErrorMsg');
+            if (!timeErrorMsg) {
+                timeErrorMsg = document.createElement('div');
+                timeErrorMsg.id = 'timeErrorMsg';
+                timeErrorMsg.className = 'validation-message';
+                timeErrorMsg.style.color = '#dc3545';
+                timeErrorMsg.style.fontSize = '12px';
+                timeErrorMsg.style.marginTop = '4px';
+                timeErrorMsg.innerText = 'End time must be after start time on the same day.';
+                timeErrorMsg.style.display = 'none';
+                endTimeInput.parentNode.appendChild(timeErrorMsg);
+            }
+
+            const sDate = startDateInput.value;
+            const eDate = endDateInput.value;
+            if (sDate && eDate && sDate === eDate) {
+                if (startTimeInput.value) {
+                    endTimeInput.setAttribute('min', startTimeInput.value);
+                }
+                if (startTimeInput.value && endTimeInput.value && endTimeInput.value <= startTimeInput.value) {
+                    endTimeInput.classList.add('is-invalid-input');
+                    endTimeInput.classList.add('is-invalid');
+                    timeErrorMsg.style.display = 'block';
+                    endTimeInput.value = '';
+                    checkHallAvailability();
+                } else {
+                    endTimeInput.classList.remove('is-invalid-input');
+                    endTimeInput.classList.remove('is-invalid');
+                    timeErrorMsg.style.display = 'none';
+                }
+            } else {
+                endTimeInput.removeAttribute('min');
+                endTimeInput.classList.remove('is-invalid-input');
+                endTimeInput.classList.remove('is-invalid');
+                timeErrorMsg.style.display = 'none';
+            }
+        }
+    }
+
+    function setEventDates(startDate, endDate, syncCalendar) {
+        document.getElementById('startDate').value = startDate || '';
+        document.getElementById('endDate').value = endDate || '';
+        document.getElementById('eventDateCalendar').value = formatRangeText(startDate, endDate);
+
+        if (syncCalendar && eventCalendarPicker) {
+            if (startDate && endDate) {
+                eventCalendarPicker.setDate([startDate, endDate], false);
+            } else {
+                eventCalendarPicker.clear();
+            }
+        }
+        
+        validateTimeLogic();
+    }
+
+    function updateEventDurationText(days) {
+        const safeDays = Number.isFinite(days) ? days : 0;
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+        const timeText = startTime && endTime ? `, ${startTime} - ${endTime}` : '';
+        document.getElementById('eventDurationText').innerText = `${safeDays} day${safeDays === 1 ? '' : 's'}${timeText}`;
+    }
+
+    function renderHallSummary(summary) {
+        const container = document.getElementById('hallStatusSummary');
+        if (!summary) {
+            container.innerHTML = '<div class="col-12"><div class="text-muted small">Select event dates to load live hall status counters.</div></div>';
+            return;
+        }
+
+        const items = [
+            ['Total Available Halls', summary.available || 0, 'available'],
+            ['Total Booked Halls', summary.booked || 0, 'booked'],
+            ['Total Ongoing Events', summary.ongoing || 0, 'ongoing'],
+            ['Total Under Cleaning', summary.cleaning || 0, 'cleaning'],
+            ['Total Reserved/Blocked', summary.blocked || 0, 'blocked']
+        ];
+
+        container.innerHTML = items.map(([label, count, key]) => {
+            const meta = hallStatusMeta[key];
+            return `
+                <div class="col-md-6 col-xl mb-2">
+                    <div class="card shadow-sm h-100" style="border: 1px solid ${meta.border}; border-radius: 12px;">
+                        <div class="card-body p-3">
+                            <div class="small text-muted">${label}</div>
+                            <div class="h4 mb-0 ${meta.summaryClass}">${count}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderHallCards(halls) {
+        const container = document.getElementById('hallCards');
+        const selectedId = document.getElementById('hallId').value;
+
+        if (!halls.length) {
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="text-muted small">No halls match the selected dates and guest count.</div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = halls.map((hall) => {
+            const meta = hallStatusMeta[hall.status_key] || hallStatusMeta.blocked;
+            const isSelected = String(selectedId) === String(hall.hall_id);
+            const actionClass = hall.selectable ? (isSelected ? 'btn-success' : 'btn-outline-success') : 'btn-light';
+            const actionText = hall.selectable ? (isSelected ? 'Selected' : 'Select Hall') : 'Unavailable';
+
+            return `
+                <div class="col-md-6 col-xl-4 mb-3">
+                    <div class="card shadow-sm h-100" style="border-radius: 12px; border: 1px solid #e2e8f0; border-left: 4px solid ${meta.border};">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <div class="font-weight-bold text-dark">${escapeHtml(hall.hall_name)}</div>
+                                    <div class="text-muted small">Hall No: ${escapeHtml(hall.hall_number)}</div>
+                                </div>
+                                <span class="badge ${meta.badge}">${escapeHtml(hall.status_label)}</span>
+                            </div>
+                            <div class="small text-muted mb-1">Supported event type: <span class="text-dark">${escapeHtml(hall.hall_type_display)}</span></div>
+                            <div class="small text-muted mb-1">Capacity: <span class="text-dark">Up to ${escapeHtml(hall.hall_capacity)} guests</span></div>
+                            <div class="small text-muted mb-1">Price: <span class="text-dark">$${Number(hall.hall_price || 0).toFixed(2)} / day</span></div>
+                            <div class="small text-muted mb-3">Current status: <span class="text-dark">${escapeHtml(hall.current_status)}</span></div>
+                            <button type="button" class="btn ${actionClass} btn-sm mt-auto" onclick="selectHallFromCard('${hall.hall_id}')" ${hall.selectable ? '' : 'disabled'}>
+                                ${actionText}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function populateHallSelect(halls, preferredHallId) {
+        const hallSelect = document.getElementById('hallId');
+        const availableHalls = halls || [];
+
+        if (!availableHalls.length) {
+            hallSelect.disabled = true;
+            hallSelect.innerHTML = '<option value="">-- No available halls found --</option>';
+            return;
+        }
+
+        hallSelect.disabled = false;
+        hallSelect.innerHTML = '<option value="">-- Choose a Hall --</option>';
+        availableHalls.forEach((hall) => {
+            const opt = document.createElement('option');
+            opt.value = hall.hall_id;
+            opt.setAttribute('data-capacity', hall.hall_capacity);
+            opt.innerText = `${hall.hall_name} (${hall.hall_type_display}) - Max ${hall.hall_capacity} Guests - $${Number(hall.hall_price || 0).toFixed(2)}/day`;
+            hallSelect.appendChild(opt);
+        });
+
+        if (preferredHallId && availableHalls.some((hall) => String(hall.hall_id) === String(preferredHallId))) {
+            hallSelect.value = preferredHallId;
+            const selectedHall = availableHalls.find((hall) => String(hall.hall_id) === String(preferredHallId));
+            if (selectedHall) {
+                // Trigger live validation instead of silently changing the value
+                validateGuestCountForHall();
+            }
+        }
+    }
+
+    function resetHallAvailability(message) {
+        loadedHalls = [];
+        allHallStatuses = [];
+        selectedHallPrice = 0;
+        renderHallSummary(null);
+        document.getElementById('hallId').innerHTML = `<option value="">${message || '-- Choose dates to check available halls --'}</option>`;
+        document.getElementById('hallId').disabled = true;
+        document.getElementById('hallCards').innerHTML = `
+            <div class="col-12">
+                <div class="text-muted small">${message || 'Select event dates and guest count from the calendar to view hall availability.'}</div>
+            </div>
+        `;
+        filterPackagesForHall('');
+        updateEventDurationText(0);
+        updateBillingSummary();
+    }
+
+    function initializeEventCalendar() {
+        eventCalendarPicker = flatpickr('#eventDateCalendar', {
+            inline: true,
+            mode: 'range',
+            minDate: 'today',
+            dateFormat: 'Y-m-d',
+            clickOpens: false,
+            allowInput: false,
+            onChange: function (selectedDates) {
+                if (selectedDates.length >= 1) {
+                    const orderedDates = selectedDates.slice().sort((a, b) => a - b);
+                    const startDate = toYMD(orderedDates[0]);
+                    const endDate = selectedDates.length === 2 ? toYMD(orderedDates[1]) : startDate;
+                    setEventDates(startDate, endDate, false);
+                    if (selectedDates.length === 2 || selectedDates.length === 1) {
+                        checkHallAvailability();
+                    }
+                } else if (selectedDates.length === 0) {
+                    setEventDates('', '', false);
+                    resetHallAvailability('Select event dates and guest count from the calendar to view hall availability.');
+                }
+            }
+        });
+    }
+
+    function resetEventSelection() {
+        setEventDates('', '', true);
+        resetHallAvailability('Select event dates and guest count from the calendar to view hall availability.');
+    }
+
+    function setCustomerType(type) {
+        try {
+            activeCustomerType = type;
+            const typeInput = document.getElementById('customerType');
+            if (typeInput) typeInput.value = type;
+            
+            const btnGuest = document.getElementById('btnGuestType');
+            const btnReg = document.getElementById('btnRegisteredType');
+            const secGuest = document.getElementById('guestCustomerSection');
+            const secReg = document.getElementById('registeredCustomerSection');
+            
+            if (type === 'guest') {
+                if (btnGuest) btnGuest.className = "btn btn-success btn-toggle-custom";
+                if (btnReg) btnReg.className = "btn btn-outline-secondary btn-toggle-custom";
+                if (secGuest) secGuest.style.display = "block";
+                if (secReg) secReg.style.display = "none";
+                
+                const guestFirstName = document.getElementById('guestFirstName');
+                if (guestFirstName) guestFirstName.required = true;
+                const guestGender = document.getElementById('guestGender');
+                if (guestGender) guestGender.required = true;
+                const guestPhone = document.getElementById('guestPhone');
+                if (guestPhone) guestPhone.required = true;
+                
+                const custId = document.getElementById('customerId');
+                if (custId) custId.value = '';
+                const redeem = document.getElementById('redeemPoints');
+                if (redeem) redeem.value = 0;
+            } else {
+                if (btnGuest) btnGuest.className = "btn btn-outline-secondary btn-toggle-custom";
+                if (btnReg) btnReg.className = "btn btn-success btn-toggle-custom";
+                if (secGuest) secGuest.style.display = "none";
+                if (secReg) secReg.style.display = "block";
+                
+                const guestFirstName = document.getElementById('guestFirstName');
+                if (guestFirstName) guestFirstName.required = false;
+                const guestGender = document.getElementById('guestGender');
+                if (guestGender) guestGender.required = false;
+                const guestPhone = document.getElementById('guestPhone');
+                if (guestPhone) guestPhone.required = false;
+            }
+        } catch (e) {
+            console.error("Error toggling customer type:", e);
+        }
+        
+        try {
+            updateBillingSummary();
+        } catch (e) {
+            console.error("Error updating billing summary:", e);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById('guestFirstName').required = true;
+        document.getElementById('guestGender').required = true;
+        document.getElementById('guestPhone').required = true;
+        initializeEventCalendar();
+        resetHallAvailability('Select event dates and guest count from the calendar to view hall availability.');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlHallId  = urlParams.get('hall_id');
+        const startDate  = urlParams.get('date');
+        const endDate    = urlParams.get('end_date') || startDate;
+        const hallName   = urlParams.get('hall_name');
+        const duration   = urlParams.get('duration');
+
+        if (startDate && urlHallId) {
+            window.initialHallId = urlHallId;
+            setEventDates(startDate, endDate, true);
+            checkHallAvailability();
+        }
+
+        document.getElementById('offlineEventForm').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+                e.preventDefault();
+            }
+        });
+        
+        const startTimeInput = document.getElementById('startTime');
+        const endTimeInput = document.getElementById('endTime');
+        if (startTimeInput) startTimeInput.addEventListener('change', validateTimeLogic);
+        if (endTimeInput) endTimeInput.addEventListener('change', validateTimeLogic);
+    });
+
+    function searchCustomer() {
+        const phoneInput = document.getElementById('searchPhone').value.trim();
+        const detailsCard = document.getElementById('customerDetailsCard');
+        const errorMsg = document.getElementById('customerSearchError');
+
+        if (!phoneInput) {
+            alert('Please enter a phone number to search.');
+            return;
+        }
+
+        fetch("{% url 'api_search_customer' %}?phone=" + encodeURIComponent(phoneInput))
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    errorMsg.style.display = 'none';
+                    detailsCard.style.display = 'block';
+                    document.getElementById('customerId').value = data.customer.id;
+                    document.getElementById('custName').innerText = data.customer.name;
+                    document.getElementById('custEmail').innerText = data.customer.email || 'N/A';
+
+                    const memBadge = document.getElementById('custMembership');
+                    memBadge.innerText = data.customer.membership_status;
+                    if (data.customer.membership_status === 'Bronze') memBadge.style.background = '#cd7f32';
+                    else if (data.customer.membership_status === 'Silver') memBadge.style.background = '#c0c0c0';
+                    else if (data.customer.membership_status === 'Gold') memBadge.style.background = '#ffd700';
+                    else if (data.customer.membership_status === 'Platinum') memBadge.style.background = '#e5e4e2';
+
+                    document.getElementById('custPoints').innerText = data.customer.loyalty_points;
+                    document.getElementById('redeemPoints').max = data.customer.loyalty_points;
+                    document.getElementById('maxRedeemText').innerText = data.customer.loyalty_points;
+                } else {
+                    detailsCard.style.display = 'none';
+                    errorMsg.style.display = 'block';
+                    document.getElementById('customerId').value = '';
+                }
+                updateBillingSummary();
+            })
+            .catch(err => {
+                console.error(err);
+                alert('An error occurred during customer search.');
+            });
+    }
+
+    function checkHallAvailability() {
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+        const guestCount = document.getElementById('guestCount').value || '1';
+        const startTime = document.getElementById('startTime').value || '';
+        const endTime = document.getElementById('endTime').value || '';
+        const hallSelect = document.getElementById('hallId');
+        const loader = document.getElementById('hallLoader');
+        let previousSelection = hallSelect.value;
+        let reqHallId = '';
+        if (window.initialHallId) {
+            previousSelection = window.initialHallId;
+            reqHallId = window.initialHallId;
+            window.initialHallId = null;
+        }
+
+        if (!start || !end) {
+            resetHallAvailability('Select event dates and guest count from the calendar to view hall availability.');
+            return;
+        }
+
+        if (new Date(start) > new Date(end)) {
+            alert('Start date cannot be after end date.');
+            return;
+        }
+
+        loader.style.display = 'block';
+        hallSelect.disabled = true;
+        hallSelect.innerHTML = '<option value="">-- Loading available halls... --</option>';
+
+        let url = "{% url 'api_available_halls' %}" +
+            "?start_date=" + encodeURIComponent(start) +
+            "&end_date=" + encodeURIComponent(end) +
+            "&guest_count=" + encodeURIComponent(guestCount) +
+            "&start_time=" + encodeURIComponent(startTime) +
+            "&end_time=" + encodeURIComponent(endTime);
+        if (reqHallId) {
+            url += "&requested_hall_id=" + encodeURIComponent(reqHallId);
+        }
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                loader.style.display = 'none';
+
+                if (!data.success) {
+                    loadedHalls = [];
+                    allHallStatuses = [];
+                    populateHallSelect([], '');
+                    renderHallSummary(null);
+                    renderHallCards([]);
+                    filterPackagesForHall('');
+                    updateEventDurationText(0);
+                    updateBillingSummary();
+                    return;
+                }
+
+                loadedHalls = data.halls || [];
+                allHallStatuses = data.all_halls || [];
+                renderHallSummary(data.summary || {});
+                renderHallCards(allHallStatuses);
+                populateHallSelect(loadedHalls, previousSelection);
+                updateEventDurationText(data.event_days || 0);
+                onHallSelected();
+            })
+            .catch(err => {
+                console.error(err);
+                loader.style.display = 'none';
+                loadedHalls = [];
+                allHallStatuses = [];
+                hallSelect.disabled = true;
+                hallSelect.innerHTML = '<option value="">-- Error loading halls --</option>';
+                renderHallSummary(null);
+                renderHallCards([]);
+                filterPackagesForHall('');
+                updateEventDurationText(0);
+                updateBillingSummary();
+            });
+    }
+
+    function filterPackagesForHall(hallId) {
+        const packageSelect = document.getElementById('packageId');
+        packageSelect.value = '';
+        packageSelect.disabled = !hallId;
+        packageSelect.options[0].text = hallId
+            ? '-- None / Hall Only --'
+            : '-- Select a hall first / No package --';
+
+        Array.from(packageSelect.options).slice(1).forEach(option => {
+            const matchesHall = option.dataset.hallId === String(hallId);
+            option.hidden = !matchesHall;
+            option.disabled = !matchesHall;
+        });
+    }
+
+    function selectHallFromCard(hallId) {
+        const hall = allHallStatuses.find((item) => String(item.hall_id) === String(hallId));
+        if (!hall || !hall.selectable) {
+            return;
+        }
+        document.getElementById('hallId').value = hallId;
+        onHallSelected();
+    }
+
+    function validateGuestCountForHall() {
+        const gcInput = document.getElementById('guestCount');
+        const hallSelect = document.getElementById('hallId');
+        if (!hallSelect.value) {
+            gcInput.classList.remove('is-invalid-input');
+            return true;
+        }
+        
+        const selectedOption = hallSelect.options[hallSelect.selectedIndex];
+        if (selectedOption) {
+            const capacity = parseInt(selectedOption.getAttribute('data-capacity')) || 0;
+            const gcValue = parseInt(gcInput.value) || 0;
+            if (capacity > 0 && gcValue > capacity) {
+                gcInput.classList.add('is-invalid-input');
+                return false;
+            } else {
+                gcInput.classList.remove('is-invalid-input');
+                return true;
+            }
+        }
+        return true;
+    }
+
+    function onHallSelected() {
+        const selectedId = document.getElementById('hallId').value;
+        if (!selectedId) {
+            selectedHallPrice = 0;
+        } else {
+            const hallObj = loadedHalls.find(h => String(h.hall_id) === String(selectedId));
+            selectedHallPrice = hallObj ? Number(hallObj.hall_price || 0) : 0;
+        }
+        renderHallCards(allHallStatuses);
+        filterPackagesForHall(selectedId);
+        validateGuestCountForHall();
+        updateBillingSummary();
+    }
+
+    function updateBillingSummary() {
+        const startVal = document.getElementById('startDate').value;
+        const endVal = document.getElementById('endDate').value;
+        let days = 0;
+
+        if (startVal && endVal) {
+            const diffTime = new Date(endVal) - new Date(startVal);
+            days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1);
+        }
+        document.getElementById('eventDays').innerText = days;
+        updateEventDurationText(days);
+
+        const hallCost = selectedHallPrice * days;
+        document.getElementById('summaryHallPrice').innerText = `$${hallCost.toFixed(2)}`;
+
+        const packageSelect = document.getElementById('packageId');
+        const selectedPkg = packageSelect.options[packageSelect.selectedIndex];
+        const packageCost = parseFloat(selectedPkg ? (selectedPkg.getAttribute('data-price') || '0') : '0');
+        document.getElementById('summaryPackagePrice').innerText = `$${packageCost.toFixed(2)}`;
+
+        const subtotal = hallCost + packageCost;
+        let pointsDiscount = 0;
+        const redeemInput = document.getElementById('redeemPoints');
+        const pointsRow = document.getElementById('summaryRedeemRow');
+
+        if (activeCustomerType === 'registered') {
+            let pts = parseInt(redeemInput.value || '0');
+            const maxPts = parseInt(redeemInput.max || '0');
+
+            if (pts < 0) pts = 0;
+            if (pts > maxPts) pts = maxPts;
+            if (pts > subtotal) pts = Math.floor(subtotal);
+
+            redeemInput.value = pts;
+            pointsDiscount = pts;
+
+            if (pointsDiscount > 0) {
+                pointsRow.setAttribute('style', 'display: flex !important;');
+                document.getElementById('summaryRedeemPrice').innerText = `-$${pointsDiscount.toFixed(2)}`;
+            } else {
+                pointsRow.setAttribute('style', 'display: none !important;');
+            }
+        } else {
+            pointsRow.setAttribute('style', 'display: none !important;');
+        }
+
+        const grandTotal = Math.max(0, subtotal - pointsDiscount);
+        document.getElementById('summaryTotalPrice').innerText = `$${grandTotal.toFixed(2)}`;
+
+        const advanceInput = document.getElementById('advanceAmount');
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        if (paymentMethod === 'Razorpay') {
+            advanceInput.value = (grandTotal * 0.25).toFixed(2);
+            advanceInput.readOnly = true;
+        } else {
+            advanceInput.readOnly = false;
+        }
+        let advance = parseFloat(advanceInput.value || '0');
+        if (advance < 0) advance = 0;
+        document.getElementById('summaryAdvancePrice').innerText = `$${advance.toFixed(2)}`;
+
+        const pending = Math.max(0, grandTotal - advance);
+        document.getElementById('summaryPendingPrice').innerText = `$${pending.toFixed(2)}`;
+    }
+
+    document.getElementById('offlineEventForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        // ---- VALIDATION CHECKS ----
+        const form = this;
+        const customerType = document.getElementById('customerType').value;
+        const customerId = document.getElementById('customerId').value;
+        const nameInput = document.getElementById('guestFirstName');
+        const genderInput = document.getElementById('guestGender');
+        const phoneInput = document.getElementById('guestPhone');
+        const emailInput = document.getElementById('guestEmail');
+        const hallSelect = document.getElementById('hallId');
+        const hallIdVal = hallSelect ? hallSelect.value : '';
+        const startDateVal = document.getElementById('startDate').value;
+        const endDateVal = document.getElementById('endDate').value;
+        const guestCountVal = parseInt(document.getElementById('guestCount').value) || 0;
+        const paymentMethod = document.getElementById('paymentMethod').value;
+
+        let isValid = true;
+        let errorMessages = [];
+
+        // Clear previous error styling
+        form.querySelectorAll('.is-invalid, .is-invalid-input').forEach(el => {
+            el.classList.remove('is-invalid');
+            el.classList.remove('is-invalid-input');
+            el.style.borderColor = '';
+            el.style.color = '';
+            const container = el.closest('.mb-3, .form-group, .col-md-6, .col-md-8, .col-md-4, .input-group');
+            const label = container ? (container.querySelector('label') || container.parentElement.querySelector('label')) : null;
+            if (label) {
+                label.style.color = '';
+                label.classList.remove('is-invalid-label');
+            }
+        });
+
+        // 1. Customer validation
+        if (customerType === 'registered') {
+            if (!customerId) {
+                isValid = false;
+                errorMessages.push("Please search and verify a registered customer profile.");
+                const searchInput = document.getElementById('searchPhone');
+                if (searchInput) {
+                    searchInput.classList.add('is-invalid');
+                    searchInput.classList.add('is-invalid-input');
+                    const container = searchInput.closest('.col-md-8');
+                    const label = container ? container.querySelector('label') : null;
+                    if (label) label.classList.add('is-invalid-label');
+                }
+            }
+        } else {
+            if (nameInput && (!nameInput.value.trim() || nameInput.value.trim().length < 2)) {
+                isValid = false;
+                errorMessages.push("Guest First Name must be at least 2 characters.");
+                nameInput.classList.add('is-invalid');
+                nameInput.classList.add('is-invalid-input');
+                const label = nameInput.closest('.col-md-6').querySelector('label');
+                if (label) label.classList.add('is-invalid-label');
+            }
+            if (genderInput && !genderInput.value) {
+                isValid = false;
+                errorMessages.push("Please select a gender.");
+                genderInput.classList.add('is-invalid');
+                genderInput.classList.add('is-invalid-input');
+                const label = genderInput.closest('.col-md-6').querySelector('label');
+                if (label) label.classList.add('is-invalid-label');
+            }
+            if (phoneInput && !phoneInput.value.match(/^\d{10}$/)) {
+                isValid = false;
+                errorMessages.push("Enter a valid 10-digit Guest phone number.");
+                phoneInput.classList.add('is-invalid');
+                phoneInput.classList.add('is-invalid-input');
+                const label = phoneInput.closest('.col-md-6').querySelector('label');
+                if (label) label.classList.add('is-invalid-label');
+            }
+            if (emailInput && emailInput.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
+                isValid = false;
+                errorMessages.push("Enter a valid Guest email address.");
+                emailInput.classList.add('is-invalid');
+                emailInput.classList.add('is-invalid-input');
+                const label = emailInput.closest('.col-md-6').querySelector('label');
+                if (label) label.classList.add('is-invalid-label');
+            }
+        }
+
+        // 2. Event dates
+        if (!startDateVal || !endDateVal) {
+            isValid = false;
+            errorMessages.push("Start and End dates are required.");
+            const dateCal = document.getElementById('eventDateCalendar');
+            if (dateCal) {
+                dateCal.classList.add('is-invalid');
+                dateCal.classList.add('is-invalid-input');
+                const label = dateCal.closest('.col-md-5').querySelector('label');
+                if (label) label.classList.add('is-invalid-label');
+            }
+        } else {
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (startDateVal < todayStr) {
+                isValid = false;
+                errorMessages.push("Start date cannot be in the past.");
+                const dateCal = document.getElementById('eventDateCalendar');
+                if (dateCal) {
+                    dateCal.classList.add('is-invalid');
+                    dateCal.classList.add('is-invalid-input');
+                    const label = dateCal.closest('.col-md-5').querySelector('label');
+                    if (label) label.classList.add('is-invalid-label');
+                }
+            }
+            if (startDateVal > endDateVal) {
+                isValid = false;
+                errorMessages.push("Start date cannot be after End date.");
+                const dateCal = document.getElementById('eventDateCalendar');
+                if (dateCal) {
+                    dateCal.classList.add('is-invalid');
+                    dateCal.classList.add('is-invalid-input');
+                    const label = dateCal.closest('.col-md-5').querySelector('label');
+                    if (label) label.classList.add('is-invalid-label');
+                }
+            }
+        }
+
+        // 3. Hall selection
+        if (!hallIdVal) {
+            isValid = false;
+            errorMessages.push("Please select an available hall.");
+            if (hallSelect) {
+                hallSelect.classList.add('is-invalid');
+                hallSelect.classList.add('is-invalid-input');
+                const container = hallSelect.closest('.mb-4');
+                const label = container ? container.querySelector('label') : null;
+                if (label) label.classList.add('is-invalid-label');
+            }
+        }
+
+        // 4. Guest count
+        if (guestCountVal < 1) {
+            isValid = false;
+            errorMessages.push("Expected guest count must be at least 1.");
+            const gc = document.getElementById('guestCount');
+            if (gc) {
+                gc.classList.add('is-invalid');
+                gc.classList.add('is-invalid-input');
+                const label = gc.closest('.col-md-6').querySelector('label');
+                if (label) label.classList.add('is-invalid-label');
+            }
+        } else if (!validateGuestCountForHall()) {
+            isValid = false;
+            errorMessages.push("Guest count exceeds the selected hall's capacity.");
+            const gc = document.getElementById('guestCount');
+            if (gc) {
+                gc.classList.add('is-invalid');
+                gc.classList.add('is-invalid-input');
+                const label = gc.closest('.col-md-6').querySelector('label');
+                if (label) label.classList.add('is-invalid-label');
+            }
+        }
+
+        if (!isValid) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                html: "<ul style='text-align:left; font-size:14px; color:#1c1d1f;'><li>" + errorMessages.join("</li><li>") + "</li></ul>",
+                confirmButtonText: 'OK',
+                customClass: { popup: 'stayzen-swal-popup', title: 'stayzen-swal-title', confirmButton: 'stayzen-swal-confirm' },
+                buttonsStyling: false
+            });
+            return;
+        }
+        // ---- END VALIDATION ----
+
+        // For Cash payments, submit natively
+        if (paymentMethod !== 'Razorpay') {
+            form.submit();
+            return;
+        }
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalBtnHTML = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>Processing...';
+
+        const formData = new FormData(this);
+        formData.append('ajax', '1');
+
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.razorpay) {
+                    const ctx = data.context;
+                    const options = {
+                        key: ctx.razorpay_key,
+                        amount: (function () {
+
+                            var amt = parseFloat(ctx.amount);
+
+                            var key = ctx.razorpay_key;
+
+                            if (key && key.indexOf("rzp_test") === 0 && amt > 50000) {
+
+                                return 50000 * 100;
+
+                            }
+
+                            return Math.round(amt * 100);
+
+                        })(),
+                        currency: "INR",
+                        name: "StayZen",
+                        description: "Offline Event Booking #" + ctx.booking_id,
+                        prefill: {
+                            name: ctx.name,
+                            email: ctx.email,
+                            contact: ctx.phone
+                        },
+                        handler: function (response) {
+                            fetch("{% url 'razorpay_callback' %}", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRFToken": "{{ csrf_token }}"
+                                },
+                                body: JSON.stringify({
+                                    booking_id: ctx.booking_id,
+                                    booking_type: ctx.booking_type,
+                                    razorpay_payment_id: response.razorpay_payment_id
+                                })
+                            })
+                                .then(res => res.json())
+                                .then(cbData => {
+                                    if (cbData.success) {
+                                        Swal.fire({
+                                            title: 'Payment Successful',
+                                            text: cbData.details ? cbData.details.message : 'Offline event booking has been confirmed successfully!',
+                                            icon: 'success',
+                                            confirmButtonText: 'OK',
+                                            customClass: {
+                                                popup: 'stayzen-swal-popup',
+                                                title: 'stayzen-swal-title',
+                                                confirmButton: 'stayzen-swal-confirm'
+                                            },
+                                            buttonsStyling: false
+                                        }).then(() => {
+                                            window.location.href = cbData.redirect_url || "{% url 'receptionist_hall_bookings' %}";
+                                        });
+                                    } else {
+                                        Swal.fire({
+                                            title: 'Error',
+                                            text: 'Payment confirmation failed: ' + cbData.message,
+                                            icon: 'error',
+                                            confirmButtonText: 'OK',
+                                            customClass: {
+                                                popup: 'stayzen-swal-popup',
+                                                title: 'stayzen-swal-title',
+                                                confirmButton: 'stayzen-swal-confirm'
+                                            },
+                                            buttonsStyling: false
+                                        });
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML = originalBtnHTML;
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error(err);
+                                    Swal.fire({
+                                        title: 'Error',
+                                        text: 'Failed to verify payment with server.',
+                                        icon: 'error',
+                                        confirmButtonText: 'OK',
+                                        customClass: {
+                                            popup: 'stayzen-swal-popup',
+                                            title: 'stayzen-swal-title',
+                                            confirmButton: 'stayzen-swal-confirm'
+                                        },
+                                        buttonsStyling: false
+                                    });
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = originalBtnHTML;
+                                });
+                        },
+                        modal: {
+                            ondismiss: function () {
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = originalBtnHTML;
+                            }
+                        },
+                        theme: {
+                            color: "#10b981"
+                        }
+                    };
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Something went wrong while initiating event booking.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'stayzen-swal-popup',
+                            title: 'stayzen-swal-title',
+                            confirmButton: 'stayzen-swal-confirm'
+                        },
+                        buttonsStyling: false
+                    });
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHTML;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An error occurred during booking creation.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'stayzen-swal-popup',
+                        title: 'stayzen-swal-title',
+                        confirmButton: 'stayzen-swal-confirm'
+                    },
+                    buttonsStyling: false
+                });
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHTML;
+            });
+    });
+
+    // Live validation logic
+    document.addEventListener('DOMContentLoaded', function () {
+        const liveRules = {
+            'guestFirstName': { regex: /^[a-zA-Z\s]{2,}$/, msg: 'First name must be at least 2 letters.', isGuestOnly: true },
+            // 'guestLastName': { regex: /^([a-zA-Z\s]{2,})?$/, msg: 'Last name must be at least 2 letters if provided.', isGuestOnly: true },
+            'guestPhone': { regex: /^[0-9]{10}$/, msg: 'Phone must be exactly 10 digits.', isGuestOnly: true },
+            'guestEmail': { regex: /^([^\s@]+@[^\s@]+\.[^\s@]+)?$/, msg: 'Enter a valid email address.', isGuestOnly: true },
+            'guestCount': { regex: /^[1-9]\d*$/, msg: 'Expected guest count must be at least 1.', isGuestOnly: false }
+        };
+
+        Object.keys(liveRules).forEach(id => {
+            const inputField = document.getElementById(id);
+            if (!inputField) return;
+
+            const parentDiv = inputField.closest('.col-md-6, .col-md-4, .col-md-8, .input-group, .mb-3');
+            const label = parentDiv ? (parentDiv.querySelector('label') || parentDiv.parentElement.querySelector('label')) : null;
+
+            // Append Validation Message Box
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'validation-message';
+            errorMsg.innerText = liveRules[id].msg;
+            if (inputField.parentElement.classList.contains('input-group')) {
+                inputField.parentElement.parentElement.appendChild(errorMsg);
+            } else {
+                inputField.parentNode.insertBefore(errorMsg, inputField.nextSibling);
+            }
+
+            const validate = () => {
+                const val = inputField.value.trim();
+                const rule = liveRules[id];
+                const customerType = document.getElementById('customerType').value;
+
+                // Bypass guest rules if "Registered Customer" is active
+                if (rule.isGuestOnly && customerType === 'registered') {
+                    inputField.classList.remove('is-invalid');
+                    inputField.classList.remove('is-invalid-input');
+                    if (label) label.classList.remove('is-invalid-label');
+                    return;
+                }
+
+                let isValid = true;
+                if (rule.regex) {
+                    if (val === '') {
+                        if (rule.isGuestOnly && id !== 'guestEmail') {
+                            isValid = false;
+                        }
+                    } else if (!rule.regex.test(val)) {
+                        isValid = false;
+                    }
+                }
+
+                if (isValid && id === 'guestCount') {
+                    const hallSelect = document.getElementById('hallId');
+                    if (hallSelect && hallSelect.selectedIndex > 0) {
+                        const selectedOpt = hallSelect.options[hallSelect.selectedIndex];
+                        const cap = parseInt(selectedOpt.getAttribute('data-capacity'));
+                        if (!isNaN(cap) && parseInt(val) > cap) {
+                            isValid = false;
+                            rule.msg = "Expected guest count cannot exceed the selected hall's capacity (" + cap + ").";
+                        } else {
+                            rule.msg = 'Expected guest count must be at least 1.';
+                        }
+                    } else {
+                        rule.msg = 'Expected guest count must be at least 1.';
+                    }
+                }
+
+                if (!isValid) {
+                    inputField.classList.add('is-invalid-input');
+                    if (label) label.classList.add('is-invalid-label');
+                    errorMsg.innerText = rule.msg;
+                } else {
+                    inputField.classList.remove('is-invalid-input');
+                    if (label) label.classList.remove('is-invalid-label');
+                    errorMsg.innerText = rule.msg;
+
+                    if (id === 'guestEmail' && customerType === 'guest') {
+                        fetch("{% url 'api_check_guest_email' %}?email=" + encodeURIComponent(val))
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.exists) {
+                                inputField.classList.add('is-invalid-input');
+                                if (label) label.classList.add('is-invalid-label');
+                                errorMsg.innerText = "Email already exist.Try another";
+                            }
+                        })
+                        .catch(err => console.error(err));
+                    }
+                    
+                    if (id === 'guestPhone' && customerType === 'guest') {
+                        fetch("{% url 'api_check_phone' %}?phone=" + encodeURIComponent(val))
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.exists) {
+                                inputField.classList.add('is-invalid-input');
+                                if (label) label.classList.add('is-invalid-label');
+                                errorMsg.innerText = "Phone number already exist.Try another";
+                            }
+                        })
+                        .catch(err => console.error(err));
+                    }
+                }
+            };
+
+            inputField.addEventListener('input', validate);
+            inputField.addEventListener('change', validate);
+            inputField.addEventListener('blur', validate);
+            
+            if (id === 'guestCount') {
+                const hallSelect = document.getElementById('hallId');
+                if (hallSelect) {
+                    hallSelect.addEventListener('change', validate);
+                }
+            }
+        });
+    });
+</script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+{% endblock %}

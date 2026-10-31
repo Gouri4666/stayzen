@@ -1,0 +1,91 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Inbox Wrapper & Typography */
+    .inbox-wrapper{ background:#fff; padding:30px; border-radius:28px; box-shadow: 0 8px 35px rgba(0,0,0,.05); }
+    .inbox-header{ margin-bottom:30px; }
+    .inbox-title{ font-size:36px; font-weight:700; color:#0f172a; }
+    .inbox-sub{ font-size:16px; color:#64748b; }
+
+    /* Search Card */
+    .search-card{ margin-bottom:30px; background:#fff; padding:20px; border-radius:18px; border:1px solid #edf2f7; }
+    .search-input{ height:55px; border-radius:14px; border:1px solid #e2e8f0; padding-left:20px; font-size:16px; }
+
+    /* Notification Card (Larger Font Version) */
+    .notification-card{ display:flex; align-items:center; gap:25px; background:#fff; padding:20px 25px; margin-top:15px; border-radius:16px; border:1px solid #edf2f7; box-shadow: 0 4px 18px rgba(0,0,0,.04); transition:.3s; }
+    .notification-card:hover{ transform:translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,.08); }
+    
+    .sender-title{ font-size:18px; font-weight:700; color:#0f172a; min-width: 250px; }
+    .preview-text{ font-size:16px; color:#475569; flex-grow:1; }
+    .msg-date{ font-size:15px; color:#94a3b8; min-width: 150px; }
+    
+    .view-btn{ background:linear-gradient(135deg, #2563eb, #3b82f6); color:white; padding:12px 25px; border-radius:14px; font-size:15px; font-weight:600; text-decoration:none; }
+    .view-btn:hover{ color:white; text-decoration:none; }
+
+    /* Dark Mode */
+    [data-theme="dark"] .inbox-wrapper, [data-theme="dark"] .search-card, [data-theme="dark"] .notification-card{ background:#1e293b; border-color:#334155; }
+    [data-theme="dark"] .inbox-title, [data-theme="dark"] .sender-title{ color:#f8fafc; }
+    [data-theme="dark"] .preview-text{ color:#cbd5e1; }
+    [data-theme="dark"] .search-input { background:#0f172a; color:#fff; border-color:#334155; }
+</style>
+
+<section id="main-content">
+    <div class="container-fluid">
+        <div class="inbox-wrapper">
+            <div class="inbox-header d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="inbox-title">Sent Notifications History</h1>
+        <p class="inbox-sub">Review the history of broadcasts sent to staff and departments.</p>
+    </div>
+    
+    <a href="{% url 'compose_notification' %}" class="btn btn-primary d-flex align-items-center" 
+       style="padding: 12px 24px; border-radius: 14px; font-weight: 600; box-shadow: 0 4px 12px rgba(37,99,235,0.3);">
+        <i class="fa fa-plus mr-2"></i> Compose New
+    </a>
+</div>
+            
+
+            <div class="search-card">
+                <form method="GET">
+                    <div class="row">
+                        <div class="col-md-9"><input type="text" name="q" value="{{ search_query }}" class="form-control search-input" placeholder="Search by title or content..."></div>
+                        <div class="col-md-3 d-flex"><button class="btn btn-primary flex-grow-1" style="height:55px;border-radius:14px;">Search</button><a href="{% url 'sent_notifications' %}" class="btn btn-light ml-3" style="height:55px;width:55px;border-radius:14px;"><i class="fa fa-refresh"></i></a></div>
+                    </div>
+                </form>
+            </div>
+
+            {% for item in sent_items %}
+            <div class="notification-card">
+                <div class="sender-title">
+                    {{ item.title }}<br>
+                </div>
+                
+                <div class="preview-text">{{ item.message|truncatechars:70 }}</div>
+
+                <div class="msg-date">
+                    <i class="fa fa-calendar mr-2"></i> {{ item.created_at|date:"M d, H:i" }}
+                </div>
+
+                <div>
+                    {% if item.read_recipients == item.total_recipients and item.total_recipients > 0 %}
+                        <span class="badge badge-success px-3 py-2">Read ({{ item.read_recipients }}/{{ item.total_recipients }})</span>
+                    {% elif item.read_recipients > 0 %}
+                        <span class="badge badge-warning text-white px-3 py-2">Partial ({{ item.read_recipients }}/{{ item.total_recipients }})</span>
+                    {% else %}
+                        <span class="badge badge-secondary px-3 py-2">Unread (0/{{ item.total_recipients }})</span>
+                    {% endif %}
+                </div>
+
+                <div class="ml-auto">
+                    <a href="{% url 'view_sent_notification' item.id %}" class="view-btn">Details</a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5"><i class="fa fa-paper-plane fa-4x text-muted"></i><h4 class="mt-4">No notifications sent yet.</h4></div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,471 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    /* Pure Red Border - strictly overriding Bootstrap's default and focus states */
+    .form-control.is-invalid, 
+    .form-control.is-invalid:focus,
+    input.is-invalid, 
+    input.is-invalid:focus,
+    select.is-invalid, 
+    select.is-invalid:focus {
+        border-color: #ff0000 !important;
+        border-width: 2px !important;
+        /* Replaces the blue focus ring with a red focus ring */
+        box-shadow: 0 0 0 0.25rem rgba(255, 0, 0, 0.25) !important; 
+        outline: none !important;
+    }
+
+    /* Red Label Error State */
+    .label-invalid {
+        color: #ff0000 !important;
+        font-weight: 900 !important;
+    }
+    
+    /* Ensure default inputs have a transition for smooth color changing */
+    form input, form textarea, form label {
+        transition: all 0.2s ease;
+    }
+
+    /* Centered Custom Modal Styles */
+    .custom-modal-overlay {
+        display: none; /* Hidden by default */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        z-index: 1050;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(3px);
+    }
+
+    .custom-modal-overlay.active {
+        display: flex;
+    }
+
+    .custom-modal-box {
+        background: #ffffff;
+        width: 100%;
+        max-width: 400px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        animation: modalFadeIn 0.3s ease-out forwards;
+        overflow: hidden;
+    }
+
+    /* Header for Error Alerts */
+    .custom-modal-header.error {
+        background: #fff5f5;
+        padding: 16px 20px;
+        border-bottom: 2px solid #ffcccc;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .custom-modal-header.error h5 {
+        color: #d32f2f;
+        margin: 0;
+        font-weight: bold;
+    }
+
+    /* Header for Confirmation Prompts */
+    .custom-modal-header.warning {
+        background: #fffdf5;
+        padding: 16px 20px;
+        border-bottom: 2px solid #ffeeba;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .custom-modal-header.warning h5 {
+        color: #d39e00;
+        margin: 0;
+        font-weight: bold;
+    }
+
+    .custom-modal-body {
+        padding: 20px;
+        color: #333;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    .custom-modal-footer {
+        padding: 12px 20px;
+        background: #f8f9fa;
+        text-align: right;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; background: linear-gradient(135deg, #1f2937, #111827); color: white;">
+        <div class="card-body p-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="mb-1 font-weight-bold"><i class="fa fa-cogs mr-2 text-primary"></i> Master Settings</h3>
+                <p class="text-muted small mb-0" style="color: #9ca3af !important;">Configure dynamic Departments and Roles for staff accounts on a single page.</p>
+            </div>
+            <div>
+                <a href="{% url 'staff_user_list' %}" class="btn btn-outline-light btn-sm">
+                    <i class="fa fa-users mr-1"></i> Staff Directory
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-6 mb-4">
+            <div class="card border-0 shadow-lg h-100" style="border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb !important;">
+                <div class="card-header bg-primary text-white py-3 d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 font-weight-bold"><i class="fa fa-building mr-2"></i> Departments</h5>
+                    <span class="badge badge-light px-2.5 py-1">{{ departments|length }} Total</span>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="card border-0 mb-4 p-3 shadow-sm bg-light" style="border-radius: 10px; border-left: 5px solid {% if edit_dept %}#ffc107{% else %}#007bff{% endif %} !important;">
+                        <h6 class="font-weight-bold {% if edit_dept %}text-warning{% else %}text-primary{% endif %} mb-3">
+                            {% if edit_dept %}
+                                <i class="fa fa-pencil mr-1"></i> Edit Department: "{{ edit_dept.name }}"
+                            {% else %}
+                                <i class="fa fa-plus mr-1"></i> Add New Department
+                            {% endif %}
+                        </h6>
+                        <form method="POST" action="{% url 'manage_masters' %}" id="departmentForm" novalidate>
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="save_department">
+                            {% if edit_dept %}
+                                <input type="hidden" name="dept_id" value="{{ edit_dept.id }}">
+                            {% endif %}
+                            
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted mb-1">Department Name</label>
+                                <input 
+                                    type="text" 
+                                    name="name" 
+                                    class="form-control" 
+                                    placeholder="e.g. Front Office, Room Service" 
+                                    value="{{ edit_dept.name|default:'' }}" 
+                                    required
+                                    maxlength="100"
+                                    style="border-radius: 8px;"
+                                >
+                            </div>
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted mb-1">Description (Optional)</label>
+                                <textarea 
+                                    name="description" 
+                                    class="form-control" 
+                                    rows="2" 
+                                    placeholder="Brief details about responsibilities..."
+                                    style="border-radius: 8px;"
+                                >{{ edit_dept.description|default:'' }}</textarea>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2">
+                                {% if edit_dept %}
+                                    <a href="{% url 'manage_masters' %}" class="btn btn-sm btn-secondary mr-2" style="border-radius: 6px;">Cancel</a>
+                                {% endif %}
+                                <button type="submit" class="btn btn-sm {% if edit_dept %}btn-warning{% else %}btn-primary{% endif %}" style="border-radius: 6px;">
+                                    <i class="fa fa-save mr-1"></i> {% if edit_dept %}Update{% else %}Save{% endif %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-secondary text-white" style="position: sticky; top: 0; z-index: 1;">
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Logs</th>
+                                    <th class="text-right" style="width: 130px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dept in departments %}
+                                <tr {% if edit_dept.id == dept.id %}class="table-warning font-weight-bold"{% endif %}>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td class="font-weight-bold text-dark">{{ dept.name }}</td>
+                                    <td class="text-muted small">{{ dept.description|default:"-" }}</td>
+                                    <td>
+                                        <span class="text-muted small" style="font-size: 10px;">
+                                            By: {{ dept.created_by.username|default:"System" }}<br>
+                                            On: {{ dept.created_at|date:"Y-m-d" }}
+                                        </span>
+                                    </td>
+                                    <td class="text-right">
+                                        <div class="d-inline-flex">
+                                            <a href="?edit_dept={{ dept.id }}" class="btn btn-xs btn-outline-warning mr-1 btn-sm" title="Edit">
+                                                <i class="fa fa-pencil"></i>
+                                            </a>
+                                            <form action="{% url 'department_delete' dept.id %}" method="POST" style="display:inline;" onsubmit="event.preventDefault(); showConfirmModal('Are you sure you want to delete the department <b class=\'text-danger\'>{{ dept.name }}</b>?<br><br><span class=\'text-muted small\'>This may clear assignments from staff profiles.</span>', this);">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-xs btn-outline-danger btn-sm" title="Delete">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">No departments found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6 mb-4">
+            <div class="card border-0 shadow-lg h-100" style="border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb !important;">
+                <div class="card-header bg-success text-white py-3 d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 font-weight-bold"><i class="fa fa-user-shield mr-2"></i> Roles</h5>
+                    <span class="badge badge-light px-2.5 py-1">{{ roles|length }} Total</span>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="card border-0 mb-4 p-3 shadow-sm bg-light" style="border-radius: 10px; border-left: 5px solid {% if edit_role %}#ffc107{% else %}#28a745{% endif %} !important;">
+                        <h6 class="font-weight-bold {% if edit_role %}text-warning{% else %}text-success{% endif %} mb-3">
+                            {% if edit_role %}
+                                <i class="fa fa-pencil mr-1"></i> Edit Role: "{{ edit_role.name }}"
+                            {% else %}
+                                <i class="fa fa-plus mr-1"></i> Add New Role
+                            {% endif %}
+                        </h6>
+                        <form method="POST" action="{% url 'manage_masters' %}" id="roleForm" novalidate>
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="save_role">
+                            {% if edit_role %}
+                                <input type="hidden" name="role_id" value="{{ edit_role.id }}">
+                            {% endif %}
+                            
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted mb-1">Role Name</label>
+                                <input 
+                                    type="text" 
+                                    name="name" 
+                                    class="form-control" 
+                                    placeholder="e.g. Manager, Receptionist, Clerk" 
+                                    value="{{ edit_role.name|default:'' }}" 
+                                    required
+                                    maxlength="100"
+                                    style="border-radius: 8px;"
+                                >
+                            </div>
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted mb-1">Description (Optional)</label>
+                                <textarea 
+                                    name="description" 
+                                    class="form-control" 
+                                    rows="2" 
+                                    placeholder="Brief details about role authorization..."
+                                    style="border-radius: 8px;"
+                                >{{ edit_role.description|default:'' }}</textarea>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2">
+                                {% if edit_role %}
+                                    <a href="{% url 'manage_masters' %}" class="btn btn-sm btn-secondary mr-2" style="border-radius: 6px;">Cancel</a>
+                                {% endif %}
+                                <button type="submit" class="btn btn-sm {% if edit_role %}btn-warning{% else %}btn-success{% endif %}" style="border-radius: 6px;">
+                                    <i class="fa fa-save mr-1"></i> {% if edit_role %}Update{% else %}Save{% endif %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-secondary text-white" style="position: sticky; top: 0; z-index: 1;">
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Logs</th>
+                                    <th class="text-right" style="width: 130px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in roles %}
+                                <tr {% if edit_role.id == r.id %}class="table-warning font-weight-bold"{% endif %}>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td class="font-weight-bold text-dark">{{ r.name }}</td>
+                                    <td class="text-muted small">{{ r.description|default:"-" }}</td>
+                                    <td>
+                                        <span class="text-muted small" style="font-size: 10px;">
+                                            By: {{ r.created_by.username|default:"System" }}<br>
+                                            On: {{ r.created_at|date:"Y-m-d" }}
+                                        </span>
+                                    </td>
+                                    <td class="text-right">
+                                        <div class="d-inline-flex">
+                                            <a href="?edit_role={{ r.id }}" class="btn btn-xs btn-outline-warning mr-1 btn-sm" title="Edit">
+                                                <i class="fa fa-pencil"></i>
+                                            </a>
+                                            <form action="{% url 'role_delete' r.id %}" method="POST" style="display:inline;" onsubmit="event.preventDefault(); showConfirmModal('Are you sure you want to delete the role <b class=\'text-danger\'>{{ r.name }}</b>?<br><br><span class=\'text-muted small\'>This may clear assignments from staff profiles.</span>', this);">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-xs btn-outline-danger btn-sm" title="Delete">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">No roles found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="customValidationModal" class="custom-modal-overlay">
+    <div class="custom-modal-box">
+        <div class="custom-modal-header error">
+            <h5><i class="fa fa-exclamation-circle mr-2"></i>Validation Error</h5>
+        </div>
+        <div class="custom-modal-body" id="customModalMessage">
+            </div>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn btn-danger btn-sm px-4" onclick="closeValidationModal()" style="border-radius: 6px;">OK</button>
+        </div>
+    </div>
+</div>
+
+<div id="customConfirmModal" class="custom-modal-overlay">
+    <div class="custom-modal-box">
+        <div class="custom-modal-header warning">
+            <h5><i class="fa fa-exclamation-triangle mr-2"></i>Confirm Action</h5>
+        </div>
+        <div class="custom-modal-body" id="customConfirmMessage">
+            </div>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn btn-secondary btn-sm px-4" onclick="closeConfirmModal()" style="border-radius: 6px;">Cancel</button>
+            <button type="button" class="btn btn-danger btn-sm px-4" id="customConfirmBtn" style="border-radius: 6px;">Yes, Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        
+        /* ---------------------------------------------------
+           ALERT MODAL LOGIC (For Validation)
+        --------------------------------------------------- */
+        const alertModal = document.getElementById("customValidationModal");
+        const alertMessage = document.getElementById("customModalMessage");
+
+        window.showValidationModal = function(message) {
+            alertMessage.innerHTML = message;
+            alertModal.classList.add("active");
+        }
+
+        window.closeValidationModal = function() {
+            alertModal.classList.remove("active");
+        }
+
+        /* ---------------------------------------------------
+           CONFIRM MODAL LOGIC (For Deletions)
+        --------------------------------------------------- */
+        const confirmModal = document.getElementById("customConfirmModal");
+        const confirmMessage = document.getElementById("customConfirmMessage");
+        const confirmBtn = document.getElementById("customConfirmBtn");
+        let formToSubmit = null; // Stores the form to submit if confirmed
+
+        window.showConfirmModal = function(message, formElement) {
+            confirmMessage.innerHTML = message;
+            formToSubmit = formElement; // Capture the specific delete form
+            confirmModal.classList.add("active");
+        }
+
+        window.closeConfirmModal = function() {
+            confirmModal.classList.remove("active");
+            formToSubmit = null; // Reset
+        }
+
+        // When "Yes, Delete" is clicked
+        confirmBtn.addEventListener("click", function() {
+            if (formToSubmit) {
+                formToSubmit.submit(); // Submit the captured form to Django
+            }
+        });
+
+
+        /* ---------------------------------------------------
+           FORM VALIDATION LOGIC
+        --------------------------------------------------- */
+        function applyValidationToForm(formId, entityName) {
+            const form = document.getElementById(formId);
+            if (!form) return;
+
+            const nameInput = form.querySelector('input[name="name"]');
+            
+            const toggleErrorState = (input, isInvalid) => {
+                if (!input) return;
+                const labelWrapper = input.closest('.form-group');
+                const label = labelWrapper ? labelWrapper.querySelector('label') : null;
+                
+                if (isInvalid) {
+                    input.classList.add("is-invalid");
+                    if (label) label.classList.add("label-invalid");
+                } else {
+                    input.classList.remove("is-invalid");
+                    if (label) label.classList.remove("label-invalid");
+                }
+            };
+
+            // Real-time validation
+            nameInput.addEventListener("input", function () {
+                if (this.value.trim().length > 0) {
+                    toggleErrorState(this, this.value.trim().length < 2);
+                } else {
+                    toggleErrorState(this, false); 
+                }
+            });
+
+            // Submit validation
+            form.addEventListener("submit", function (e) {
+                const nameValue = nameInput.value.trim();
+                
+                if (nameValue === "") {
+                    e.preventDefault();
+                    toggleErrorState(nameInput, true);
+                    showValidationModal(`Please enter a valid name for the ${entityName}.<br><br>The field cannot be left blank.`);
+                } else if (nameValue.length < 2) {
+                    e.preventDefault();
+                    toggleErrorState(nameInput, true);
+                    showValidationModal(`The ${entityName} name must be at least 2 characters long.`);
+                }
+            });
+        }
+
+        // Apply real-time & submit validation to both forms
+        applyValidationToForm("departmentForm", "Department");
+        applyValidationToForm("roleForm", "Role");
+
+    });
+</script>
+
+{% endblock %}

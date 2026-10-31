@@ -1,0 +1,157 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+<style>
+    /* 1. LIGHT MODE (Default) */
+    :root { 
+        --card-bg: #ffffff; 
+        --text-main: #1e293b; 
+        --border-color: #e2e8f0; 
+        --bg-input: #f8fafc;
+        --blue-active: #3b82f6;
+        --label-border: #cbd5e1;
+        --label-text: #64748b;
+    }
+
+    /* 2. DARK MODE OVERRIDES */
+    [data-theme="dark"] {
+        --card-bg: #0f172a; 
+        --text-main: #f8fafc; 
+        --border-color: #1e293b; 
+        --bg-input: #1e293b;
+        --label-border: #334155;
+        --label-text: #94a3b8;
+    }
+
+    .notification-card { 
+        background: var(--card-bg) !important; 
+        border: 1px solid var(--border-color) !important; 
+        border-radius: 16px; padding: 30px; color: var(--text-main);
+    }
+
+    /* Inputs/Fields */
+    .form-control {
+        background-color: var(--bg-input) !important;
+        border: 1px solid var(--border-color) !important;
+        color: var(--text-main) !important;
+    }
+
+    /* Radio Button Labels */
+    .styled-options-container label {
+        background: var(--bg-input); 
+        border: 2px solid var(--label-border); 
+        padding: 15px 25px;
+        border-radius: 12px; 
+        color: var(--label-text);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .styled-options-container label:has(input:checked) {
+        background: rgba(59, 130, 246, 0.1);
+        border-color: var(--blue-active);
+        color: var(--text-main);
+    }
+
+    .dynamic-section { 
+        background: var(--bg-input) !important; 
+        border: 1px solid var(--border-color); 
+        padding: 20px; border-radius: 12px; margin-bottom: 20px; 
+    }
+    
+    .ctrl-info-box { 
+        background: var(--card-bg) !important; 
+        border: 1px solid var(--border-color); 
+        color: var(--label-text) !important;
+    }
+</style>
+<div class="content-wrapper">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <section class="notification-card shadow-lg">
+                <!-- <header class="mb-4 pb-3 border-bottom border-dark">
+                    <h2 class="font-weight-bold">Compose Notification</h2>
+                </header> -->
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="form-group mb-4">
+                        <label class="text-uppercase text-muted" style="font-size: 12px; font-weight: 700;">Target Audience</label>
+                        <div class="styled-options-container">
+                            {% for radio in form.broadcast_type %}
+                                <label>{{ radio.tag }} <span class="ml-2">{{ radio.choice_label }}</span></label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="form-group dynamic-section" id="departments-section" style="display:none;">
+                        <label class="font-weight-bold">Select Departments</label>
+                        {{ form.departments }}
+                    </div>
+
+                    <div class="form-group dynamic-section" id="roles-section" style="display:none;">
+                        <label class="font-weight-bold">Select Roles</label>
+                        {{ form.roles }}
+                    </div>
+
+                    <div class="form-group dynamic-section" id="staff-section" style="display:none;">
+                        <label class="font-weight-bold">Select Staff Members</label>
+                        {{ form.staff_members }}
+                        <div class="ctrl-info-box mt-2"><i class="fa fa-info-circle"></i> Hold <b>CTRL/CMD</b> to select multiple.</div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="font-weight-bold">Title</label>
+                        {{ form.title }}
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="font-weight-bold">Message</label>
+                        {{ form.message }}
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="font-weight-bold">Attachment</label>
+                        {{ form.attachment }}
+                    </div>
+
+                    <div class="text-right mt-4">
+                        <a href="{% url 'inbox' %}" class="btn btn-outline-secondary px-4 mr-2 rounded-pill">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-5 rounded-pill font-weight-bold">Send Notification</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const radios = document.querySelectorAll('input[name="broadcast_type"]');
+        const sections = {
+            'department': document.getElementById('departments-section'),
+            'role': document.getElementById('roles-section'),
+            'specific': document.getElementById('staff-section')
+        };
+
+        function updateVisibility() {
+            const val = document.querySelector('input[name="broadcast_type"]:checked')?.value;
+            
+            // Toggle display and clear values of hidden inputs
+            Object.keys(sections).forEach(key => {
+                const isVisible = (val === key);
+                sections[key].style.display = isVisible ? 'block' : 'none';
+                
+                // CRITICAL: Clear selection so it isn't sent in POST if hidden
+                if (!isVisible) {
+                    const select = sections[key].querySelector('select');
+                    if (select) select.selectedIndex = -1; 
+                }
+            });
+        }
+
+        radios.forEach(r => r.addEventListener('change', updateVisibility));
+        updateVisibility();
+    });
+</script>
+{% endblock %}

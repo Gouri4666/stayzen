@@ -1,0 +1,1563 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<style>
+    .offline-booking-card {
+        border-radius: 16px;
+        background: var(--bg-card, #ffffff);
+        border: none;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="dark"] .offline-booking-card {
+        background: #1e293b;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .gradient-header {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: #ffffff;
+        padding: 24px 30px;
+    }
+
+    .form-section-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        font-size: 16px;
+        color: #4f46e5;
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 8px;
+        margin-bottom: 20px;
+    }
+
+    [data-theme="dark"] .form-section-title {
+        color: #818cf8;
+        border-bottom-color: #334155;
+    }
+
+    .billing-summary-box {
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px dashed #cbd5e1;
+        padding: 20px;
+    }
+
+    [data-theme="dark"] .billing-summary-box {
+        background: #0f172a;
+        border-color: #334155;
+    }
+
+    .btn-toggle-custom {
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 8px 20px;
+        transition: all 0.2s;
+    }
+
+    .activity-session-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 10px;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    [data-theme="dark"] .activity-session-card {
+        border-color: #334155;
+    }
+
+    .activity-session-card:hover {
+        border-color: #6366f1;
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .badge-membership {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 12px;
+    }
+
+    .flatpickr-day.flatpickr-disabled.date-reserved {
+        opacity: 0.9;
+        text-decoration: line-through !important;
+    }
+
+    .flatpickr-day.flatpickr-disabled.date-not-available {
+        opacity: 0.9;
+        text-decoration: line-through !important;
+    }
+
+    .flatpickr-day.flatpickr-disabled.date-maintenance {
+        background-color: #64748b !important;
+        color: #ffffff !important;
+        opacity: 0.9;
+        border-radius: 50% !important;
+        text-decoration: none !important;
+    }
+
+    /* --- Live Validation Styles --- */
+    .is-invalid-input {
+        border-color: #ef4444 !important;
+        color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+    
+    .is-invalid-label {
+        color: #ef4444 !important;
+        transition: color 0.2s;
+    }
+
+    .validation-message {
+        display: none;
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+        font-weight: 500;
+    }
+    
+    .is-invalid-input ~ .validation-message {
+        display: block;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="offline-booking-card">
+        <div class="gradient-header d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="mb-1 font-weight-bold" style="font-family: 'Outfit', sans-serif;">New Offline Booking</h3>
+                <p class="mb-0 text-white-50" style="font-size: 13px;">Create a room booking with optional activities
+                    for registered customers</p>
+            </div>
+            <div>
+                <a href="{% url 'offline_fresh_up_booking' %}"
+                    class="btn btn-warning btn-sm text-dark font-weight-bold mr-2"
+                    style="border-radius: 8px; padding: 8px 16px;">
+                    <i class="fa fa-clock-o mr-1"></i> Switch to Hourly Fresh-Up
+                </a>
+                <a href="{% url 'receptionist_room_bookings' %}"
+                    class="btn btn-light btn-sm text-primary font-weight-semibold"
+                    style="border-radius: 8px; padding: 8px 16px;">
+                    <i class="fa fa-arrow-left mr-1"></i> Back to List
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <form id="offlineBookingForm" method="POST" action="{% url 'offline_booking' %}">
+                {% csrf_token %}
+
+                <input type="hidden" name="customer_id" id="customerId">
+
+                <div class="row">
+                    <div class="col-lg-12">
+
+                        <div class="mb-4">
+                            <h5 class="form-section-title"><i class="fa fa-user-circle mr-2"></i>Customer Information
+                            </h5>
+
+                            <div class="d-flex gap-3 mb-4">
+                                <button type="button" id="btnGuestType" class="btn btn-primary btn-toggle-custom"
+                                    onclick="setCustomerType('guest')">
+                                    Guest Customer (Walk-in)
+                                </button>
+                                <button type="button" id="btnRegisteredType"
+                                    class="btn btn-outline-secondary btn-toggle-custom"
+                                    onclick="setCustomerType('registered')">
+                                    Registered Customer
+                                </button>
+                                <input type="hidden" name="customer_type" id="customerType" value="guest">
+                            </div>
+
+                            <div id="registeredCustomerSection" style="display: none;">
+                                <div class="row align-items-end mb-3">
+                                    <div class="col-md-8">
+                                        <label class="form-label font-weight-bold">Search Registered Phone
+                                            Number</label>
+                                        <div class="input-group">
+                                            <span class="input-group-addon"><i class="fa fa-phone"></i></span>
+                                            <input type="text" id="searchPhone" class="form-control"
+                                                placeholder="Enter customer phone number..." style="height: 42px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-info w-100" onclick="searchCustomer()"
+                                            style="height: 42px; font-weight: 600; background: #06b6d4; border: none; color: #fff;">
+                                            <i class="fa fa-search mr-2"></i> Search Customer
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="customerDetailsCard" class="card p-3 mb-3"
+                                    style="display: none; border: 1px solid #22c55e; background: rgba(34, 197, 94, 0.05); border-radius: 10px;">
+                                    <h6 class="text-success font-weight-bold mb-3"><i
+                                            class="fa fa-check-circle mr-1"></i> Customer Profile Verified</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted small d-block">Full Name</span>
+                                            <strong id="custName" class="text-dark">-</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted small d-block">Email Address</span>
+                                            <strong id="custEmail" class="text-dark">-</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted small d-block">Membership Status</span>
+                                            <span id="custMembership"
+                                                class="badge-membership bg-primary text-white">-</span>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted small d-block">Loyalty Points Available</span>
+                                            <strong id="custPoints" class="text-primary">-</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 p-3" id="membershipBenefitsWrapper"
+                                        style="border: 1px dashed #cbd5e1; border-radius: 10px; background: rgba(255,255,255,0.65);">
+                                        <h6 class="font-weight-bold mb-3 text-primary">MEMBERSHIP BENEFITS</h6>
+                                        <div class="row">
+                                            <div class="col-md-4 mb-2">
+                                                <span class="text-muted small d-block">Membership Status</span>
+                                                <strong id="benefitMembershipStatus" class="text-dark">-</strong>
+                                            </div>
+                                            <div class="col-md-4 mb-2">
+                                                <span class="text-muted small d-block">Membership Discount</span>
+                                                <strong id="benefitMembershipDiscount" class="text-dark">0%</strong>
+                                            </div>
+                                            <div class="col-md-4 mb-2">
+                                                <span class="text-muted small d-block">Discount Amount</span>
+                                                <strong id="benefitMembershipAmount"
+                                                    class="text-success">&#8377;0.00</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3" id="pointsRedeemWrapper">
+                                        <h6 class="font-weight-bold mb-3 text-primary">LOYALTY POINTS</h6>
+                                        <label class="form-label font-weight-semibold">Redeem Loyalty Points</label>
+                                        <div class="text-muted small mb-2">Available Points: <strong
+                                                id="availablePointsText">0</strong></div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="text-muted small mb-1">Points to Redeem</label>
+                                                <input type="number" name="redeem_points" id="redeemPoints"
+                                                    class="form-control" min="0" value="0"
+                                                    oninput="updateBillingSummary()">
+                                            </div>
+                                            <div class="col-md-6 align-self-center">
+                                                <span class="text-muted small">1 point = &#8377;1 discount<br>Max
+                                                    redeemable: <strong id="maxRedeemText">0</strong> points</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="customerSearchError" class="alert alert-danger"
+                                    style="display: none; border-radius: 8px;">
+                                    Customer not found. Make sure the phone number is fully registered.
+                                </div>
+                            </div>
+
+                            <div id="guestCustomerSection">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">First Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="guest_first_name" id="guestFirstName" class="form-control" placeholder="John">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Last Name</label>
+                                        <input type="text" name="guest_last_name" id="guestLastName" class="form-control" placeholder="Doe">
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Guest Phone <span class="text-danger">*</span></label>
+                                        <input type="text" name="guest_phone" id="guestPhone" class="form-control" placeholder="1234567890">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Guest Email</label>
+                                        <input type="email" name="guest_email" id="guestEmail" class="form-control" placeholder="john@example.com">
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Gender <span class="text-danger">*</span></label>
+                                        <select name="guest_gender" id="guestGender" class="form-control" style="height: auto; padding: 10px;" required>
+                                            <option value="">Please Select</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-semibold">Guest Address</label>
+                                        <input type="text" name="guest_address" id="guestAddress" class="form-control" placeholder="Street, City, Country">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5 class="form-section-title"><i class="fa fa-bed mr-2"></i>Stay Details & Room Selection
+                            </h5>
+                            <div class="row">
+                                <div class="col-lg-5 mb-3">
+                                    <label class="form-label font-weight-semibold">Stay Calendar <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" id="stayDateCalendar" class="form-control mb-2"
+                                        placeholder="Select check-in and check-out dates" readonly>
+                                    <div class="text-muted small mt-2">Select the stay dates from this calendar. The
+                                        form updates automatically.</div>
+                                </div>
+                                <div class="col-lg-7">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label font-weight-semibold">Check-in Date <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="date" name="check_in" id="checkIn" class="form-control"
+                                                readonly>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label font-weight-semibold">Check-out Date <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="date" name="check_out" id="checkOut" class="form-control"
+                                                readonly>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label font-weight-semibold">Adults</label>
+                                            <input type="number" name="adults" id="adults" class="form-control" min="1"
+                                                value="1" onchange="checkAvailability()">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label font-weight-semibold">Children</label>
+                                            <input type="number" name="children" id="children" class="form-control"
+                                                min="0" value="0" onchange="checkAvailability()">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div class="small text-muted">Stay duration: <strong id="stayDurationText"
+                                                class="text-dark">0 nights</strong></div>
+                                        <button type="button" class="btn btn-link btn-sm p-0"
+                                            onclick="resetStaySelection()">Change dates</button>
+                                    </div>
+                                    <div class="row" id="roomStatusSummary">
+                                        <div class="col-12">
+                                            <div class="text-muted small">Select dates to load live room status
+                                                counters.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label font-weight-bold">Select Available Room <span
+                                        class="text-danger">*</span></label>
+                                <select name="room_id" id="roomId" class="form-control"
+                                    style="height: auto; padding: 10px;" onchange="onRoomSelected()" disabled>
+                                    <option value="">-- Please select check-in & check-out first --</option>
+                                </select>
+                                <div id="roomLoader" class="mt-2 text-primary" style="display: none; font-size: 13px;">
+                                    <i class="fa fa-spinner fa-spin mr-1"></i> Checking room availability...
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label font-weight-bold mb-0">Visual Room List</label>
+                                    <div class="small">
+                                        <span class="badge badge-success">Available</span>
+                                        <span class="badge badge-danger">Occupied</span>
+                                        <span class="badge badge-warning">Checkout</span>
+                                        <span class="badge badge-info">Cleaning</span>
+                                        <span class="badge badge-secondary">Blocked</span>
+                                    </div>
+                                </div>
+                                <div id="roomCards" class="row">
+                                    <div class="col-12">
+                                        <div class="text-muted small">Select check-in and check-out dates from the
+                                            calendar to view room availability.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3" id="roomCalendarWrapper" style="display: none;">
+                                <label class="form-label font-weight-bold">Selected Room Calendar</label>
+                                <input type="text" id="roomCalendar" class="form-control" readonly>
+                                <div class="text-muted small mt-2">
+                                    <span class="mr-3"><span
+                                            style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;"></span>
+                                        Reserved</span>
+                                    <span class="mr-3"><span
+                                            style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f97316;"></span>
+                                        Not Available</span>
+                                    <span><span
+                                            style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#64748b;"></span>
+                                        Maintenance</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4" id="activitiesSection">
+                            <h5 class="form-section-title"><i class="fa fa-heartbeat mr-2"></i>Optional Activities</h5>
+                            <p class="text-muted small mb-3">Select activities to schedule during the stay. These
+                                sessions are active and have available slots.</p>
+
+                            <div class="row">
+                                {% for session in activity_sessions %}
+                                <div class="col-md-6 mb-2">
+                                    <div class="activity-session-card d-flex align-items-center justify-content-between"
+                                        onclick="toggleActivityCheckbox('session_{{ session.id }}')">
+                                        <div>
+                                            <div class="font-weight-bold text-dark">{{ session.activity.activity_name }}
+                                            </div>
+                                            <div class="text-muted small">
+                                                <i class="fa fa-clock-o mr-1"></i> {{ session.start_time|time:"g:i A" }}
+                                                - {{ session.end_time|time:"g:i A" }}
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="font-weight-bold text-primary mb-1">&#8377;{{ session.activity.price }}</div>
+                                            <input type="checkbox" name="activities" value="{{ session.id }}"
+                                                id="session_{{ session.id }}" data-price="{{ session.activity.price }}"
+                                                class="activity-chk-btn"
+                                                onclick="event.stopPropagation(); updateBillingSummary()">
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="col-12 text-muted small">No active activity sessions available at the
+                                    moment.</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="card p-4 mt-4 shadow-sm"
+                            style="border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0); background: var(--bg-card, #ffffff);">
+                            <h5 class="form-section-title mb-3"><i class="fa fa-credit-card mr-2"></i>Booking & Payment
+                                Summary</h5>
+
+                            <input type="hidden" name="status" value="Pending">
+                            <input type="hidden" name="payment_status" value="Pending">
+
+                            <div class="mb-4">
+                                <label class="form-label font-weight-bold">Payment Method <span
+                                        class="text-danger">*</span></label>
+                                <select name="payment_method" id="paymentMethod" class="form-control"
+                                    style="height: auto; padding: 10px;" onchange="togglePaymentMethod()">
+                                    <option value="Razorpay">Card / Online Payment</option>
+                                    <option value="Cash">Cash at Reception</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4" id="cashAmountDiv" style="display: none;">
+                                <label class="form-label font-weight-bold text-success">Advance Amount Received <span
+                                        class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text font-weight-bold"
+                                            style="background: #f1f5f9; border: 1px solid #ced4da;">&#8377;</span>
+                                    </div>
+                                    <input type="number" name="advance_amount" id="advanceAmount" class="form-control"
+                                        value="0.00" min="0" step="0.01"
+                                        oninput="this.dataset.modified='1'; updateBillingSummary()">
+                                </div>
+                                <small class="text-muted">Enter the amount received in cash. Ensure it does not exceed
+                                    the total.</small>
+                            </div>
+
+                            <div class="billing-summary-box mb-4">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Stay Cost (<span id="stayNights">0</span> nights):</span>
+                                    <span id="summaryStayPrice"
+                                        class="font-weight-semibold text-dark">&#8377;0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Activities Cost:</span>
+                                    <span id="summaryActivitiesPrice"
+                                        class="font-weight-semibold text-dark">&#8377;0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-success" id="summaryMembershipRow"
+                                    style="display: none !important;">
+                                    <span>Membership Discount:</span>
+                                    <span id="summaryMembershipPrice">-&#8377;0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-danger" id="summaryRedeemRow"
+                                    style="display: none !important;">
+                                    <span>Points Redeemed:</span>
+                                    <span id="summaryRedeemPrice">-&#8377;0.00</span>
+                                </div>
+                                <hr style="border-top: 1px solid #cbd5e1; margin: 10px 0;">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="font-weight-bold text-dark">Total Amount:</span>
+                                    <span id="summaryTotalPrice" class="font-weight-bold text-dark"
+                                        style="font-size: 16px;">&#8377;0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-success">
+                                    <span class="font-weight-semibold">Required Advance:</span>
+                                    <span id="summaryAdvancePrice" class="font-weight-semibold">&#8377;0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between pt-2 border-top border-dark"
+                                    style="border-top-width: 2px !important;">
+                                    <span class="font-weight-bold text-primary">Pending Balance:</span>
+                                    <span id="summaryPendingPrice" class="font-weight-bold text-primary"
+                                        style="font-size: 18px;">&#8377;0.00</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="submitBtn" class="btn btn-primary btn-lg w-100 font-weight-bold"
+                                style="border-radius: 8px; background: #4f46e5; border: none; padding: 14px; color: #fff; transition: background 0.3s;">
+                                <span id="btnIcon"><i class="fa fa-credit-card mr-2"></i></span> <span id="btnText">Book
+                                    Now</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let activeCustomerType = 'guest';
+    let loadedRooms = [];
+    let allRoomStatuses = [];
+    let selectedRoomPrice = 0;
+    let activeCustomerMembership = '';
+    let activeCustomerPoints = 0;
+    let stayCalendarPicker = null;
+    let roomCalendarPicker = null;
+    let roomCalendarState = {
+        reserved: new Set(),
+        notAvailable: new Set(),
+        maintenance: new Set()
+    };
+
+    const roomStatusMeta = {
+        available: { badge: 'badge-success', border: '#22c55e', summaryClass: 'text-success' },
+        occupied: { badge: 'badge-danger', border: '#ef4444', summaryClass: 'text-danger' },
+        checkout: { badge: 'badge-warning', border: '#f59e0b', summaryClass: 'text-warning' },
+        cleaning: { badge: 'badge-info', border: '#06b6d4', summaryClass: 'text-info' },
+        blocked: { badge: 'badge-secondary', border: '#64748b', summaryClass: 'text-secondary' }
+    };
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function toYMD(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    function getMonthRange(baseDate) {
+        const y = baseDate.getFullYear();
+        const m = baseDate.getMonth();
+        const start = new Date(y, m, 1);
+        const end = new Date(y, m + 2, 0);
+        return { start: toYMD(start), end: toYMD(end) };
+    }
+
+    function formatRangeText(checkIn, checkOut) {
+        if (!checkIn || !checkOut) return '';
+        return `${checkIn} to ${checkOut}`;
+    }
+
+    function formatCurrency(amount) {
+        return `\u20B9${Number(amount || 0).toFixed(2)}`;
+    }
+
+    function getMembershipRate(status) {
+        const rates = { Silver: 0.05, Gold: 0.10, Platinum: 0.25 };
+        return rates[status] || 0;
+    }
+
+    function setStayDates(checkIn, checkOut, syncCalendar) {
+        document.getElementById('checkIn').value = checkIn || '';
+        document.getElementById('checkOut').value = checkOut || '';
+        document.getElementById('stayDateCalendar').value = formatRangeText(checkIn, checkOut);
+
+        if (syncCalendar && stayCalendarPicker) {
+            if (checkIn && checkOut) {
+                stayCalendarPicker.setDate([checkIn, checkOut], false);
+            } else {
+                stayCalendarPicker.clear();
+            }
+        }
+    }
+
+    function updateStayDurationText(nights) {
+        const safeNights = Number.isFinite(nights) ? nights : 0;
+        document.getElementById('stayDurationText').innerText = `${safeNights} night${safeNights === 1 ? '' : 's'}`;
+    }
+
+    function renderRoomSummary(summary) {
+        const container = document.getElementById('roomStatusSummary');
+        if (!summary) {
+            container.innerHTML = '<div class="col-12"><div class="text-muted small">Select dates to load live room status counters.</div></div>';
+            return;
+        }
+
+        const items = [
+            ['Total Available Rooms', summary.available || 0, 'available'],
+            ['Total Occupied Rooms', summary.occupied || 0, 'occupied'],
+            ['Total Checkout Rooms', summary.checkout || 0, 'checkout'],
+            ['Total Under Cleaning Rooms', summary.cleaning || 0, 'cleaning'],
+            ['Total Reserved/Blocked Rooms', summary.blocked || 0, 'blocked']
+        ];
+
+        container.innerHTML = items.map(([label, count, key]) => {
+            const meta = roomStatusMeta[key];
+            return `
+                <div class="col-md-6 col-xl mb-2">
+                    <div class="card shadow-sm h-100" style="border: 1px solid ${meta.border}; border-radius: 12px;">
+                        <div class="card-body p-3">
+                            <div class="small text-muted">${label}</div>
+                            <div class="h4 mb-0 ${meta.summaryClass}">${count}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderRoomCards(rooms) {
+        const container = document.getElementById('roomCards');
+        const selectedId = document.getElementById('roomId').value;
+
+        if (!rooms.length) {
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="text-muted small">No rooms match the selected dates and guest count.</div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = rooms.map((room) => {
+            const meta = roomStatusMeta[room.status_key] || roomStatusMeta.blocked;
+            const isSelected = String(selectedId) === String(room.id);
+            const actionClass = room.selectable ? (isSelected ? 'btn-primary' : 'btn-outline-primary') : 'btn-light';
+            const actionText = room.selectable ? (isSelected ? 'Selected' : 'Select Room') : 'Unavailable';
+
+            return `
+                <div class="col-md-6 col-xl-4 mb-3">
+                    <div class="card shadow-sm h-100" style="border-radius: 12px; border: 1px solid #e2e8f0; border-left: 4px solid ${meta.border};">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <div class="font-weight-bold text-dark">Room ${escapeHtml(room.room_number)}</div>
+                                    <div class="text-muted small">${escapeHtml(room.room_name)}</div>
+                                </div>
+                                <span class="badge ${meta.badge}">${escapeHtml(room.status_label)}</span>
+                            </div>
+                            <div class="small text-muted mb-1">Type: <span class="text-dark">${escapeHtml(room.room_type)}</span></div>
+                            <div class="small text-muted mb-1">Capacity: <span class="text-dark">Up to ${escapeHtml(room.capacity)} guests</span></div>
+                            <div class="small text-muted mb-1">Price: <span class="text-dark">${formatCurrency(room.price)} / night</span></div>
+                            <div class="small text-muted mb-3">Current status: <span class="text-dark">${escapeHtml(room.current_status)}</span></div>
+                            <button type="button" class="btn ${actionClass} btn-sm mt-auto" onclick="selectRoomFromCard('${room.id}')" ${room.selectable ? '' : 'disabled'}>
+                                ${actionText}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function populateRoomSelect(rooms, preferredRoomId) {
+        const roomSelect = document.getElementById('roomId');
+        const availableRooms = rooms || [];
+
+        if (!availableRooms.length) {
+            roomSelect.disabled = true;
+            roomSelect.innerHTML = '<option value="">-- No available rooms found --</option>';
+            return;
+        }
+
+        roomSelect.disabled = false;
+        roomSelect.innerHTML = '<option value="">-- Choose a Room --</option>';
+        availableRooms.forEach((room) => {
+            const opt = document.createElement('option');
+            opt.value = room.id;
+            opt.innerText = `Room ${room.room_number} - ${room.room_type} - ${formatCurrency(room.price)}/night (Up to ${room.capacity} guests)`;
+            roomSelect.appendChild(opt);
+        });
+
+        if (preferredRoomId && availableRooms.some((room) => String(room.id) === String(preferredRoomId))) {
+            roomSelect.value = preferredRoomId;
+            const selectedRoom = availableRooms.find((room) => String(room.id) === String(preferredRoomId));
+            if (selectedRoom) {
+                const adultsInput = document.getElementById('adults');
+                const childrenInput = document.getElementById('children');
+                const adVal = parseInt(adultsInput.value) || 0;
+                const chVal = parseInt(childrenInput.value) || 0;
+                if (adVal > selectedRoom.max_adults) {
+                    adultsInput.value = selectedRoom.max_adults;
+                }
+                if (chVal > selectedRoom.max_children) {
+                    childrenInput.value = selectedRoom.max_children;
+                }
+            }
+        }
+    }
+
+    function resetRoomAvailability(message) {
+        loadedRooms = [];
+        allRoomStatuses = [];
+        selectedRoomPrice = 0;
+        renderRoomSummary(null);
+        document.getElementById('roomId').innerHTML = `<option value="">${message || '-- Please select check-in & check-out first --'}</option>`;
+        document.getElementById('roomId').disabled = true;
+        document.getElementById('roomCards').innerHTML = `
+            <div class="col-12">
+                <div class="text-muted small">${message || 'Select check-in and check-out dates from the calendar to view room availability.'}</div>
+            </div>
+        `;
+        clearRoomCalendar();
+        updateStayDurationText(0);
+        updateBillingSummary();
+    }
+
+    function initializeStayCalendar() {
+        stayCalendarPicker = flatpickr('#stayDateCalendar', {
+            mode: 'range',
+            minDate: 'today',
+            dateFormat: 'Y-m-d',
+            clickOpens: true,
+            onChange: function (selectedDates) {
+                if (selectedDates.length === 2) {
+                    const orderedDates = selectedDates.slice().sort((a, b) => a - b);
+                    const checkIn = toYMD(orderedDates[0]);
+                    const checkOut = toYMD(orderedDates[1]);
+                    setStayDates(checkIn, checkOut, false);
+                    checkAvailability();
+                } else if (selectedDates.length === 0) {
+                    setStayDates('', '', false);
+                    resetRoomAvailability('Select check-in and check-out dates from the calendar to view room availability.');
+                }
+            }
+        });
+    }
+
+    function resetStaySelection() {
+        setStayDates('', '', true);
+        resetRoomAvailability('Select check-in and check-out dates from the calendar to view room availability.');
+    }
+
+    function clearRoomCalendar() {
+        const wrap = document.getElementById('roomCalendarWrapper');
+        if (wrap) wrap.style.display = 'none';
+        if (roomCalendarPicker) {
+            roomCalendarPicker.destroy();
+            roomCalendarPicker = null;
+        }
+        roomCalendarState.reserved = new Set();
+        roomCalendarState.notAvailable = new Set();
+        roomCalendarState.maintenance = new Set();
+    }
+
+    function applyRoomCalendarData(data) {
+        roomCalendarState.reserved = new Set(data.reserved || []);
+        roomCalendarState.notAvailable = new Set(data.not_available || []);
+        roomCalendarState.maintenance = new Set(data.maintenance || []);
+
+        const disabledDates = Array.from(new Set([
+            ...(data.booked || []),
+            ...(data.reserved || []),
+            ...(data.not_available || []),
+            ...(data.maintenance || [])
+        ]));
+
+        const wrap = document.getElementById('roomCalendarWrapper');
+        if (wrap) wrap.style.display = 'block';
+
+        if (!roomCalendarPicker) {
+            roomCalendarPicker = flatpickr('#roomCalendar', {
+                inline: true,
+                clickOpens: false,
+                allowInput: false,
+                showMonths: 2,
+                minDate: 'today',
+                dateFormat: 'Y-m-d',
+                disable: disabledDates,
+                onDayCreate: function (dObj, dStr, fp, dayElem) {
+                    if (!dayElem || !dayElem.dateObj) return;
+                    const ds = toYMD(dayElem.dateObj);
+                    if (roomCalendarState.maintenance.has(ds)) {
+                        dayElem.classList.add('date-maintenance');
+                        dayElem.title = 'Maintenance';
+                    } else if (roomCalendarState.reserved.has(ds)) {
+                        dayElem.classList.add('date-reserved');
+                        dayElem.title = 'Reserved';
+                    } else if (roomCalendarState.notAvailable.has(ds)) {
+                        dayElem.classList.add('date-not-available');
+                        dayElem.title = 'Not Available';
+                    }
+                },
+                onMonthChange: function (selectedDates, dateStr, fp) {
+                    const base = new Date(fp.currentYear, fp.currentMonth, 1);
+                    updateRoomCalendar(base);
+                },
+                onYearChange: function (selectedDates, dateStr, fp) {
+                    const base = new Date(fp.currentYear, fp.currentMonth, 1);
+                    updateRoomCalendar(base);
+                }
+            });
+        } else {
+            roomCalendarPicker.set('disable', disabledDates);
+            roomCalendarPicker.redraw();
+        }
+    }
+
+    function updateRoomCalendar(baseDateOverride) {
+        const selectedRoomId = document.getElementById('roomId')?.value;
+        if (!selectedRoomId) {
+            clearRoomCalendar();
+            return;
+        }
+
+        const checkInVal = document.getElementById('checkIn')?.value;
+        let baseDate = baseDateOverride;
+        if (!baseDate) {
+            baseDate = checkInVal ? new Date(checkInVal + 'T00:00:00') : new Date();
+        }
+
+        const range = getMonthRange(baseDate);
+        const url = "{% url 'api_room_calendar_status' %}" +
+            "?room_id=" + encodeURIComponent(selectedRoomId) +
+            "&start=" + encodeURIComponent(range.start) +
+            "&end=" + encodeURIComponent(range.end);
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    clearRoomCalendar();
+                    return;
+                }
+                applyRoomCalendarData(data);
+            })
+            .catch(() => {
+                clearRoomCalendar();
+            });
+    }
+
+    function setCustomerType(type) {
+        activeCustomerType = type;
+        document.getElementById('customerType').value = type;
+
+        const btnGuest = document.getElementById('btnGuestType');
+        const btnReg = document.getElementById('btnRegisteredType');
+        const secGuest = document.getElementById('guestCustomerSection');
+        const secReg = document.getElementById('registeredCustomerSection');
+        const secAct = document.getElementById('activitiesSection');
+
+        if (type === 'guest') {
+            btnGuest.className = "btn btn-primary btn-toggle-custom";
+            btnReg.className = "btn btn-outline-secondary btn-toggle-custom";
+            secGuest.style.display = "block";
+            secReg.style.display = "none";
+            secAct.style.display = "block";
+
+            document.getElementById('guestFirstName').required = true;
+            document.getElementById('guestGender').required = true;
+            document.getElementById('guestPhone').required = true;
+
+            document.getElementById('customerId').value = '';
+            document.getElementById('redeemPoints').value = 0;
+            document.getElementById('redeemPoints').max = 0;
+            document.getElementById('customerDetailsCard').style.display = 'none';
+            document.getElementById('customerSearchError').style.display = 'none';
+            document.querySelectorAll('.activity-chk-btn').forEach(chk => chk.checked = false);
+            activeCustomerMembership = '';
+            activeCustomerPoints = 0;
+        } else {
+            btnGuest.className = "btn btn-outline-secondary btn-toggle-custom";
+            btnReg.className = "btn btn-primary btn-toggle-custom";
+            secGuest.style.display = "none";
+            secReg.style.display = "block";
+            document.getElementById('guestFirstName').required = false;
+            document.getElementById('guestGender').required = false;
+            document.getElementById('guestPhone').required = false;
+
+            const detailsCard = document.getElementById('customerDetailsCard');
+            if (detailsCard.style.display === 'block') {
+                secAct.style.display = "block";
+            } else {
+                secAct.style.display = "none";
+            }
+        }
+        
+        // Remove error styling when toggling modes
+        document.querySelectorAll('.is-invalid-input').forEach(el => {
+            el.classList.remove('is-invalid-input');
+        });
+        
+        updateBillingSummary();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById('guestFirstName').required = true;
+        document.getElementById('guestGender').required = true;
+        document.getElementById('guestPhone').required = true;
+        initializeStayCalendar();
+        resetRoomAvailability('Select check-in and check-out dates from the calendar to view room availability.');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlRoomId = urlParams.get('room_id');
+        const startDate = urlParams.get('date');
+        let endDate = urlParams.get('end_date');
+        const roomName  = urlParams.get('room_name');
+        const duration  = urlParams.get('duration');
+        const bookingType = urlParams.get('booking_type');
+
+        if (startDate && !endDate) {
+            const d = new Date(startDate + 'T00:00:00');
+            d.setDate(d.getDate() + 1);
+            endDate = toYMD(d);
+        } else if (!endDate) {
+            endDate = startDate;
+        }
+
+        if (startDate && urlRoomId) {
+            window.initialRoomId = urlRoomId;
+            setStayDates(startDate, endDate, true);
+            checkAvailability();
+        }
+
+        document.getElementById('offlineBookingForm').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+                e.preventDefault();
+            }
+        });
+    });
+
+    function searchCustomer() {
+        const phoneInput = document.getElementById('searchPhone').value.trim();
+        const detailsCard = document.getElementById('customerDetailsCard');
+        const errorMsg = document.getElementById('customerSearchError');
+        const secAct = document.getElementById('activitiesSection');
+
+        if (!phoneInput) {
+            alert('Please enter a phone number to search.');
+            return;
+        }
+
+        fetch("{% url 'api_search_customer' %}?phone=" + encodeURIComponent(phoneInput))
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    errorMsg.style.display = 'none';
+                    detailsCard.style.display = 'block';
+                    if (activeCustomerType === 'registered') {
+                        secAct.style.display = 'block';
+                    }
+
+                    document.getElementById('customerId').value = data.customer.id;
+                    document.getElementById('custName').innerText = data.customer.name;
+                    document.getElementById('custEmail').innerText = data.customer.email || 'N/A';
+                    activeCustomerMembership = data.customer.membership_status || '';
+                    activeCustomerPoints = parseInt(data.customer.loyalty_points || '0') || 0;
+
+                    const memBadge = document.getElementById('custMembership');
+                    memBadge.innerText = data.customer.membership_status;
+                    if (data.customer.membership_status === 'Bronze') memBadge.style.background = '#cd7f32';
+                    else if (data.customer.membership_status === 'Silver') memBadge.style.background = '#c0c0c0';
+                    else if (data.customer.membership_status === 'Gold') memBadge.style.background = '#ffd700';
+                    else if (data.customer.membership_status === 'Platinum') memBadge.style.background = '#e5e4e2';
+
+                    const discountPercent = getMembershipRate(activeCustomerMembership) * 100;
+                    document.getElementById('benefitMembershipStatus').innerText = activeCustomerMembership || '-';
+                    document.getElementById('benefitMembershipDiscount').innerText = `${discountPercent.toFixed(0)}%`;
+                    document.getElementById('custPoints').innerText = activeCustomerPoints;
+                    document.getElementById('availablePointsText').innerText = activeCustomerPoints;
+                    document.getElementById('redeemPoints').max = activeCustomerPoints;
+                    document.getElementById('maxRedeemText').innerText = activeCustomerPoints;
+                } else {
+                    detailsCard.style.display = 'none';
+                    secAct.style.display = 'none';
+                    errorMsg.style.display = 'block';
+                    document.getElementById('customerId').value = '';
+                    document.getElementById('redeemPoints').value = 0;
+                    document.getElementById('redeemPoints').max = 0;
+                    activeCustomerMembership = '';
+                    activeCustomerPoints = 0;
+                    document.querySelectorAll('.activity-chk-btn').forEach(chk => chk.checked = false);
+                }
+                updateBillingSummary();
+            })
+            .catch(err => {
+                console.error(err);
+                alert('An error occurred while searching customer.');
+            });
+    }
+
+    function checkAvailability() {
+        const checkIn = document.getElementById('checkIn').value;
+        const checkOut = document.getElementById('checkOut').value;
+        const adults = document.getElementById('adults').value || '1';
+        const children = document.getElementById('children').value || '0';
+        const roomSelect = document.getElementById('roomId');
+        const loader = document.getElementById('roomLoader');
+        let previousSelection = roomSelect.value;
+        let reqRoomId = '';
+        if (window.initialRoomId) {
+            previousSelection = window.initialRoomId;
+            reqRoomId = window.initialRoomId;
+            window.initialRoomId = null;
+        }
+
+        if (!checkIn || !checkOut) {
+            resetRoomAvailability('Select check-in and check-out dates from the calendar to view room availability.');
+            return;
+        }
+
+        if (new Date(checkIn) > new Date(checkOut)) {
+            alert('Check-in date cannot be after check-out date.');
+            return;
+        }
+
+        loader.style.display = 'block';
+        roomSelect.disabled = true;
+        roomSelect.innerHTML = '<option value="">-- Loading available rooms... --</option>';
+
+        let url = "{% url 'api_available_rooms' %}" +
+            "?check_in=" + encodeURIComponent(checkIn) +
+            "&check_out=" + encodeURIComponent(checkOut) +
+            "&adults=" + encodeURIComponent(adults) +
+            "&children=" + encodeURIComponent(children);
+        if (reqRoomId) {
+            url += "&requested_room_id=" + encodeURIComponent(reqRoomId);
+        }
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                loader.style.display = 'none';
+
+                if (!data.success) {
+                    loadedRooms = [];
+                    allRoomStatuses = [];
+                    populateRoomSelect([], '');
+                    renderRoomSummary(null);
+                    renderRoomCards([]);
+                    clearRoomCalendar();
+                    updateStayDurationText(0);
+                    updateBillingSummary();
+                    return;
+                }
+
+                loadedRooms = data.rooms || [];
+                allRoomStatuses = data.all_rooms || [];
+                renderRoomSummary(data.summary || {});
+                renderRoomCards(allRoomStatuses);
+                populateRoomSelect(loadedRooms, previousSelection);
+                updateStayDurationText(data.stay_nights || 0);
+                onRoomSelected();
+            })
+            .catch(err => {
+                console.error(err);
+                loader.style.display = 'none';
+                loadedRooms = [];
+                allRoomStatuses = [];
+                roomSelect.disabled = true;
+                roomSelect.innerHTML = '<option value="">-- Error loading rooms --</option>';
+                renderRoomSummary(null);
+                renderRoomCards([]);
+                clearRoomCalendar();
+                updateStayDurationText(0);
+                updateBillingSummary();
+            });
+    }
+
+    function selectRoomFromCard(roomId) {
+        const room = allRoomStatuses.find((item) => String(item.id) === String(roomId));
+        if (!room || !room.selectable) {
+            return;
+        }
+        document.getElementById('roomId').value = roomId;
+        onRoomSelected();
+    }
+
+    function onRoomSelected() {
+        const selectedId = document.getElementById('roomId').value;
+        if (!selectedId) {
+            selectedRoomPrice = 0;
+        } else {
+            const roomObj = loadedRooms.find(r => String(r.id) === String(selectedId));
+            selectedRoomPrice = roomObj ? Number(roomObj.price || 0) : 0;
+        }
+        renderRoomCards(allRoomStatuses);
+        updateRoomCalendar();
+        updateBillingSummary();
+    }
+
+    function toggleActivityCheckbox(id) {
+        const chk = document.getElementById(id);
+        if (chk) {
+            chk.checked = !chk.checked;
+            updateBillingSummary();
+        }
+    }
+
+    function togglePaymentMethod() {
+        const method = document.getElementById('paymentMethod').value;
+        const btnText = document.getElementById('btnText');
+        const btnIcon = document.getElementById('btnIcon');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (method === 'Cash') {
+            btnText.innerText = 'Confirm Booking';
+            btnIcon.innerHTML = '<i class="fa fa-money mr-2"></i>';
+            submitBtn.style.background = '#22c55e'; // Green
+        } else {
+            btnText.innerText = 'Book Now';
+            btnIcon.innerHTML = '<i class="fa fa-credit-card mr-2"></i>';
+            submitBtn.style.background = '#4f46e5'; // Indigo
+        }
+
+        updateBillingSummary();
+    }
+
+    function updateBillingSummary() {
+        const checkInVal = document.getElementById('checkIn').value;
+        const checkOutVal = document.getElementById('checkOut').value;
+        let nights = 0;
+
+        if (checkInVal && checkOutVal) {
+            const diffTime = new Date(checkOutVal) - new Date(checkInVal);
+            nights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+        }
+        document.getElementById('stayNights').innerText = nights;
+        updateStayDurationText(nights);
+
+        const stayCost = selectedRoomPrice * nights;
+        document.getElementById('summaryStayPrice').innerText = formatCurrency(stayCost);
+
+        let activitiesCost = 0;
+        document.querySelectorAll('.activity-chk-btn:checked').forEach(chk => {
+            activitiesCost += parseFloat(chk.getAttribute('data-price') || '0');
+        });
+        document.getElementById('summaryActivitiesPrice').innerText = formatCurrency(activitiesCost);
+
+        const subtotal = stayCost + activitiesCost;
+        const hasRegisteredCustomer = activeCustomerType === 'registered' && !!document.getElementById('customerId').value;
+        const membershipRate = hasRegisteredCustomer ? getMembershipRate(activeCustomerMembership) : 0;
+        const membershipDiscount = stayCost * membershipRate;
+        const amountAfterMembership = Math.max(0, subtotal - membershipDiscount);
+        const membershipRow = document.getElementById('summaryMembershipRow');
+        document.getElementById('benefitMembershipAmount').innerText = formatCurrency(membershipDiscount);
+
+        if (hasRegisteredCustomer && membershipDiscount > 0) {
+            membershipRow.setAttribute('style', 'display: flex !important;');
+            document.getElementById('summaryMembershipPrice').innerText = `-${formatCurrency(membershipDiscount)}`;
+        } else {
+            membershipRow.setAttribute('style', 'display: none !important;');
+        }
+
+        let pointsDiscount = 0;
+        const redeemInput = document.getElementById('redeemPoints');
+        const pointsRow = document.getElementById('summaryRedeemRow');
+
+        if (hasRegisteredCustomer) {
+            let pts = parseInt(redeemInput.value || '0');
+            const maxPts = Math.min(activeCustomerPoints, Math.floor(amountAfterMembership));
+
+            if (pts < 0) pts = 0;
+            if (pts > maxPts) pts = maxPts;
+
+            redeemInput.value = pts;
+            redeemInput.max = maxPts;
+            document.getElementById('maxRedeemText').innerText = maxPts;
+            pointsDiscount = pts;
+
+            if (pointsDiscount > 0) {
+                pointsRow.setAttribute('style', 'display: flex !important;');
+                document.getElementById('summaryRedeemPrice').innerText = `-${formatCurrency(pointsDiscount)}`;
+            } else {
+                pointsRow.setAttribute('style', 'display: none !important;');
+            }
+        } else {
+            redeemInput.value = 0;
+            pointsRow.setAttribute('style', 'display: none !important;');
+        }
+
+        const grandTotal = Math.max(0, amountAfterMembership - pointsDiscount);
+        document.getElementById('summaryTotalPrice').innerText = formatCurrency(grandTotal);
+
+        const advanceInput = document.getElementById('advanceAmount');
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const cashAmountDiv = document.getElementById('cashAmountDiv');
+
+        if (paymentMethod === 'Razorpay') {
+            if (cashAmountDiv) cashAmountDiv.style.display = 'none';
+            advanceInput.value = (grandTotal * 0.25).toFixed(2); // 25% for card
+        } else {
+            if (cashAmountDiv) cashAmountDiv.style.display = 'block';
+        }
+
+        let advance = parseFloat(advanceInput.value || '0');
+        if (advance < 0) {
+            advance = 0;
+            advanceInput.value = advance.toFixed(2);
+        }
+        if (advance > grandTotal && grandTotal > 0) {
+            advance = grandTotal;
+            advanceInput.value = grandTotal.toFixed(2);
+        }
+
+        document.getElementById('summaryAdvancePrice').innerText = formatCurrency(advance);
+
+        const pending = Math.max(0, grandTotal - advance);
+        document.getElementById('summaryPendingPrice').innerText = formatCurrency(pending);
+    }
+
+    document.getElementById('offlineBookingForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const customerType = document.getElementById('customerType').value;
+        const customerId = document.getElementById('customerId').value;
+        const phoneInput = document.getElementById('guestPhone');
+        const nameInput = document.getElementById('guestFirstName');
+        const genderInput = document.getElementById('guestGender');
+        const emailInput = document.getElementById('guestEmail');
+
+        const roomSelect = document.getElementById('roomId');
+        const roomIdVal = roomSelect ? roomSelect.value : '';
+        const checkInVal = document.getElementById('checkIn').value;
+        const checkOutVal = document.getElementById('checkOut').value;
+        const adultsVal = parseInt(document.getElementById('adults').value) || 0;
+
+        let isValid = true;
+        let errorMessages = [];
+
+        // Clear existing is-invalid-input classes
+        this.querySelectorAll('.is-invalid-input').forEach(el => {
+            el.classList.remove('is-invalid-input');
+            const container = el.closest('.mb-3, .col-md-6, .col-md-8, .input-group');
+            const label = container ? container.querySelector('label') : null;
+            if (label) label.classList.remove('is-invalid-label');
+        });
+
+        // 1. Customer Verification Validation
+        if (customerType === 'registered') {
+            if (!customerId) {
+                isValid = false;
+                errorMessages.push("Please search and verify a registered customer profile.");
+                const searchInput = document.getElementById('searchPhone');
+                if (searchInput) {
+                    searchInput.classList.add('is-invalid-input');
+                    const label = searchInput.closest('.col-md-8').querySelector('label');
+                    if(label) label.classList.add('is-invalid-label');
+                }
+            }
+        } else {
+            if (!nameInput.value.trim() || nameInput.value.trim().length < 2) {
+                isValid = false;
+                errorMessages.push("Guest First Name must be at least 2 characters.");
+                nameInput.classList.add('is-invalid-input');
+                const label = nameInput.closest('.col-md-6').querySelector('label');
+                if(label) label.classList.add('is-invalid-label');
+            }
+            if (!genderInput.value) {
+                isValid = false;
+                errorMessages.push("Please select a gender.");
+                genderInput.classList.add('is-invalid-input');
+                const label = genderInput.closest('.col-md-6').querySelector('label');
+                if(label) label.classList.add('is-invalid-label');
+            }
+            if (!phoneInput.value.match(/^\d{10}$/)) {
+                isValid = false;
+                errorMessages.push("Enter a valid 10-digit Guest phone number.");
+                phoneInput.classList.add('is-invalid-input');
+                const label = phoneInput.closest('.col-md-6').querySelector('label');
+                if(label) label.classList.add('is-invalid-label');
+            }
+            if (emailInput.value.trim() && !/^([^\s@]+@[^\s@]+\.[^\s@]+)?$/.test(emailInput.value.trim())) {
+                isValid = false;
+                errorMessages.push("Enter a valid Guest email address.");
+                emailInput.classList.add('is-invalid-input');
+                const label = emailInput.closest('.col-md-6').querySelector('label');
+                if(label) label.classList.add('is-invalid-label');
+            }
+        }
+
+        // 2. Room Selection Validation
+        if (!roomIdVal) {
+            isValid = false;
+            errorMessages.push("Please select an available room from the list.");
+            if (roomSelect) {
+                roomSelect.classList.add('is-invalid-input');
+                const label = roomSelect.closest('.mb-3').querySelector('label');
+                if(label) label.classList.add('is-invalid-label');
+            }
+        }
+
+        // 3. Stay Dates Validation
+        if (!checkInVal || !checkOutVal) {
+            isValid = false;
+            errorMessages.push("Check-in and Check-out dates are required.");
+            const dateCal = document.getElementById('stayDateCalendar');
+            if (dateCal) {
+                dateCal.classList.add('is-invalid-input');
+                const label = dateCal.closest('.mb-3').querySelector('label');
+                if(label) label.classList.add('is-invalid-label');
+            }
+        } else {
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (checkInVal < todayStr) {
+                isValid = false;
+                errorMessages.push("Check-in date cannot be in the past.");
+            }
+            if (checkOutVal < checkInVal) {
+                isValid = false;
+                errorMessages.push("Check-out date must be after Check-in date.");
+            }
+        }
+
+        // 4. Occupancy Validation
+        if (adultsVal < 1) {
+            isValid = false;
+            errorMessages.push("At least 1 adult is required.");
+            const adultsInput = document.getElementById('adults');
+            if (adultsInput) {
+                adultsInput.classList.add('is-invalid-input');
+                const label = adultsInput.closest('.col-md-6').querySelector('label');
+                if(label) label.classList.add('is-invalid-label');
+            }
+        }
+
+        if (!isValid) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Label Validation Error', // Updated title here
+                // Adapts to dark/light mode with proper list spacing
+                html: "<ul style='text-align:left; font-size:14px; padding-left:20px; margin-bottom:0;'><li>" + errorMessages.join("</li><li style='margin-top:6px;'>") + "</li></ul>",
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#ef4444', // Native red color
+            });
+            return;
+        }
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalBtnHTML = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>Processing...';
+
+        const formData = new FormData(this);
+        formData.append('ajax', '1');
+
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.razorpay) {
+                        const ctx = data.context;
+                        const options = {
+                            key: ctx.razorpay_key,
+                            amount: (function () {
+                                var amt = parseFloat(ctx.amount);
+                                var key = ctx.razorpay_key;
+                                if (key && key.indexOf("rzp_test") === 0 && amt > 50000) {
+                                    return 50000 * 100;
+                                }
+                                return Math.round(amt * 100);
+                            })(),
+                            currency: "INR",
+                            name: "StayZen",
+                            description: "Offline Room Booking #" + ctx.booking_id,
+                            prefill: {
+                                name: ctx.name,
+                                email: ctx.email,
+                                contact: ctx.phone
+                            },
+                            handler: function (response) {
+                                fetch("{% url 'razorpay_callback' %}", {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRFToken": "{{ csrf_token }}"
+                                    },
+                                    body: JSON.stringify({
+                                        booking_id: ctx.booking_id,
+                                        booking_type: ctx.booking_type,
+                                        razorpay_payment_id: response.razorpay_payment_id
+                                    })
+                                })
+                                    .then(res => res.json())
+                                    .then(cbData => {
+                                        if (cbData.success) {
+                                            Swal.fire({
+                                                title: 'Payment Successful',
+                                                text: cbData.details ? cbData.details.message : 'Offline booking has been confirmed successfully!',
+                                                icon: 'success',
+                                                confirmButtonText: 'OK',
+                                                customClass: { popup: 'stayzen-swal-popup', title: 'stayzen-swal-title', confirmButton: 'stayzen-swal-confirm' },
+                                                buttonsStyling: false
+                                            }).then(() => {
+                                                window.location.href = cbData.redirect_url || "{% url 'receptionist_room_bookings' %}";
+                                            });
+                                        } else {
+                                            Swal.fire('Error', 'Payment confirmation failed: ' + cbData.message, 'error');
+                                            submitBtn.disabled = false;
+                                            submitBtn.innerHTML = originalBtnHTML;
+                                        }
+                                    })
+                                    .catch(err => {
+                                        Swal.fire('Error', 'Failed to verify payment with server.', 'error');
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML = originalBtnHTML;
+                                    });
+                            },
+                            modal: {
+                                ondismiss: function () {
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = originalBtnHTML;
+                                }
+                            },
+                            theme: { color: "#6366f1" }
+                        };
+                        const rzp = new Razorpay(options);
+                        rzp.open();
+                    } else {
+                        Swal.fire({
+                            title: 'Success',
+                            text: data.message || 'Offline booking created successfully!',
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            customClass: { popup: 'stayzen-swal-popup', title: 'stayzen-swal-title', confirmButton: 'stayzen-swal-confirm' },
+                            buttonsStyling: false
+                        }).then(() => {
+                            window.location.href = data.redirect_url || "{% url 'receptionist_room_bookings' %}";
+                        });
+                    }
+                } else {
+                    Swal.fire({
+                        title: 'Validation Error',
+                        text: data.message || 'Something went wrong while initiating booking.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        customClass: { popup: 'stayzen-swal-popup', title: 'stayzen-swal-title', confirmButton: 'stayzen-swal-confirm' },
+                        buttonsStyling: false
+                    });
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHTML;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('Error', 'An error occurred during booking creation.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHTML;
+            });
+    });
+
+    // --- Live validation logic block ---
+    document.addEventListener('DOMContentLoaded', function () {
+        const liveRules = {
+            'guestFirstName': { regex: /^[a-zA-Z\s]{2,}$/, msg: 'First name must be at least 2 letters.', isGuestOnly: true },
+            // 'guestLastName': { regex: /^([a-zA-Z\s]{2,})?$/, msg: 'Last name must be at least 2 letters if provided.', isGuestOnly: true },
+            'guestPhone': { regex: /^[0-9]{10}$/, msg: 'Phone must be exactly 10 digits.', isGuestOnly: true },
+            'guestEmail': { regex: /^([^\s@]+@[^\s@]+\.[^\s@]+)?$/, msg: 'Enter a valid email address.', isGuestOnly: true },
+            'adults': { regex: /^[1-9]\d*$/, msg: 'At least 1 adult required.', isGuestOnly: false },
+            'advanceAmount': { regex: /^\d+(\.\d{1,2})?$/, msg: 'Enter a valid decimal amount.', isGuestOnly: false }
+        };
+
+        Object.keys(liveRules).forEach(id => {
+            const inputField = document.getElementById(id);
+            if (!inputField) return;
+
+            // Find closest parent for label styling
+            const parentDiv = inputField.closest('.col-md-6, .input-group');
+            const label = parentDiv ? (parentDiv.querySelector('label') || parentDiv.parentElement.querySelector('label')) : null;
+
+            // Append Validation Message Box
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'validation-message';
+            errorMsg.innerText = liveRules[id].msg;
+            if(inputField.parentElement.classList.contains('input-group')) {
+                inputField.parentElement.parentElement.appendChild(errorMsg);
+            } else {
+                inputField.parentNode.insertBefore(errorMsg, inputField.nextSibling);
+            }
+
+            inputField.addEventListener('input', function () {
+                const val = this.value.trim();
+                const rule = liveRules[id];
+                const currentType = document.getElementById('customerType').value;
+
+                // Bypass guest rules if "Registered Customer" is active
+                if (rule.isGuestOnly && currentType === 'registered') {
+                    this.classList.remove('is-invalid-input');
+                    if(label) label.classList.remove('is-invalid-label');
+                    return;
+                }
+
+                if (val === '') {
+                    // Empty is invalid for required guest fields
+                    if (rule.isGuestOnly && id !== 'guestEmail') {
+                        this.classList.add('is-invalid-input');
+                        if(label) label.classList.add('is-invalid-label');
+                    } else {
+                        this.classList.remove('is-invalid-input');
+                        if(label) label.classList.remove('is-invalid-label');
+                    }
+                } else if (!rule.regex.test(val)) {
+                    this.classList.add('is-invalid-input');
+                    if(label) label.classList.add('is-invalid-label');
+                    errorMsg.innerText = rule.msg;
+                } else {
+                    this.classList.remove('is-invalid-input');
+                    if(label) label.classList.remove('is-invalid-label');
+                    errorMsg.innerText = rule.msg; // Reset to default message
+
+                    // Live backend validation for guest email
+                    if (id === 'guestEmail' && currentType === 'guest') {
+                        fetch("{% url 'api_check_guest_email' %}?email=" + encodeURIComponent(val))
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.exists) {
+                                this.classList.add('is-invalid-input');
+                                if(label) label.classList.add('is-invalid-label');
+                                errorMsg.innerText = "Email already exist. try another";
+                            }
+                        })
+                        .catch(err => console.error(err));
+                    }
+                    
+                    // Live backend validation for guest phone
+                    if (id === 'guestPhone' && currentType === 'guest') {
+                        fetch("{% url 'api_check_phone' %}?phone=" + encodeURIComponent(val))
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.exists) {
+                                this.classList.add('is-invalid-input');
+                                if(label) label.classList.add('is-invalid-label');
+                                errorMsg.innerText = "Phone number already exist. try another";
+                            }
+                        })
+                        .catch(err => console.error(err));
+                    }
+                }
+            });
+        });
+    });
+</script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+{% endblock %}

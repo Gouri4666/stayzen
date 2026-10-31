@@ -1,0 +1,744 @@
+<div class="room-booking-container">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .room-booking-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+        }
+
+        .bf-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .bf-col {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .bf-col label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1c1d1f !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bf-col input,
+        .bf-col select {
+            padding: 12px 14px;
+            border: 1.5px solid rgba(197, 168, 128, 0.4) !important;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #ffffff !important;
+            color: #1c1d1f !important;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .bf-col input:focus,
+        .bf-col select:focus {
+            outline: none;
+            border-color: #c5a880 !important;
+            box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.15) !important;
+        }
+
+        /* Error state class for validation - Updated to PURE RED */
+        .is-invalid {
+            border-color: #ff0000 !important;
+            box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.2) !important;
+        }
+
+        .bf-submit-btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 12px;
+            background: var(--text-highlight, var(--zen-gold, #c5a880));
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+            text-align: center;
+        }
+
+        .bf-submit-btn:hover {
+            background: #a57f5a;
+        }
+
+        .bf-submit-btn:active {
+            transform: scale(0.98);
+        }
+    </style>
+
+    <form method="POST" action="{% url 'room_booking' %}" class="room-booking-form" id="roomBookingForm" novalidate>
+        {% csrf_token %}
+
+        {% if room %}
+        <input type="hidden" name="room_id" id="room_id" value="{{ room.id }}" data-price="{{ room.price }}" data-max-adults="{{ room.max_adults }}" data-max-children="{{ room.max_children }}">
+        <div
+            style="margin-bottom: 8px; padding: 16px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--card-hover-bg);">
+            <h4 style="color: var(--text-highlight, var(--zen-gold, #c5a880)); font-size: 18px; margin-bottom: 6px;">Room {{ room.room_number }} —
+                {{ room.room_type }}</h4>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 2px 0;">Max Capacity: {{ room.max_adults }}
+                adults, {{ room.max_children }} children</p>
+            <p style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-top: 6px;">Price: ₹{{ room.price }} / night</p>
+            
+        </div>
+        {% else %}
+        <div class="bf-col">
+            <label>Select Room *</label>
+            <select name="room_id" id="room_id" required>
+                <option value="" data-price="0" data-max-adults="999" data-max-children="999">-- Choose Room --</option>
+                {% for r in rooms %}
+                <option value="{{ r.id }}" data-price="{{ r.price }}" data-max-adults="{{ r.max_adults }}" data-max-children="{{ r.max_children }}" {% if r.status == 'Not Available' or r.status == 'Maintenance' %}disabled{% endif %}>
+                    Room {{ r.room_number }} — {{ r.room_type }} (₹{{ r.price }}/night) {% if r.status == 'Not Available' or r.status == 'Maintenance' %}({{ r.status }}){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <div class="bf-row">
+            <div class="bf-col">
+                <label>Check In *</label>
+                <input type="date" name="check_in" id="check_in" value="{{ filter_check_in|default:'' }}" required>
+            </div>
+            <div class="bf-col">
+                <label>Check Out *</label>
+                <input type="date" name="check_out" id="check_out" value="{{ filter_check_out|default:'' }}" required>
+                <small id="check_out_error" style="color: red; display: none; margin-top: 4px;">Check-out date must be on or after Check-in.</small>
+            </div>
+        </div>
+
+        <div class="bf-row">
+            <div class="bf-col">
+                <label>Adults *</label>
+                <input type="number" name="adults" id="adults" min="1" value="{{ filter_adults|default:'1' }}" required>
+            </div>
+            <div class="bf-col">
+                <label>Children *</label>
+                <input type="number" name="children" id="children" min="0" value="{{ filter_children|default:'0' }}" required>
+            </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 8px;">
+            <h5 style="color: var(--text-highlight, var(--zen-gold, #c5a880)); margin-bottom: 12px; font-size: 14px; text-transform: uppercase;">
+                Contact Details</h5>
+            <div class="bf-row">
+                <div class="bf-col">
+                    <label>Guest Name *</label>
+                    <input type="text" name="guest_name" id="guest_name" placeholder="Full name" value="{% if customer %}{{ customer.user.get_full_name|default:customer.user.username }}{% elif request.user.is_authenticated %}{{ request.user.get_full_name|default:request.user.username }}{% endif %}" required>
+                </div>
+                <div class="bf-col">
+                    <label>Guest Phone *</label>
+                    <input type="text" name="guest_phone" id="guest_phone" placeholder="10-digit Phone number" value="{% if customer %}{{ customer.phone }}{% endif %}" required>
+                </div>
+            </div>
+            <div class="bf-col" style="margin-top: 12px;">
+                <label>Guest Email *</label>
+                <input type="email" name="guest_email" id="guest_email" placeholder="Email address" value="{% if customer %}{{ customer.user.email }}{% elif request.user.is_authenticated %}{{ request.user.email }}{% endif %}" required>
+            </div>
+        </div>
+
+        {% if customer and customer.membership_status in "Silver,Gold,Platinum" %}
+        <div style="margin-top: 10px; padding: 12px; border: 1.5px dashed rgba(197, 168, 128, 0.4); border-radius: 8px; background: rgba(197, 168, 128, 0.05); color: #1c1d1f !important;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="font-size: 14px; font-weight: 600; color: #1c1d1f !important; margin: 0; text-transform: none; letter-spacing: 0;">
+                        Membership Discount Auto-Applied
+                    </label>
+                </div>
+                <span style="background: #c5a880; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                    {{ customer.membership_status }} Member
+                    {% if customer.membership_status == 'Silver' %}(5% Off)
+                    {% elif customer.membership_status == 'Gold' %}(10% Off)
+                    {% elif customer.membership_status == 'Platinum' %}(15% Off)
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        {% elif customer and customer.membership_status == 'Bronze' %}
+        <div style="margin-top: 10px; padding: 12px; border: 1.5px dashed rgba(197, 168, 128, 0.4); border-radius: 8px; background: rgba(197, 168, 128, 0.05);">
+            <p style="font-size: 13px; font-weight: 600; color: #1c1d1f; margin: 0;">
+                <span style="background: #cd7f32; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px;">Bronze Member</span> Upgrade to Silver or higher to unlock exclusive discounts!
+            </p>
+        </div>
+        {% endif %}
+
+        {% if customer and customer.loyalty_points > 0 %}
+        <div style="margin-top: 10px; padding: 12px; border: 1.5px dashed rgba(197, 168, 128, 0.4); border-radius: 8px; background: rgba(197, 168, 128, 0.05); color: #1c1d1f !important;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="redeem_points_checkbox" style="width: 18px; height: 18px; cursor: pointer; border: 1.5px solid rgba(197, 168, 128, 0.4) !important;">
+                <label for="redeem_points_checkbox" style="font-size: 14px; font-weight: 600; color: #1c1d1f !important; cursor: pointer; margin: 0; text-transform: none; letter-spacing: 0;">
+                    Redeem available loyalty points (Available: {{ customer.loyalty_points }} points)
+                </label>
+            </div>
+            <div id="points_input_container" style="display: none; margin-top: 8px; align-items: center; gap: 8px;">
+                <label for="redeem_points" style="font-size: 13px; font-weight: 600; color: #1c1d1f !important; margin: 0; text-transform: none;">Points to Redeem:</label>
+                <input type="number" name="redeem_points" id="redeem_points" value="0" min="0" max="{{ customer.loyalty_points }}" style="width: 100px; padding: 6px 10px; border: 1.5px solid rgba(197, 168, 128, 0.4) !important; border-radius: 6px; font-size: 14px; background: #fff !important; color: #1c1d1f !important;">
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="bf-summary-box"
+            style="background: rgba(193, 155, 118, 0.08); border: 1px solid rgba(193, 155, 118, 0.3); border-radius: 10px; padding: 18px; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; color: #1c1d1f !important;">
+            <div class="bf-summary-row" style="display: flex; justify-content: space-between; font-size: 14px;">
+                <span>Duration:</span>
+                <span id="bf_duration">0 nights</span>
+            </div>
+            <div class="bf-summary-row" style="display: flex; justify-content: space-between; font-size: 14px;">
+                <span>Room Price:</span>
+                <span id="bf_room_price">₹0.00 / night</span>
+            </div>
+            <div class="bf-summary-row total-row"
+                style="display: flex; justify-content: space-between; font-size: 14px; border-top: 1px solid rgba(193, 155, 118, 0.2); padding-top: 8px; font-weight: 700; color: var(--text-primary);">
+                <span>Total Amount:</span>
+                <span id="bf_total_amount">₹0.00</span>
+            </div>
+            <div class="bf-summary-row payment-row"
+                style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 700; color: var(--text-highlight, var(--zen-gold, #c5a880));">
+                <span>Pending Payment (25%):</span>
+                <span id="bf_pending_payment">₹0.00</span>
+            </div>
+        </div>
+
+        <button type="submit" class="bf-submit-btn">Confirm Booking</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("roomBookingForm");
+        const roomSelect = document.getElementById("room_id");
+        const checkInInput = document.getElementById("check_in");
+        const checkOutInput = document.getElementById("check_out");
+        const phoneInput = document.getElementById("guest_phone");
+        const nameInput = document.getElementById("guest_name");
+        const emailInput = document.getElementById("guest_email");
+        const emailFeedback = document.createElement("small");
+        emailFeedback.id = "email_feedback";
+        emailFeedback.style.color = "red";
+        emailFeedback.style.display = "none";
+        emailFeedback.style.marginTop = "4px";
+        if (emailInput) {
+            emailInput.parentNode.appendChild(emailFeedback);
+            
+            {% if not request.user.is_authenticated %}
+            emailInput.addEventListener("blur", function() {
+                const val = this.value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (val && emailRegex.test(val)) {
+                    fetch("{% url 'api_check_guest_email' %}?email=" + encodeURIComponent(val))
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.exists) {
+                                emailFeedback.textContent = "please login for booking";
+                                emailFeedback.style.display = "block";
+                                emailInput.classList.add("is-invalid");
+                            } else {
+                                emailFeedback.style.display = "none";
+                                emailInput.classList.remove("is-invalid");
+                            }
+                        });
+                }
+            });
+            {% endif %}
+        }
+
+        const phoneFeedback = document.createElement("small");
+        phoneFeedback.id = "phone_feedback";
+        phoneFeedback.style.color = "red";
+        phoneFeedback.style.display = "none";
+        phoneFeedback.style.marginTop = "4px";
+        if (phoneInput) {
+            phoneInput.parentNode.appendChild(phoneFeedback);
+            
+            {% if not request.user.is_authenticated %}
+            phoneInput.addEventListener("blur", function() {
+                const val = this.value.trim();
+                if (val) {
+                    fetch("{% url 'api_check_phone' %}?phone=" + encodeURIComponent(val))
+                        .then(response => response.json())
+                        .then(data => {
+                            const submitBtn = document.querySelector(".bf-submit-btn");
+                            if (data.exists) {
+                                phoneFeedback.textContent = "please login for booking";
+                                phoneFeedback.style.display = "block";
+                                phoneInput.classList.add("is-invalid");
+                                if(submitBtn) submitBtn.disabled = true;
+                            } else {
+                                phoneFeedback.style.display = "none";
+                                phoneInput.classList.remove("is-invalid");
+                                if(submitBtn) submitBtn.disabled = false;
+                            }
+                        });
+                } else {
+                    phoneFeedback.style.display = "none";
+                    phoneInput.classList.remove("is-invalid");
+                    const submitBtn = document.querySelector(".bf-submit-btn");
+                    if(submitBtn) submitBtn.disabled = false;
+                }
+            });
+            {% endif %}
+        }
+        const adultsInput = document.getElementById("adults");
+        const childrenInput = document.getElementById("children");
+
+        // Display elements
+        const durationEl = document.getElementById("bf_duration");
+        const roomPriceEl = document.getElementById("bf_room_price");
+        const totalAmountEl = document.getElementById("bf_total_amount");
+        const pendingPaymentEl = document.getElementById("bf_pending_payment");
+
+        const redeemCheckbox = document.getElementById("redeem_points_checkbox");
+        const redeemInput = document.getElementById("redeem_points");
+        const pointsContainer = document.getElementById("points_input_container");
+        const availablePoints = parseInt("{{ customer.loyalty_points|default:0 }}") || 0;
+
+        const membershipStatus = "{{ customer.membership_status|default:'' }}";
+
+        // Set minimum dates
+        const today = new Date().toISOString().split('T')[0];
+        checkInInput.setAttribute('min', today);
+
+        function validateRoomDates() {
+            const ci = checkInInput.value;
+            const co = checkOutInput.value;
+            const errEl = document.getElementById('check_out_error');
+            const btn = document.querySelector('.bf-submit-btn');
+            
+            if (ci && co && co < ci) {
+                checkOutInput.classList.add('is-invalid');
+                if (errEl) errEl.style.display = 'block';
+                if (btn) btn.disabled = true;
+            } else {
+                checkOutInput.classList.remove('is-invalid');
+                if (errEl) errEl.style.display = 'none';
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        checkInInput.addEventListener('change', function() {
+            if(this.value) {
+                checkOutInput.setAttribute('min', this.value);
+            }
+            validateRoomDates();
+            calculateBill();
+        });
+
+        checkOutInput.addEventListener('change', function() {
+            validateRoomDates();
+            calculateBill();
+        });
+
+        // Real-time phone validation
+        phoneInput.addEventListener("input", function () {
+            // Strip non-digits automatically
+            this.value = this.value.replace(/\D/g, '');
+            
+            // Turn purely red if it's not exactly 10 digits
+            if (this.value.length > 0 && this.value.length !== 10) {
+                this.classList.add("is-invalid");
+            } else {
+                this.classList.remove("is-invalid");
+            }
+        });
+
+        function getRoomLimits() {
+            let maxAdults = 999;
+            let maxChildren = 999;
+            if (roomSelect.tagName === "SELECT") {
+                const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    maxAdults = parseInt(selectedOption.getAttribute("data-max-adults")) || 999;
+                    maxChildren = parseInt(selectedOption.getAttribute("data-max-children")) || 999;
+                }
+            } else if (roomSelect.tagName === "INPUT") {
+                maxAdults = parseInt(roomSelect.getAttribute("data-max-adults")) || 999;
+                maxChildren = parseInt(roomSelect.getAttribute("data-max-children")) || 999;
+            }
+            return { maxAdults, maxChildren };
+        }
+
+        function validateOccupancy() {
+            const { maxAdults, maxChildren } = getRoomLimits();
+            const adults = parseInt(adultsInput.value) || 0;
+            const children = parseInt(childrenInput.value) || 0;
+            
+            let isValid = true;
+            
+            adultsInput.classList.remove("is-invalid");
+            childrenInput.classList.remove("is-invalid");
+            
+            let adultsFeedback = document.getElementById("adults_feedback");
+            if (adultsFeedback) adultsFeedback.remove();
+            let childrenFeedback = document.getElementById("children_feedback");
+            if (childrenFeedback) childrenFeedback.remove();
+
+            if (adults < 1) {
+                isValid = false;
+                adultsInput.classList.add("is-invalid");
+                showFeedback(adultsInput, "adults_feedback", "At least 1 adult is required.");
+            } else if (adults > maxAdults) {
+                isValid = false;
+                adultsInput.classList.add("is-invalid");
+                showFeedback(adultsInput, "adults_feedback", `Max adults allowed is ${maxAdults}`);
+            }
+
+            if (children < 0) {
+                isValid = false;
+                childrenInput.classList.add("is-invalid");
+                showFeedback(childrenInput, "children_feedback", "Children cannot be negative.");
+            } else if (children > maxChildren) {
+                isValid = false;
+                childrenInput.classList.add("is-invalid");
+                showFeedback(childrenInput, "children_feedback", `Max children allowed is ${maxChildren}`);
+            }
+
+            if (isValid && (adults + children) > (maxAdults + maxChildren)) {
+                isValid = false;
+                adultsInput.classList.add("is-invalid");
+                childrenInput.classList.add("is-invalid");
+                showFeedback(childrenInput, "children_feedback", `Total guests cannot exceed room capacity of ${maxAdults + maxChildren}.`);
+            }
+            
+            return isValid;
+        }
+
+        function showFeedback(inputEl, id, message) {
+            let feedback = document.createElement("div");
+            feedback.id = id;
+            feedback.className = "invalid-feedback";
+            feedback.style.color = "#ff0000";
+            feedback.style.fontSize = "12px";
+            feedback.style.marginTop = "4px";
+            feedback.innerText = message;
+            inputEl.after(feedback);
+        }
+
+        adultsInput.addEventListener("input", validateOccupancy);
+        childrenInput.addEventListener("input", validateOccupancy);
+        if (roomSelect.tagName === "SELECT") {
+            roomSelect.addEventListener("change", validateOccupancy);
+        }
+
+        function calculateBill() {
+            let roomPrice = 0;
+            if (roomSelect.tagName === "SELECT") {
+                const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    roomPrice = parseFloat(selectedOption.getAttribute("data-price")) || 0;
+                }
+            } else if (roomSelect.tagName === "INPUT") {
+                roomPrice = parseFloat(roomSelect.getAttribute("data-price")) || 0;
+            }
+
+            const checkInVal = checkInInput.value;
+            const checkOutVal = checkOutInput.value;
+
+            let nights = 1;
+            if (checkInVal && checkOutVal) {
+                const d1 = new Date(checkInVal);
+                const d2 = new Date(checkOutVal);
+                const diffTime = d2 - d1;
+                nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (nights < 1) nights = 1;
+            }
+
+            const totalAmount = nights * roomPrice;
+            
+            let membershipDiscountAmount = 0;
+            if (membershipStatus === 'Platinum') {
+                membershipDiscountAmount = totalAmount * 0.15;
+            } else if (membershipStatus === 'Gold') {
+                membershipDiscountAmount = totalAmount * 0.10;
+            } else if (membershipStatus === 'Silver') {
+                membershipDiscountAmount = totalAmount * 0.05;
+            }
+
+            let amountAfterMembership = totalAmount - membershipDiscountAmount;
+            
+            let pointsToRedeem = 0;
+            if (redeemCheckbox && redeemCheckbox.checked) {
+                if (pointsContainer) pointsContainer.style.display = "flex";
+                let val = parseInt(redeemInput.value) || 0;
+                if (val < 0) {
+                    val = 0;
+                    redeemInput.value = 0;
+                }
+                const maxAllowed = Math.min(availablePoints, Math.floor(amountAfterMembership));
+                if (val > maxAllowed) {
+                    val = maxAllowed;
+                    redeemInput.value = val;
+                }
+                pointsToRedeem = val;
+            } else {
+                if (pointsContainer) pointsContainer.style.display = "none";
+                if (redeemInput) redeemInput.value = 0;
+            }
+
+            const finalAmount = amountAfterMembership - pointsToRedeem;
+            const pendingPayment = finalAmount * 0.25;
+
+            // Update display
+            durationEl.innerText = nights + (nights === 1 ? " night" : " nights");
+            roomPriceEl.innerText = "₹" + roomPrice.toFixed(2) + " / night";
+            
+            let discountRow = document.getElementById("bf_discount_row");
+            if (!discountRow) {
+                discountRow = document.createElement("div");
+                discountRow.id = "bf_discount_row";
+                discountRow.style.display = "flex";
+                discountRow.style.flexDirection = "column";
+                discountRow.style.gap = "4px";
+                discountRow.style.fontSize = "14px";
+                discountRow.style.color = "#10b981";
+                totalAmountEl.parentElement.before(discountRow);
+            }
+            
+            discountRow.innerHTML = '';
+            if (membershipDiscountAmount > 0) {
+                discountRow.innerHTML += `<div style="display: flex; justify-content: space-between;"><span>Membership Discount:</span><span>-₹${membershipDiscountAmount.toFixed(2)}</span></div>`;
+            }
+            if (pointsToRedeem > 0) {
+                discountRow.innerHTML += `<div style="display: flex; justify-content: space-between;"><span>Points Redeemed:</span><span>-${pointsToRedeem} pts (-₹${pointsToRedeem.toFixed(2)})</span></div>`;
+            }
+
+            totalAmountEl.innerText = "₹" + finalAmount.toFixed(2);
+            pendingPaymentEl.innerText = "₹" + pendingPayment.toFixed(2);
+
+            return { totalAmount: finalAmount, pendingPayment };
+        }
+
+        if (roomSelect.tagName === "SELECT") {
+            roomSelect.addEventListener("change", calculateBill);
+        }
+        
+        if (redeemCheckbox) {
+            redeemCheckbox.addEventListener("change", function () {
+                if (redeemCheckbox.checked) {
+                    calculateBill(); 
+                    // Set max possible points to redeem if checking for the first time
+                    redeemInput.value = Math.min(availablePoints, Math.floor(calculateBill().totalAmount + parseInt(redeemInput.value || 0)));
+                } else {
+                    redeemInput.value = 0;
+                }
+                calculateBill();
+            });
+        }
+        
+        if (redeemInput) {
+            redeemInput.addEventListener("input", calculateBill);
+            redeemInput.addEventListener("change", calculateBill);
+        }
+
+        calculateBill();
+
+        // Form Submit Validation
+        form.addEventListener("submit", function (e) {
+            let isValid = true;
+            let errorMessages = [];
+
+            // Reset all error borders
+            form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            
+            // Clear occupancy feedbacks
+            let adultsFeedback = document.getElementById("adults_feedback");
+            if (adultsFeedback) adultsFeedback.remove();
+            let childrenFeedback = document.getElementById("children_feedback");
+            if (childrenFeedback) childrenFeedback.remove();
+
+            // 1. Room Validation
+            if (roomSelect.tagName === "SELECT" && !roomSelect.value) {
+                isValid = false;
+                roomSelect.classList.add("is-invalid");
+                errorMessages.push("Please select a room.");
+            }
+
+            // 2. Date Validation
+            if (!checkInInput.value) {
+                isValid = false;
+                checkInInput.classList.add("is-invalid");
+                errorMessages.push("Check-in date is required.");
+            }
+            if (!checkOutInput.value) {
+                isValid = false;
+                checkOutInput.classList.add("is-invalid");
+                errorMessages.push("Check-out date is required.");
+            }
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (checkInInput.value && checkInInput.value < todayStr) {
+                isValid = false;
+                checkInInput.classList.add("is-invalid");
+                errorMessages.push("Check-in date cannot be in the past.");
+            }
+            if (checkInInput.value && checkOutInput.value && checkOutInput.value < checkInInput.value) {
+                isValid = false;
+                checkOutInput.classList.add("is-invalid");
+                errorMessages.push("Check-out date must be on or after Check-in.");
+            }
+
+            // 3. Occupancy Validation
+            if (!validateOccupancy()) {
+                isValid = false;
+                const { maxAdults, maxChildren } = getRoomLimits();
+                const adults = parseInt(adultsInput.value) || 0;
+                const children = parseInt(childrenInput.value) || 0;
+                if (adults < 1) {
+                    errorMessages.push("At least 1 adult is required.");
+                } else if (adults > maxAdults) {
+                    errorMessages.push(`Max adults allowed is ${maxAdults}.`);
+                }
+                if (children < 0) {
+                    errorMessages.push("Children cannot be negative.");
+                } else if (children > maxChildren) {
+                    errorMessages.push(`Max children allowed is ${maxChildren}.`);
+                }
+                if ((adults + children) > (maxAdults + maxChildren)) {
+                    errorMessages.push(`Total guests cannot exceed room capacity of ${maxAdults + maxChildren}.`);
+                }
+            }
+
+            // 4. Name Validation
+            if (nameInput.value.trim().length < 2) {
+                isValid = false;
+                nameInput.classList.add("is-invalid");
+                errorMessages.push("Please enter a valid guest name.");
+            }
+
+            // 5. Phone Validation (Strict 10 digits)
+            if (phoneInput.value.length !== 10) {
+                isValid = false;
+                phoneInput.classList.add("is-invalid");
+                errorMessages.push("Phone number must be exactly 10 digits.");
+            }
+
+            // 6. Email Validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(emailInput.value)) {
+                isValid = false;
+                emailInput.classList.add("is-invalid");
+                errorMessages.push("Please enter a valid email address.");
+            }
+
+            // Prevent form submission and display popup correction message if errors exist
+            if (!isValid) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    html: "Booking cannot be completed. Please fix the following errors:<br><br><ul style='text-align:left; color:#1c1d1f; font-size:14px;'><li>" + errorMessages.join("</li><li>") + "</li></ul>",
+                    confirmButtonColor: '#c5a880'
+                });
+                return; // Stop execution
+            }
+
+            {% if not request.user.is_authenticated %}
+            // Verify email asynchronously before submitting
+            const val = emailInput.value.trim();
+            e.preventDefault();
+            fetch("{% url 'api_check_guest_email' %}?email=" + encodeURIComponent(val))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            html: "This email is associated with a registered account. Please log in to book.",
+                            confirmButtonColor: '#c5a880'
+                        });
+                        emailInput.classList.add("is-invalid");
+                    } else {
+                        proceedWithPayment(calculateBill());
+                    }
+                });
+            {% else %}
+            e.preventDefault();
+            proceedWithPayment(calculateBill());
+            {% endif %}
+            
+            function proceedWithPayment(bill) {
+                {% if not request.user.is_authenticated %}
+                Swal.fire({
+                    title: 'Advance Payment Required',
+                    html: "You have to pay 25% of the booking amount.<br><br><b>Total Amount:</b> ₹" + bill.totalAmount.toFixed(2) + "<br><b>Pending Payment (25%):</b> ₹" + bill.pendingPayment.toFixed(2),
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonColor: '#c5a880',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Proceed to Payment'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+                {% else %}
+                form.submit();
+                {% endif %}
+            }
+        });
+    });
+
+    // Form persistence using sessionStorage
+    document.addEventListener("DOMContentLoaded", function() {
+        const form = document.getElementById("roomBookingForm");
+        if (!form) return;
+        
+        const storageKey = "stayzen_roomBookingForm";
+        const storedData = sessionStorage.getItem(storageKey);
+        
+        if (storedData) {
+            try {
+                const data = JSON.parse(storedData);
+                for (const key in data) {
+                    const field = form.elements[key];
+                    if (field) {
+                        if (field.type === 'checkbox' || field.type === 'radio') {
+                            field.checked = data[key] === 'on' || data[key] === true;
+                        } else {
+                            // Don't overwrite if value is already populated from backend (unless it's empty)
+                            if (!field.value || field.value === '') {
+                                field.value = data[key];
+                            }
+                        }
+                        field.dispatchEvent(new Event('change', { bubbles: true }));
+                        field.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+            } catch (e) {
+                console.error("Error restoring form data", e);
+            }
+        }
+        
+        function saveFormData() {
+            const data = {};
+            const formData = new FormData(form);
+            for (let [key, val] of formData.entries()) {
+                if (key !== 'csrfmiddlewaretoken') {
+                    const field = form.elements[key];
+                    if (field && field.type === 'checkbox') {
+                        data[key] = field.checked;
+                    } else {
+                        data[key] = val;
+                    }
+                }
+            }
+            sessionStorage.setItem(storageKey, JSON.stringify(data));
+        }
+        
+        form.addEventListener("input", saveFormData);
+        form.addEventListener("change", saveFormData);
+        form.addEventListener("submit", saveFormData);
+    });
+</script>

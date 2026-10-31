@@ -1,0 +1,96 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+<section id="main-content" class="fadeIn">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card p-4">
+                    <h2>Admin Attendance Dashboard</h2>
+                    <hr>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white p-3">
+                                <h5>Total Present</h5>
+                                <h3>{{ total_present }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-danger text-white p-3">
+                                <h5>Total Absent</h5>
+                                <h3>{{ total_absent }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-dark p-3">
+                                <h5>Total Late</h5>
+                                <h3>{{ total_late }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white p-3">
+                                <h5>Total Half Day</h5>
+                                <h3>{{ total_half_day }}</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="get" class="form-inline mb-4" style="display: flex; gap: 10px; align-items: center;">
+                        <select name="staff_id" class="form-control">
+                            <option value="">All Staff</option>
+                            {% for u in users %}
+                                <option value="{{ u.id }}" {% if request.GET.staff_id == u.id|stringformat:"s" %}selected{% endif %}>{{ u.username }} ({{ u.first_name }})</option>
+                            {% endfor %}
+                        </select>
+                        <input type="date" name="date" class="form-control" value="{{ request.GET.date }}">
+                        <input type="month" name="month" class="form-control" value="{{ request.GET.month }}">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="{% url 'admin_attendance_dashboard' %}" class="btn btn-secondary">Clear</a>
+                    </form>
+
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Staff</th>
+                                <th>Shift</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                                <th>Working Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in attendances %}
+                            <tr>
+                                <td>{{ record.staff.username }}</td>
+                                <td><span class="badge badge-info">{{ record.display_shift }}</span></td>
+                                <td>{{ record.date }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if record.status == 'Present' %}badge-success
+                                        {% elif record.status == 'Absent' %}badge-danger
+                                        {% elif record.status == 'Late' %}badge-warning
+                                        {% elif record.status == 'Half Day' %}badge-info
+                                        {% else %}badge-secondary{% endif %}">
+                                        {{ record.status }}
+                                    </span>
+                                </td>
+                                <td>{{ record.check_in_time|default:"-" }}</td>
+                                <td>{{ record.check_out_time|default:"-" }}</td>
+                                <td>{{ record.display_hours }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No attendance records found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

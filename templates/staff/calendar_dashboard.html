@@ -1,0 +1,1628 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% block title %}Calendar Dashboard{% endblock %}
+{% block content %}
+<link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<style>
+    :root {
+        --color-available: #10b981;
+        /* Green */
+        --color-reserved: #3b82f6;
+        /* Blue */
+        --color-maintenance: #ef4444;
+        /* Red */
+        --color-notavailable: #9ca3af;
+        /* Gray */
+        --bg-main: #f8fafc;
+        --border-color: #e2e8f0;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-main);
+    }
+
+    .dashboard-wrapper {
+        padding: 20px;
+        color: var(--text-primary);
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .dashboard-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 10px;
+    }
+
+    .tab-btn {
+        background: transparent;
+        border: 2px solid transparent;
+        color: var(--text-secondary);
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+        font-size: 16px;
+        padding: 8px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .tab-btn:hover {
+        color: var(--color-reserved);
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .tab-btn.active {
+        color: var(--color-reserved);
+        border-color: var(--color-reserved);
+        background: rgba(59, 130, 246, 0.1);
+    }
+
+    .main-layout {
+        display: flex;
+        gap: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .calendar-container {
+        flex: 1;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        padding: 24px;
+        transition: all 0.3s ease;
+    }
+
+    .panel-container {
+        width: 350px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: var(--shadow-lg);
+        padding: 24px;
+        display: none;
+        flex-direction: column;
+        height: fit-content;
+        position: sticky;
+        top: 20px;
+        animation: slideIn 0.3s ease forwards;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .cal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .cal-nav {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .icon-btn {
+        width: 36px;
+        height: 36px;
+        border: 1px solid var(--border-color);
+        background: #fff;
+        border-radius: 8px;
+        cursor: pointer;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+        background: var(--bg-main);
+        color: var(--color-reserved);
+    }
+
+    .month-selector {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+
+    .today-btn {
+        border: 1px solid var(--border-color);
+        background: #fff;
+        font-weight: 500;
+        padding: 6px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .today-btn:hover {
+        background: var(--bg-main);
+    }
+
+    .legend {
+        display: flex;
+        gap: 16px;
+        background: #fff;
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary);
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.available {
+        background: var(--color-available);
+    }
+
+    .dot.reserved {
+        background: var(--color-reserved);
+    }
+
+    .dot.maintenance {
+        background: var(--color-maintenance);
+    }
+
+    .dot.notavailable {
+        background: var(--color-notavailable);
+    }
+
+    .cal-grid {
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .cal-days-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        background: #fff;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .cal-days-header span {
+        padding: 12px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    .cal-days-body {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+    }
+
+    .cal-cell {
+        min-height: 120px;
+        padding: 10px;
+        border-right: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        background: #fff;
+        cursor: pointer;
+        transition: 0.2s;
+        position: relative;
+    }
+
+    .cal-cell:nth-child(7n) {
+        border-right: none;
+    }
+
+    .cal-cell:nth-last-child(-n+7) {
+        border-bottom: none;
+    }
+
+    .cal-cell:hover {
+        background: #f8fafc;
+    }
+
+    .cal-cell.selected {
+        background: rgba(59, 130, 246, 0.05);
+        box-shadow: inset 0 0 0 2px var(--color-reserved);
+    }
+
+    .cal-cell.other-month {
+        background: #fcfcfc;
+        cursor: default;
+    }
+
+    .cal-cell.other-month:hover {
+        background: #fcfcfc;
+    }
+
+    .cal-cell.other-month .date-num {
+        color: #cbd5e1;
+    }
+
+    .cal-cell.in-range {
+        background: rgba(59, 130, 246, 0.08);
+    }
+
+    .cal-cell.range-start,
+    .cal-cell.range-end {
+        background: rgba(59, 130, 246, 0.16);
+        box-shadow: inset 0 0 0 2px var(--color-reserved);
+    }
+
+    .cal-cell.past-date {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .cal-cell.past-date:hover {
+        background: #fff;
+    }
+
+    /* New: non-today dates are visually disabled while in the Freshup tab */
+    .cal-cell.not-today-disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .cal-cell.not-today-disabled:hover {
+        background: #fff;
+    }
+
+    .cal-cell.has-reservation {
+        background: rgba(59, 130, 246, 0.08); /* Highlight reserved dates in light blue */
+    }
+
+    .duration-display {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(59, 130, 246, 0.08);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 16px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--color-reserved);
+    }
+
+    .duration-display.active {
+        display: flex;
+    }
+
+    .date-num {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    .cal-cell.today .date-num {
+        color: var(--color-reserved);
+        background: rgba(59, 130, 246, 0.1);
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+
+    .status-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .status-badge {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .status-badge.available {
+        background: var(--color-available);
+    }
+
+    .status-badge.reserved {
+        background: var(--color-reserved);
+    }
+
+    .status-badge.maintenance {
+        background: var(--color-maintenance);
+    }
+
+    .status-badge.notavailable {
+        background: var(--color-notavailable);
+    }
+
+    .see-more {
+        font-size: 11px;
+        color: var(--color-reserved);
+        font-weight: 600;
+        background: rgba(59, 130, 246, 0.1);
+        padding: 2px 6px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        height: 24px;
+    }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .panel-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 4px 0;
+    }
+
+    .panel-subtitle {
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .check-availability-box {
+        background: var(--bg-main);
+        padding: 16px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 20px;
+    }
+
+    .date-inputs input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+    }
+
+    .date-inputs input:focus {
+        border-color: var(--color-reserved);
+    }
+
+    .date-inputs input:disabled {
+        background: var(--bg-main);
+        color: var(--text-secondary);
+        cursor: not-allowed;
+    }
+
+    .cards-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow-y: auto;
+        max-height: calc(100vh - 350px);
+        padding-right: 5px;
+    }
+
+    .cards-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .cards-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .cards-container::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    .resource-card {
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 14px;
+        background: #fff;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .resource-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .resource-card.bookable-card {
+        cursor: pointer;
+    }
+
+    .resource-card.bookable-card:hover {
+        border-color: var(--color-reserved);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+
+    .resource-card .book-now-hint {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-reserved);
+        text-align: right;
+        opacity: 0;
+        transition: opacity 0.2s;
+        margin-top: auto;
+    }
+
+    .resource-card.bookable-card:hover .book-now-hint {
+        opacity: 1;
+    }
+
+    .rc-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .rc-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .rc-id-badge {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .rc-id-badge.available {
+        background: var(--color-available);
+    }
+
+    .rc-id-badge.reserved {
+        background: var(--color-reserved);
+    }
+
+    .rc-id-badge.maintenance {
+        background: var(--color-maintenance);
+    }
+
+    .rc-id-badge.notavailable {
+        background: var(--color-notavailable);
+    }
+
+    .rc-status-text {
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .rc-status-text.available {
+        color: var(--color-available);
+    }
+
+    .rc-status-text.reserved {
+        color: var(--color-reserved);
+    }
+
+    .rc-status-text.maintenance {
+        color: var(--color-maintenance);
+    }
+
+    .rc-status-text.notavailable {
+        color: var(--color-notavailable);
+    }
+
+    .rc-details {
+        font-size: 13px;
+        color: var(--text-secondary);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        background: var(--bg-main);
+        padding: 10px;
+        border-radius: 6px;
+        margin-top: 4px;
+    }
+
+    .rc-detail-item {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .rc-detail-label {
+        font-weight: 500;
+    }
+
+    .rc-detail-val {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .status-group-header {
+        font-family: 'Outfit', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin: 10px 0 4px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .loader-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid var(--border-color);
+        border-top-color: var(--color-reserved);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .empty-state {
+        color: var(--text-secondary);
+        font-size: 14px;
+        text-align: center;
+        padding: 20px 0;
+    }
+
+    /* Single-date status popup */
+    .date-popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 23, 42, 0.45);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .date-popup-overlay.active {
+        display: flex;
+    }
+
+    .date-popup {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: var(--shadow-lg);
+        width: 100%;
+        max-width: 640px;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: popupIn 0.2s ease;
+    }
+
+    @keyframes popupIn {
+        from {
+            opacity: 0;
+            transform: scale(0.97) translateY(8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .date-popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 24px 24px 16px 24px;
+    }
+
+    .date-popup-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 4px 0;
+    }
+
+    .date-popup-subtitle {
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .date-popup-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        padding: 4px 24px 24px 24px;
+        overflow-y: auto;
+    }
+
+    @media (max-width: 768px) {
+        .date-popup-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 560px) {
+        .date-popup-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 380px) {
+        .date-popup-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .room-status-card {
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        text-align: center;
+        transition: all 0.2s ease;
+        background: #fff;
+    }
+
+    .room-status-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-3px);
+        border-color: #cbd5e1;
+    }
+
+    .room-status-badge {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-family: 'Outfit', sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    }
+
+    .room-status-badge.available {
+        background: var(--color-available);
+    }
+
+    .room-status-badge.reserved {
+        background: var(--color-reserved);
+    }
+
+    .room-status-badge.maintenance {
+        background: var(--color-maintenance);
+    }
+
+    .room-status-badge.notavailable {
+        background: var(--color-notavailable);
+    }
+
+    .room-status-name {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--text-primary);
+    }
+
+    .room-status-label {
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .room-status-label.available {
+        color: var(--color-available);
+    }
+
+    .room-status-label.reserved {
+        color: var(--color-reserved);
+    }
+
+    .room-status-label.maintenance {
+        color: var(--color-maintenance);
+    }
+
+    .room-status-label.notavailable {
+        color: var(--color-notavailable);
+    }
+
+    .date-popup-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .popup-close-btn {
+        padding: 10px 24px;
+        border: 1px solid var(--border-color);
+        background: #fff;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: 0.2s;
+        color: var(--text-primary);
+    }
+
+    .popup-close-btn:hover {
+        background: var(--bg-main);
+    }
+
+    .room-status-card.bookable {
+        cursor: pointer;
+    }
+
+    .room-status-card.disabled-card {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 1024px) {
+        .main-layout {
+            flex-direction: column;
+        }
+
+        .panel-container {
+            width: 100%;
+            position: static;
+            display: none;
+        }
+
+        .panel-container.active {
+            display: flex;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .panel-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 999;
+            border-radius: 0;
+            overflow-y: auto;
+        }
+    }
+</style>
+
+<div class="loader-overlay" id="loader">
+    <div class="spinner"></div>
+</div>
+
+<div class="date-popup-overlay" id="datePopupOverlay">
+    <div class="date-popup" id="datePopup">
+        <div class="date-popup-header">
+            <div>
+                <h3 class="date-popup-title" id="popupTitle">Date — All Rooms</h3>
+                <p class="date-popup-subtitle" id="popupSubtitle">0 Rooms</p>
+            </div>
+            <button class="icon-btn" id="popupCloseX"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="date-popup-grid" id="popupGrid"></div>
+        <div class="date-popup-footer">
+            <button class="popup-close-btn" id="popupCloseBtn">Close</button>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-wrapper">
+    <div class="dashboard-tabs">
+        <button class="tab-btn active" data-tab="rooms"><i class="fas fa-bed"></i> Rooms</button>
+        <button class="tab-btn" data-tab="events"><i class="far fa-calendar-alt"></i> Events</button>
+        <button class="tab-btn" data-tab="freshup"><i class="fas fa-shower"></i> Freshup</button>
+    </div>
+
+    <div class="main-layout">
+        <div class="calendar-container">
+            <div class="cal-header">
+                <div class="cal-nav">
+                    <button class="icon-btn" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                    <div class="month-selector" id="monthYearDisplay">March 2025</div>
+                    <button class="icon-btn" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                    <button class="today-btn" id="todayBtn">Today</button>
+                </div>
+                <div class="legend">
+                    <div class="legend-item"><span class="dot available"></span> Available</div>
+                    <div class="legend-item"><span class="dot reserved"></span> Reserved</div>
+                    <div class="legend-item"><span class="dot maintenance"></span> Maintenance</div>
+                    <div class="legend-item"><span class="dot notavailable"></span> Not Available</div>
+                </div>
+            </div>
+
+            <div class="cal-grid">
+                <div class="cal-days-header">
+                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+                <div class="cal-days-body" id="calGridBody"></div>
+            </div>
+        </div>
+
+        <div class="panel-container" id="detailsPanel">
+            <div class="panel-header">
+                <div>
+                    <h3 class="panel-title" id="panelTitle">Date Details</h3>
+                    <p class="panel-subtitle"><span id="panelTotal">0</span> <span id="panelLabel">Rooms</span></p>
+                </div>
+                <button class="icon-btn" id="closePanel"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="date-inputs" style="margin-bottom: 20px; display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label
+                        style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">Check-in</label>
+                    <input type="text" id="checkInDate" placeholder="Select date">
+                </div>
+                <div style="flex: 1;">
+                    <label
+                        style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">Checkout</label>
+                    <input type="text" id="checkOutDate" placeholder="Select date">
+                </div>
+            </div>
+
+            <div class="duration-display" id="durationDisplay">
+                <span id="durationRangeText"></span>
+                <span id="durationDaysText"></span>
+            </div>
+
+            <div class="cards-container" id="cardsContainer"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Real offline booking pages this dashboard hands off to once a room/hall is picked.
+        // Resolved server-side so this works regardless of which app owns these URLs.
+        const OFFLINE_ROOM_BOOKING_URL = "{% url 'offline_booking' %}";
+        const OFFLINE_EVENT_BOOKING_URL = "{% url 'offline_event_booking' %}";
+        const OFFLINE_FRESHUP_BOOKING_URL = "{% url 'offline_fresh_up_booking' %}";
+
+        let currentTab = 'rooms';
+        let currentDate = new Date();
+        let selectedDateStr = null;
+        let rangeMode = false;
+        let rangeStart = null;
+        let rangeEnd = null;
+        let apiData = { resources: [], events: [] };
+
+        function todayYMD() {
+            return toYMD(new Date());
+        }
+
+        // Freshup bookings are same-day only: no ranges, no past/future dates.
+        function isFreshupTab() {
+            return currentTab === 'freshup';
+        }
+
+        const gridBody = document.getElementById('calGridBody');
+        const monthYearDisplay = document.getElementById('monthYearDisplay');
+        const detailsPanel = document.getElementById('detailsPanel');
+        const loader = document.getElementById('loader');
+
+        let syncingInputs = false;
+
+        function handleDateChange() {
+            if (syncingInputs) return;
+            if (isFreshupTab()) return; // inputs are disabled/locked for freshup, ignore
+
+            const cIn = document.getElementById('checkInDate').value;
+            const cOut = document.getElementById('checkOutDate').value;
+            const today = todayYMD();
+
+            if (cIn && cIn < today) {
+                fpIn.clear();
+                return;
+            }
+
+            if (cIn && cOut) {
+                if (cOut < cIn) return;
+                rangeMode = true;
+                rangeStart = cIn;
+                rangeEnd = cOut;
+                selectedDateStr = null;
+                renderCalendar();
+                renderPanel();
+            } else if (cIn && !cOut) {
+                rangeMode = true;
+                rangeStart = cIn;
+                rangeEnd = null;
+                selectedDateStr = null;
+                renderCalendar();
+                renderPanel();
+            }
+        }
+
+        const fpIn = flatpickr("#checkInDate", { dateFormat: "Y-m-d", minDate: "today", onChange: handleDateChange });
+        const fpOut = flatpickr("#checkOutDate", { dateFormat: "Y-m-d", minDate: "today", onChange: handleDateChange });
+
+
+        function fetchData(callback) {
+            loader.style.display = 'flex';
+            let m = currentDate.getMonth() + 1;
+            let y = currentDate.getFullYear();
+            fetch(`/staff/api/calendar/?filter=${currentTab}&month=${m}&year=${y}`)
+                .then(res => res.json())
+                .then(data => {
+                    apiData = data;
+                    loader.style.display = 'none';
+                    renderCalendar();
+                    if (callback) {
+                        callback();
+                    } else if (detailsPanel.style.display === 'flex') {
+                        renderPanel();
+                    }
+                    if (datePopupOverlay.classList.contains('active')) renderDatePopup();
+                })
+                .catch(err => {
+                    console.error(err);
+                    loader.style.display = 'none';
+                    alert('Failed to load calendar data');
+                });
+        }
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentTab = this.getAttribute('data-tab');
+                detailsPanel.style.display = 'none';
+                detailsPanel.classList.remove('active');
+                selectedDateStr = null;
+                rangeMode = false;
+                rangeStart = null;
+                rangeEnd = null;
+                fpIn.clear(); fpOut.clear();
+                datePopupOverlay.classList.remove('active');
+
+                // Lock/unlock the date inputs depending on tab
+                const checkInEl = document.getElementById('checkInDate');
+                const checkOutEl = document.getElementById('checkOutDate');
+                if (isFreshupTab()) {
+                    checkInEl.disabled = true;
+                    checkOutEl.disabled = true;
+                    checkInEl.placeholder = 'Today only';
+                    checkOutEl.placeholder = 'Today only';
+                    // Always jump the calendar to the current month/year for freshup
+                    currentDate = new Date();
+                } else {
+                    checkInEl.disabled = false;
+                    checkOutEl.disabled = false;
+                    checkInEl.placeholder = 'Select date';
+                    checkOutEl.placeholder = 'Select date';
+                }
+
+                renderCalendar();
+                fetchData();
+            });
+        });
+
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            if (isFreshupTab()) return; // freshup is locked to the current month (today only)
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+            fetchData();
+        });
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            if (isFreshupTab()) return; // freshup is locked to the current month (today only)
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+            fetchData();
+        });
+        document.getElementById('todayBtn').addEventListener('click', () => {
+            currentDate = new Date();
+            renderCalendar();
+            fetchData();
+        });
+        document.getElementById('closePanel').addEventListener('click', () => {
+            detailsPanel.style.display = 'none';
+            detailsPanel.classList.remove('active');
+            rangeMode = false;
+            rangeStart = null;
+            rangeEnd = null;
+            fpIn.clear(); fpOut.clear();
+            renderCalendar();
+        });
+
+        const datePopupOverlay = document.getElementById('datePopupOverlay');
+        const datePopup = document.getElementById('datePopup');
+        let popupDateStr = null;
+
+        gridBody.addEventListener('click', (e) => {
+            const trigger = e.target.closest('.see-more');
+            if (!trigger) return;
+            e.stopPropagation();
+            openDatePopup(trigger.dataset.seemoreDate);
+        });
+
+        function openDatePopup(dateStr) {
+            popupDateStr = dateStr;
+            renderDatePopup();
+            datePopupOverlay.classList.add('active');
+        }
+
+        function closeDatePopup() {
+            datePopupOverlay.classList.remove('active');
+            popupDateStr = null;
+        }
+
+        function renderDatePopup() {
+            if (!popupDateStr) return;
+
+            const labelName = currentTab === 'all' ? 'Resources' : (currentTab === 'rooms' ? 'Rooms' : (currentTab === 'events' ? 'Halls' : 'Units'));
+            document.getElementById('popupTitle').textContent = `${formatDisplayDate(popupDateStr)} — All ${labelName}`;
+
+            const statusLabels = { available: 'Available', reserved: 'Reserved', maintenance: 'Maintenance', notavailable: 'Not Available' };
+
+            const grid = document.getElementById('popupGrid');
+            grid.innerHTML = '';
+
+            const total = apiData.resources.length;
+            document.getElementById('popupSubtitle').textContent = `Total ${labelName}: ${total}`;
+
+            if (total === 0) {
+                grid.innerHTML = '<div class="empty-state">No data available for this date.</div>';
+                return;
+            }
+
+            apiData.resources.forEach((res, index) => {
+                const status = getResourceStatusForDate(res, popupDateStr);
+                const shortLabel = (res.title.match(/\d+/) || [])[0] || (index + 1);
+                const isBookable = status === 'available';
+
+                const card = document.createElement('div');
+                card.className = 'room-status-card' + (isBookable ? ' bookable' : ' disabled-card');
+                card.innerHTML = `
+                <div class="room-status-badge ${status}">${shortLabel}</div>
+                <div class="room-status-name">${res.title}</div>
+                <div class="room-status-label ${status}">${statusLabels[status]}</div>
+            `;
+                if (isBookable) {
+                    card.addEventListener('click', () => selectRoomFromPopup(res));
+                }
+                grid.appendChild(card);
+            });
+        }
+
+        function selectRoomFromPopup(resource) {
+            const checkIn = rangeStart || popupDateStr;
+            const checkOut = rangeEnd || checkIn;
+            const duration = computeDurationDays(checkIn, checkOut);
+            const status = getResourceStatusForRange(resource, checkIn, checkOut);
+            const bookingType = currentTab === 'all' ? (resource.type === 'hall' ? 'event' : 'room') : (currentTab === 'events' ? 'event' : (currentTab === 'freshup' ? 'freshup' : 'room'));
+
+            const rawId = resource.id.includes('_') ? resource.id.split('_').slice(1).join('_') : resource.id;
+
+            try {
+                sessionStorage.setItem('calendar_booking_handoff', JSON.stringify({
+                    booking_type: bookingType,
+                    resource_id: rawId,
+                    resource_name: resource.title,
+                    check_in: checkIn,
+                    check_out: checkOut,
+                    duration: duration,
+                    status: status
+                }));
+            } catch (e) { }
+
+            let targetUrl;
+            if (currentTab === 'events') {
+                targetUrl = `${OFFLINE_EVENT_BOOKING_URL}?hall_id=${encodeURIComponent(rawId)}` +
+                    `&date=${encodeURIComponent(checkIn)}&end_date=${encodeURIComponent(checkOut)}` +
+                    `&checkin=${encodeURIComponent(checkIn)}&checkout=${encodeURIComponent(checkOut)}` +
+                    `&duration=${encodeURIComponent(duration)}&booking_type=event` +
+                    `&hall_name=${encodeURIComponent(resource.title)}&status=${encodeURIComponent(status)}`;
+            } else if (currentTab === 'freshup') {
+                targetUrl = `${OFFLINE_FRESHUP_BOOKING_URL}?room_id=${encodeURIComponent(rawId)}` +
+                    `&checkin=${encodeURIComponent(checkIn)}&checkout=${encodeURIComponent(checkOut)}` +
+                    `&duration=${encodeURIComponent(duration)}&booking_type=freshup` +
+                    `&room_name=${encodeURIComponent(resource.title)}&status=${encodeURIComponent(status)}`;
+            } else {
+                targetUrl = `${OFFLINE_ROOM_BOOKING_URL}?room_id=${encodeURIComponent(rawId)}` +
+                    `&date=${encodeURIComponent(checkIn)}&end_date=${encodeURIComponent(checkOut)}` +
+                    `&checkin=${encodeURIComponent(checkIn)}&checkout=${encodeURIComponent(checkOut)}` +
+                    `&duration=${encodeURIComponent(duration)}&booking_type=room` +
+                    `&room_name=${encodeURIComponent(resource.title)}&status=${encodeURIComponent(status)}`;
+            }
+
+            window.location.href = targetUrl;
+        }
+
+        document.getElementById('popupCloseX').addEventListener('click', closeDatePopup);
+        document.getElementById('popupCloseBtn').addEventListener('click', closeDatePopup);
+        datePopupOverlay.addEventListener('click', (e) => {
+            if (e.target === datePopupOverlay) closeDatePopup();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && datePopupOverlay.classList.contains('active')) closeDatePopup();
+        });
+
+        function toYMD(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function normalizeBaseStatus(resource) {
+            const raw = (resource.status || '').toLowerCase().trim();
+            if (raw === 'maintenance') return 'maintenance';
+            if (raw === 'not available' || raw === 'unavailable' || raw === 'notavailable') return 'notavailable';
+            return 'available';
+        }
+
+        function getSafeDateStr(dStr) {
+            if (!dStr) return '';
+            return dStr.split(' ')[0].split('T')[0];
+        }
+
+        function getResourceStatusForDate(resource, dateStr) {
+            const base = normalizeBaseStatus(resource);
+
+            if (base === 'maintenance' && dateStr === todayYMD()) {
+                return 'maintenance';
+            }
+
+            const overlappingEvent = apiData.events.find(ev => {
+                if (ev.resourceId !== resource.id) return false;
+                const evStart = getSafeDateStr(ev.start);
+                const evEnd = getSafeDateStr(ev.end);
+                return evStart <= dateStr && evEnd >= dateStr;
+            });
+
+            if (overlappingEvent) return 'reserved';
+
+            return base === 'notavailable' ? 'notavailable' : 'available';
+        }
+
+        function getResourceStatusForRange(resource, startStr, endStr) {
+            if (startStr === endStr) {
+                return getResourceStatusForDate(resource, startStr);
+            }
+            const base = normalizeBaseStatus(resource);
+
+            if (base === 'maintenance') {
+                const today = todayYMD();
+                if (startStr <= today && endStr >= today) {
+                    return 'maintenance';
+                }
+            }
+
+            const overlappingEvent = apiData.events.find(ev => {
+                if (ev.resourceId !== resource.id) return false;
+                const evStart = getSafeDateStr(ev.start);
+                const evEnd = getSafeDateStr(ev.end);
+                return startStr <= evEnd && endStr >= evStart;
+            });
+
+            if (overlappingEvent) return 'reserved';
+
+            return base === 'notavailable' ? 'notavailable' : 'available';
+        }
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            monthYearDisplay.textContent = `${monthNames[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1);
+            let startDayIndex = firstDay.getDay() - 1;
+            if (startDayIndex === -1) startDayIndex = 6;
+
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            gridBody.innerHTML = '';
+            const todayStr = toYMD(new Date());
+            const freshup = isFreshupTab();
+
+            for (let i = 0; i < startDayIndex; i++) {
+                const blankDiv = document.createElement('div');
+                blankDiv.className = 'cal-cell other-month';
+                gridBody.appendChild(blankDiv);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cellDate = new Date(year, month, day);
+                const dateStr = toYMD(cellDate);
+
+                const isToday = dateStr === todayStr;
+                const isSelected = dateStr === selectedDateStr && !rangeMode;
+
+                let cellClasses = 'cal-cell';
+                if (isToday) cellClasses += ' today';
+                if (isSelected) cellClasses += ' selected';
+
+                const isPast = dateStr < todayYMD();
+                if (isPast) cellClasses += ' past-date';
+
+                // Freshup: every date that isn't today is disabled (no past/future, no ranges)
+                const isFreshupBlocked = freshup && !isToday;
+                if (isFreshupBlocked && !isPast) cellClasses += ' not-today-disabled';
+
+                let isRangeStart = !freshup && rangeMode && dateStr === rangeStart;
+                let isRangeEnd = !freshup && rangeMode && dateStr === rangeEnd && rangeStart !== rangeEnd;
+                let isInRange = !freshup && rangeMode && rangeStart && rangeEnd && dateStr > rangeStart && dateStr < rangeEnd;
+
+                if (isRangeStart || isRangeEnd) cellClasses += isRangeStart ? ' range-start' : ' range-end';
+                else if (isInRange) cellClasses += ' in-range';
+
+                const cellDiv = document.createElement('div');
+                cellDiv.className = cellClasses;
+                cellDiv.dataset.date = dateStr;
+
+                let badgesHtml = '<div class="status-badges">';
+                let displayCount = 0;
+                const maxBadges = 5;
+                let hiddenCount = 0;
+                let hasReservation = false;
+
+                apiData.resources.forEach((res, index) => {
+                    const status = getResourceStatusForDate(res, dateStr);
+                    if (status === 'reserved') {
+                        hasReservation = true;
+                    }
+                    const shortId = (res.title.match(/\d+/) || [])[0] || (index + 1);
+
+                    if (displayCount < maxBadges) {
+                        badgesHtml += `<div class="status-badge ${status}">${shortId}</div>`;
+                        displayCount++;
+                    } else {
+                        hiddenCount++;
+                    }
+                });
+                
+                if (hasReservation) {
+                    cellDiv.classList.add('has-reservation');
+                }
+
+                if (hiddenCount > 0) badgesHtml += `<div class="see-more" data-seemore-date="${dateStr}">+${hiddenCount} see more</div>`;
+                badgesHtml += '</div>';
+
+                cellDiv.innerHTML = `<div class="date-num">${day}</div>${badgesHtml}`;
+
+                // In freshup mode only today is clickable; otherwise normal past-date rule applies.
+                const isClickable = freshup ? isToday : !isPast;
+
+                if (isClickable) {
+                    cellDiv.addEventListener('click', (e) => {
+                        if (e.target.closest('.see-more')) return;
+                        handleCalendarCellClick(dateStr);
+                    });
+                }
+
+                gridBody.appendChild(cellDiv);
+            }
+
+            const totalCellsSoFar = startDayIndex + daysInMonth;
+            const trailingBlanks = (7 - (totalCellsSoFar % 7)) % 7;
+            for (let i = 0; i < trailingBlanks; i++) {
+                const blankDiv = document.createElement('div');
+                blankDiv.className = 'cal-cell other-month';
+                gridBody.appendChild(blankDiv);
+            }
+        }
+
+        function handleCalendarCellClick(dateStr) {
+            if (isFreshupTab()) {
+                // Freshup: single same-day selection only, never a range.
+                if (dateStr !== todayYMD()) return;
+                rangeMode = false;
+                rangeStart = null;
+                rangeEnd = null;
+                selectedDateStr = dateStr;
+                syncInputsFromRange(); // keeps the (disabled) inputs visually in sync, no-op otherwise
+                fetchData(() => renderPanel());
+                return;
+            }
+
+            if (!rangeMode || (rangeStart && rangeEnd)) {
+                rangeMode = true;
+                rangeStart = dateStr;
+                rangeEnd = null;
+            } else if (rangeStart && !rangeEnd) {
+                if (dateStr < rangeStart) {
+                    rangeStart = dateStr;
+                    rangeEnd = null;
+                } else {
+                    rangeEnd = dateStr;
+                }
+            }
+
+            syncInputsFromRange();
+            fetchData(() => renderPanel());
+        }
+
+        function syncInputsFromRange() {
+            syncingInputs = true;
+            if (isFreshupTab()) {
+                const today = todayYMD();
+                fpIn.setDate(today, false);
+                fpOut.setDate(today, false);
+            } else {
+                fpIn.setDate(rangeStart || null, false);
+                fpOut.setDate(rangeEnd || null, false);
+            }
+            syncingInputs = false;
+        }
+
+        function formatDisplayDate(ymd) {
+            const d = new Date(ymd + 'T00:00:00');
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            return `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+        }
+
+        function computeDurationDays(startStr, endStr) {
+            if (startStr === endStr) return 1;
+            const start = new Date(startStr + 'T00:00:00');
+            const end = new Date(endStr + 'T00:00:00');
+            return Math.round((end - start) / 86400000);
+        }
+
+        function renderPanel() {
+            detailsPanel.style.display = 'flex';
+            detailsPanel.classList.add('active');
+            const cardsContainer = document.getElementById('cardsContainer');
+            const durationDisplay = document.getElementById('durationDisplay');
+            cardsContainer.innerHTML = '';
+            durationDisplay.classList.remove('active');
+
+            let targetResources = [];
+            let titleStr = '';
+
+            if (rangeMode && rangeStart && rangeEnd) {
+                titleStr = `${formatDisplayDate(rangeStart)} – ${formatDisplayDate(rangeEnd)}`;
+                const days = computeDurationDays(rangeStart, rangeEnd);
+                durationDisplay.classList.add('active');
+                document.getElementById('durationRangeText').textContent =
+                    rangeStart === rangeEnd ? `Same-day booking: ${formatDisplayDate(rangeStart)}` : `${formatDisplayDate(rangeStart)} → ${formatDisplayDate(rangeEnd)}`;
+                document.getElementById('durationDaysText').textContent = `Duration: ${days} Day${days !== 1 ? 's' : ''}`;
+
+                apiData.resources.forEach(res => {
+                    const status = getResourceStatusForRange(res, rangeStart, rangeEnd);
+                    targetResources.push({ resource: res, status: status, event: null });
+                });
+            } else if (rangeMode && rangeStart && !rangeEnd) {
+                titleStr = `Check-in: ${formatDisplayDate(rangeStart)} (select checkout)`;
+                apiData.resources.forEach(res => {
+                    const status = getResourceStatusForDate(res, rangeStart);
+                    const ev = apiData.events.find(e => {
+                        if (e.resourceId !== res.id) return false;
+                        const eStart = getSafeDateStr(e.start);
+                        const eEnd = getSafeDateStr(e.end);
+                        return eStart <= rangeStart && (eEnd > rangeStart || (eStart === eEnd && eStart === rangeStart));
+                    });
+                    targetResources.push({ resource: res, status: status, event: ev });
+                });
+            } else if (selectedDateStr) {
+                titleStr = formatDisplayDate(selectedDateStr);
+                apiData.resources.forEach(res => {
+                    const status = getResourceStatusForDate(res, selectedDateStr);
+                    const ev = apiData.events.find(e => {
+                        if (e.resourceId !== res.id) return false;
+                        const eStart = getSafeDateStr(e.start);
+                        const eEnd = getSafeDateStr(e.end);
+                        return eStart <= selectedDateStr && (eEnd > selectedDateStr || (eStart === eEnd && eStart === selectedDateStr));
+                    });
+                    targetResources.push({ resource: res, status: status, event: ev });
+                });
+            }
+
+            let labelName = currentTab === 'all' ? 'Resources' : (currentTab === 'rooms' ? 'Rooms' : (currentTab === 'events' ? 'Halls' : 'Units'));
+            document.getElementById('panelTitle').textContent = `${titleStr} — All ${labelName}`;
+            document.getElementById('panelTotal').textContent = targetResources.length;
+            document.getElementById('panelLabel').textContent = labelName;
+
+            const groups = {
+                available: { title: 'Available', items: [] },
+                reserved: { title: 'Reserved', items: [] },
+                maintenance: { title: 'Maintenance', items: [] },
+                notavailable: { title: 'Not Available', items: [] }
+            };
+
+            targetResources.forEach(item => { if (groups[item.status]) groups[item.status].items.push(item); });
+
+            if (targetResources.length === 0) {
+                cardsContainer.innerHTML = '<div class="empty-state">Select a date or range to see availability.</div>';
+                return;
+            }
+
+            Object.keys(groups).forEach(key => {
+                const group = groups[key];
+                if (group.items.length === 0) return;
+
+                const header = document.createElement('div');
+                header.className = 'status-group-header';
+                header.textContent = group.title;
+                cardsContainer.appendChild(header);
+
+                group.items.forEach((item, idx) => {
+                    const globalIdx = apiData.resources.findIndex(r => r.id === item.resource.id);
+                    const shortId = (item.resource.title.match(/\d+/) || [])[0] || (globalIdx + 1);
+                    const isBookable = item.status === 'available';
+
+                    let detailsHtml = '';
+                    if (item.event) {
+                        detailsHtml = `
+                        <div class="rc-details">
+                            <div class="rc-detail-item">
+                                <span class="rc-detail-label">Guest:</span>
+                                <span class="rc-detail-val">${item.event.guest_name || '-'}</span>
+                            </div>
+
+                            <div class="rc-detail-item">
+                                <span class="rc-detail-label">Check-in:</span>
+                                <span class="rc-detail-val">${item.event.check_in || item.event.start}</span>
+                            </div>
+                            <div class="rc-detail-item">
+                                <span class="rc-detail-label">Check-out:</span>
+                                <span class="rc-detail-val">${item.event.check_out || item.event.end}</span>
+                            </div>
+                        </div>
+                    `;
+                    }
+
+                    const bookHint = isBookable ? '<div class="book-now-hint">Book Now →</div>' : '';
+
+                    const card = document.createElement('div');
+                    card.className = 'resource-card' + (isBookable ? ' bookable-card' : '');
+                    card.innerHTML = `
+                    <div class="rc-header">
+                        <div class="rc-title">
+                            <div class="rc-id-badge ${item.status}">${shortId}</div>
+                            ${item.resource.title}
+                        </div>
+                        <div class="rc-status-text ${item.status}">${group.title}</div>
+                    </div>
+                    ${detailsHtml}
+                    ${bookHint}
+                `;
+
+                    if (isBookable) {
+                        card.addEventListener('click', () => selectRoomFromPanel(item.resource));
+                    }
+
+                    cardsContainer.appendChild(card);
+                });
+            });
+        }
+
+        function selectRoomFromPanel(resource) {
+            const checkIn = isFreshupTab() ? todayYMD() : (rangeStart || selectedDateStr);
+            if (!checkIn) return; // guard: no date context
+            const checkOut = isFreshupTab() ? checkIn : (rangeEnd || checkIn);
+            const duration = computeDurationDays(checkIn, checkOut);
+            const status = getResourceStatusForRange(resource, checkIn, checkOut);
+            const bookingType = currentTab === 'all' ? (resource.type === 'hall' ? 'event' : 'room') : (currentTab === 'events' ? 'event' : (currentTab === 'freshup' ? 'freshup' : 'room'));
+
+            // Strip the resource-type prefix (e.g. "room_5" → "5", "hall_3" → "3")
+            const rawId = resource.id.includes('_') ? resource.id.split('_').slice(1).join('_') : resource.id;
+
+            // Mirror into sessionStorage as a fallback data channel
+            try {
+                sessionStorage.setItem('calendar_booking_handoff', JSON.stringify({
+                    booking_type: bookingType,
+                    resource_id: rawId,
+                    resource_name: resource.title,
+                    check_in: checkIn,
+                    check_out: checkOut,
+                    duration: duration,
+                    status: status
+                }));
+            } catch (e) { /* sessionStorage unavailable */ }
+
+            let targetUrl;
+            if (currentTab === 'events') {
+                targetUrl = `${OFFLINE_EVENT_BOOKING_URL}?hall_id=${encodeURIComponent(rawId)}` +
+                    `&date=${encodeURIComponent(checkIn)}&end_date=${encodeURIComponent(checkOut)}` +
+                    `&checkin=${encodeURIComponent(checkIn)}&checkout=${encodeURIComponent(checkOut)}` +
+                    `&duration=${encodeURIComponent(duration)}&booking_type=event` +
+                    `&hall_name=${encodeURIComponent(resource.title)}&status=${encodeURIComponent(status)}`;
+            } else if (currentTab === 'freshup') {
+                targetUrl = `${OFFLINE_FRESHUP_BOOKING_URL}?room_id=${encodeURIComponent(rawId)}` +
+                    `&checkin=${encodeURIComponent(checkIn)}&checkout=${encodeURIComponent(checkOut)}` +
+                    `&duration=${encodeURIComponent(duration)}&booking_type=freshup` +
+                    `&room_name=${encodeURIComponent(resource.title)}&status=${encodeURIComponent(status)}`;
+            } else {
+                targetUrl = `${OFFLINE_ROOM_BOOKING_URL}?room_id=${encodeURIComponent(rawId)}` +
+                    `&date=${encodeURIComponent(checkIn)}&end_date=${encodeURIComponent(checkOut)}` +
+                    `&checkin=${encodeURIComponent(checkIn)}&checkout=${encodeURIComponent(checkOut)}` +
+                    `&duration=${encodeURIComponent(duration)}&booking_type=room` +
+                    `&room_name=${encodeURIComponent(resource.title)}&status=${encodeURIComponent(status)}`;
+            }
+
+            window.location.href = targetUrl;
+        }
+
+        fetchData();
+    });
+</script>
+{% endblock %}

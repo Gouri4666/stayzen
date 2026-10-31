@@ -1,0 +1,244 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* --- Live Validation Styles --- */
+    .is-invalid-input {
+        border-color: #ef4444 !important;
+        color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+    
+    .is-invalid-label {
+        color: #ef4444 !important;
+        transition: color 0.2s;
+    }
+
+    .validation-message {
+        display: none;
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+        font-weight: 500;
+    }
+    
+    .is-invalid-input ~ .validation-message {
+        display: block;
+    }
+</style>
+
+<div class="container-fluid" style="margin-top:45px; max-width:1100px;">
+
+    <div class="card border-0 shadow-lg">
+
+        <!-- Header -->
+        <div class="card-header bg-dark text-white">
+            <h4 class="mb-0">🍽️ Add / Update Food Item</h4>
+        </div>
+
+        <div class="card-body p-4">
+
+            <form method="POST" enctype="multipart/form-data" id="foodForm">
+                {% csrf_token %}
+
+
+
+                <div class="row g-3">
+
+                    <!-- Item Name -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Item Name</label>
+                        {{ form.item_name }}
+
+                    </div>
+
+                    <!-- Category -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Category</label>
+                        {{ form.category }}
+
+                    </div>
+
+                    <!-- Cuisine (NEW) -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Cuisine</label>
+                        {{ form.cuisine }}
+
+                    </div>
+
+                    <!-- Dietary Status -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Dietary Status</label>
+                        {{ form.dietary_status }}
+
+                    </div>
+
+                    <!-- Price -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Price (₹)</label>
+                        {{ form.price }}
+
+                    </div>
+
+                    <!-- Quantity (NEW IMPORTANT) -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Quantity</label>
+                        {{ form.quantity }}
+
+                    </div>
+
+                    <!-- Status (optional - system controlled recommended) -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Status</label>
+                        {{ form.status }}
+
+                    </div>
+
+                    <!-- Image -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Food Image</label>
+                        {{ form.image }}
+
+                        {% if form.instance.image %}
+                            <div class="mt-2">
+                                <img src="{{ form.instance.image.url }}"
+                                     style="width:120px;height:90px;object-fit:cover;border-radius:8px;">
+                            </div>
+                        {% endif %}
+
+
+                    </div>
+
+                    <!-- Description -->
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Description</label>
+                        {{ form.description }}
+
+                    </div>
+
+                </div>
+
+                <!-- Buttons -->
+                <div class="mt-4 d-flex justify-content-between">
+
+                    <a href="{% url 'food_item_list' %}" class="btn btn-secondary">
+                        ← Back
+                    </a>
+
+                    <button type="submit" class="btn btn-success px-4">
+                        Save Food Item
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    
+    // --- Live Validation Rules ---
+    const validationRules = {
+        'id_item_name': {
+            // Allows letters, numbers, spaces, hyphens, ampersands, and parentheses (e.g. "Burger (Large)")
+            regex: /^[a-zA-Z0-9\s\-_'&()]{2,}$/, 
+            errorMessage: 'Item name must be at least 2 characters.'
+        },
+        'id_price': {
+            // Numbers with optional up to 2 decimal places
+            regex: /^\d+(\.\d{1,2})?$/, 
+            errorMessage: 'Enter a valid price.'
+        },
+        'id_quantity': {
+            // Whole numbers only (0 or greater)
+            regex: /^\d+$/, 
+            errorMessage: 'Enter a valid whole number for quantity.'
+        }
+    };
+
+    Object.keys(validationRules).forEach(inputId => {
+        const inputField = document.getElementById(inputId);
+        
+        if (inputField) {
+            // Find the closest Bootstrap column div to locate the label
+            const parentDiv = inputField.closest('[class^="col-"]');
+            const label = parentDiv ? parentDiv.querySelector('.form-label') : null;
+
+            // Create the error message element below the input
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'validation-message';
+            errorMsg.innerText = validationRules[inputId].errorMessage;
+            inputField.parentNode.insertBefore(errorMsg, inputField.nextSibling);
+
+            // Listen for user typing
+            inputField.addEventListener('input', function() {
+                const value = this.value.trim();
+
+                // Reset on empty (removes red styling if user clears the field)
+                if (value === '') {
+                    this.classList.remove('is-invalid-input');
+                    if (label) label.classList.remove('is-invalid-label');
+                } 
+                // Mark Invalid
+                else if (!validationRules[inputId].regex.test(value)) {
+                    this.classList.add('is-invalid-input');
+                    if (label) label.classList.add('is-invalid-label');
+                } 
+                // Mark Valid
+                else {
+                    this.classList.remove('is-invalid-input');
+                    if (label) label.classList.remove('is-invalid-label');
+                }
+            });
+        }
+    });
+
+    // --- Prevent Form Submission on Error ---
+    const form = document.getElementById('foodForm');
+    
+    if (form) {
+        form.addEventListener('submit', function (event) {
+            let formIsValid = true;
+
+            // Loop through all rules to check current values
+            Object.keys(validationRules).forEach(inputId => {
+                const inputField = document.getElementById(inputId);
+                
+                if (inputField) {
+                    const value = inputField.value.trim();
+                    const rule = validationRules[inputId].regex;
+
+                    // If the field is empty or fails the regex validation
+                    if (!rule.test(value)) {
+                        formIsValid = false;
+
+                        // Force the red invalid styling to appear
+                        inputField.classList.add('is-invalid-input');
+                        const parentDiv = inputField.closest('[class^="col-"]');
+                        if (parentDiv) {
+                            const label = parentDiv.querySelector('.form-label');
+                            if (label) label.classList.add('is-invalid-label');
+                        }
+                    }
+                }
+            });
+
+            // If any field failed, stop the form from submitting
+            if (!formIsValid) {
+                event.preventDefault(); 
+                
+                // Scroll to the top of the form so the user sees the errors
+                window.scrollTo({ top: form.offsetTop - 50, behavior: 'smooth' });
+            }
+        });
+    }
+});
+</script>
+<script src="{% static 'guest/js/unique_validation.js' %}"></script>
+{% endblock %}

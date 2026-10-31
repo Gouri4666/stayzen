@@ -1,0 +1,467 @@
+{% extends 'accounts/dashboard_base.html' %}
+
+{% block title %}StayZen Dashboard{% endblock %}
+
+{% block extra_css %}
+
+    /* ==========================================================================
+       GLOBAL CONTAINER & HEADERS
+       ========================================================================== */
+    .dashboard-title-row {
+        font-size: 28px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 4px;
+        letter-spacing: -0.5px;
+    }
+
+    .dashboard-subtitle {
+        font-size: 14px;
+        color: #64748B;
+        margin-bottom: 24px;
+    }
+
+    /* ==========================================================================
+       PURPLE HERO BANNER PROFILE CARD (REF STYLE: IMAGE_81118A.PNG)
+       ========================================================================== */
+    .profile-hero-card {
+        background: #4A3386;
+        background: linear-gradient(135deg, #4A3386 0%, #351F66 100%);
+        border-radius: 24px;
+        padding: 32px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 20px rgba(74, 51, 134, 0.2);
+    }
+
+    .profile-hero-left {
+        flex: 1;
+    }
+
+    .profile-hero-card h2 {
+        font-size: 26px;
+        font-weight: 600;
+        color: #FFFFFF;
+        margin: 0 0 6px 0;
+        letter-spacing: -0.3px;
+    }
+
+    .profile-hero-card p {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.85);
+        margin: 0 0 24px 0;
+    }
+
+    .profile-action-buttons {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .profile-btn {
+        background: #FFFFFF;
+        color: #1E293B;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 12px 24px;
+        border-radius: 14px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    .profile-hero-right {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .avatar-ring {
+        position: relative;
+        padding: 10px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .avatar-ring::before {
+        content: '';
+        position: absolute;
+        top: -2px; left: -2px; right: -2px; bottom: -2px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        border-top-color: rgba(255, 255, 255, 0.8);
+        border-right-color: rgba(255, 255, 255, 0.8);
+        transform: rotate(45deg);
+    }
+
+    .profile-hero-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .profile-hero-avatar-fallback {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: #C49A55;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 28px;
+        border: 3px solid rgba(255, 255, 255, 0.4);
+    }
+
+    /* ==========================================================================
+       TWO COLUMN LAYOUT GRID SPLIT (REF STYLE: IMAGE_816F45.PNG ADAPTATION)
+       ========================================================================== */
+    .loyalty-grid-split {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 24px;
+    }
+
+    /* CARD 1: Premium Asset Tracker Card Layout */
+    .loyalty-card-dark {
+        background: #1E293B; /* Dark slate background theme */
+        border-radius: 20px;
+        padding: 30px;
+        color: #FFFFFF;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .dark-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .dark-card-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #F8FAFC;
+    }
+
+    .dark-pill-badge {
+        background: rgba(245, 158, 11, 0.15);
+        color: #F59E0B;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 6px 14px;
+        border-radius: 30px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .dark-main-value-box {
+        margin-bottom: 28px;
+    }
+
+    .dark-value-label {
+        font-size: 13px;
+        color: #94A3B8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+
+    .dark-primary-value {
+        font-size: 46px;
+        font-weight: 700;
+        color: #FFFFFF;
+    }
+
+    .dark-primary-value span {
+        font-size: 16px;
+        color: #94A3B8;
+        font-weight: 400;
+        margin-left: 6px;
+    }
+
+    /* Horizontal Grid Metrics Columns */
+    .dark-stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding-top: 20px;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .stat-col-val {
+        font-size: 18px;
+        font-weight: 700;
+        color: #F8FAFC;
+        margin-bottom: 4px;
+    }
+
+    .stat-col-lbl {
+        font-size: 11px;
+        color: #64748B;
+        text-transform: uppercase;
+    }
+
+    /* CARD 2: Premium Tier Selector Card Layout */
+    .loyalty-card-light {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 20px;
+        padding: 0;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    /* Horizontal Privilege Selector Tab bar */
+    .tier-tab-bar {
+        display: flex;
+        background: #F8FAFC;
+        border-bottom: 1px solid #E2E8F0;
+    }
+
+    .tier-tab-item {
+        flex: 1;
+        text-align: center;
+        padding: 14px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #94A3B8;
+        border-bottom: 3px solid transparent;
+        text-transform: capitalize;
+    }
+
+    .tier-tab-item.active {
+        color: #4A3386;
+        background: #FFFFFF;
+        font-weight: 700;
+        border-bottom-color: #4A3386;
+    }
+
+    .light-card-body {
+        padding: 28px;
+    }
+
+    .light-card-heading-area {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 12px;
+    }
+
+    .light-card-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0F172A;
+    }
+
+    .light-card-subtitle-badge {
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748B;
+    }
+
+    .light-card-description {
+        font-size: 13.5px;
+        color: #475569;
+        line-height: 1.6;
+        margin-bottom: 24px;
+    }
+
+    /* Elegant Vertical Privilege Checklist Rows */
+    .premium-list-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .premium-list-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: #F8FAFC;
+        border-radius: 12px;
+        border: 1px solid #F1F5F9;
+    }
+
+    .premium-item-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 13.5px;
+        font-weight: 500;
+        color: #334155;
+    }
+
+    .premium-check-icon {
+        color: #10B981;
+        font-weight: bold;
+    }
+
+    .premium-item-right-value {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #64748B;
+    }
+
+    .premium-list-item.active-tier-row {
+        background: rgba(74, 51, 134, 0.03);
+        border-color: rgba(74, 51, 134, 0.1);
+    }
+    
+    .premium-list-item.active-tier-row .premium-item-left {
+        color: #4A3386;
+        font-weight: 600;
+    }
+
+    /* Media Responsive Queries */
+    @media (max-width: 992px) {
+        .loyalty-grid-split { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+        .profile-hero-card {
+            flex-direction: column-reverse;
+            text-align: center;
+            padding: 24px;
+        }
+        .profile-action-buttons {
+            justify-content: center;
+        }
+    }
+
+{% endblock %} %}
+
+{% block content %}
+
+
+<div class="profile-hero-card">
+    <div class="profile-hero-left">
+        <h2>Welcome back, {{ request.user.get_full_name|default:request.user.username }}!</h2>
+        <p>{{ request.user.email }}</p>
+        
+        <div class="profile-action-buttons">
+            <span class="profile-btn">{{ loyalty_summary.membership_status|default:"Silver" }} Member</span>
+            <span class="profile-btn">{{ loyalty_summary.current_points|default_if_none:"0" }} Points</span>
+        </div>
+    </div>
+
+    <div class="profile-hero-right">
+        <div class="avatar-ring">
+            {% if request.user.customer.image %}
+                <img src="{{ request.user.customer.image.url }}" alt="Avatar" class="profile-hero-avatar">
+            {% else %}
+                <div class="profile-hero-avatar-fallback">
+                    {{ request.user.first_name|slice:":1"|upper|default:"G" }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="loyalty-grid-split">
+    
+    <div class="loyalty-card-dark">
+        <div>
+            <div class="dark-card-header">
+                <span class="dark-card-title">Loyalty Rewards</span>
+                <span class="dark-pill-badge">🔹 {{ loyalty_summary.membership_status|default:"Silver" }}</span>
+            </div>
+            
+            <div class="dark-main-value-box">
+                <div class="dark-value-label">Current Balance</div>
+                <div class="dark-primary-value">
+                    {{ loyalty_summary.current_points|default_if_none:"0" }}<span>Points</span>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <div class="dark-stats-row">
+                <div>
+                    <div class="stat-col-val">{{ loyalty_summary.lifetime_points_earned|default_if_none:"0" }}</div>
+                    <div class="stat-col-lbl">Lifetime</div>
+                </div>
+                <div>
+                    <div class="stat-col-val">{{ loyalty_summary.last_earned_points|default_if_none:"0" }}</div>
+                    <div class="stat-col-lbl">Last In</div>
+                </div>
+                <div>
+                    <div class="stat-col-val">{{ loyalty_summary.last_redeemed_points|default:"0" }}</div>
+                    <div class="stat-col-lbl">Redeemed</div>
+                </div>
+            </div>
+
+            <div class="progress-bar-wrapper">
+                <div class="progress-bar-labels" style="color: #94A3B8;">
+                    <span>{{ loyalty_summary.membership_status|default:"Silver" }}</span>
+                    {% if loyalty_summary.next_membership_tier %}
+                        <span>{{ loyalty_summary.next_membership_tier }} in {{ loyalty_summary.points_needed_for_next_tier }} pts</span>
+                    {% else %}
+                        <span>Gold in 830 pts</span>
+                    {% endif %}
+                </div>
+                <div class="progress-bar-container" style="background: rgba(255,255,255,0.12);">
+                    <div class="progress-bar-fill" style="width: {{ loyalty_summary.progress_percent|default:'45' }}%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loyalty-card-light">
+        <div class="tier-tab-bar">
+            <div class="tier-tab-item">Bronze</div>
+            <div class="tier-tab-item active">Silver</div>
+            <div class="tier-tab-item">Gold</div>
+            <div class="tier-tab-item">Platinum</div>
+        </div>
+        
+        <div class="light-card-body">
+            <div class="light-card-heading-area">
+                <div class="light-card-title">{{ loyalty_summary.membership_status|default:"Silver" }} Level Privileges</div>
+                <div class="light-card-subtitle-badge">Active Member</div>
+            </div>
+            
+            <p class="light-card-description">
+                Earn 1 point for every Rs.100 paid on confirmed room and event bookings. <br>
+                Redeem 1 point for Rs.1 discount at checkout.
+            </p>
+
+            <div class="premium-list-stack">
+                <div class="premium-list-item">
+                    <div class="premium-item-left"><span class="premium-check-icon">✓</span> Bronze Tier</div>
+                    <div class="premium-item-right-value">0 - 499 pts</div>
+                </div>
+                <div class="premium-list-item active-tier-row">
+                    <div class="premium-item-left"><span class="premium-check-icon">✓</span> Silver Tier</div>
+                    <div class="premium-item-right-value">500 - 1,499 pts</div>
+                </div>
+                <div class="premium-list-item">
+                    <div class="premium-item-left"><span class="premium-check-icon">✓</span> Gold Tier</div>
+                    <div class="premium-item-right-value">1,500 - 2,999 pts</div>
+                </div>
+                <div class="premium-list-item">
+                    <div class="premium-item-left"><span class="premium-check-icon">✓</span> Platinum Tier</div>
+                    <div class="premium-item-right-value">3,000+ pts</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+

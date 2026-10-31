@@ -1,0 +1,32 @@
+.team__member{
+    text-align: center;
+    &__thumb{
+        margin-bottom: 30px;
+        img{
+            border-radius: 6px;
+        }
+    }
+    &__meta{
+        .h6{
+            margin-bottom: 10px;
+            display: block;
+            @include mq($md){
+                margin-bottom: 0;
+            }
+        }
+        .designation{
+            display: block;
+            margin-bottom: 10px;
+        }
+    }
+    &__social{
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: center;
+        a{
+            color: var(--rts-para);
+            font-size: 20px;
+        }
+    }
+}

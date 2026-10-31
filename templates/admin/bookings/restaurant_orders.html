@@ -1,0 +1,362 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .booking-admin-table thead th {
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        border-bottom: 1px solid #cbd5e1 !important;
+        font-weight: 700;
+    }
+    [data-theme="dark"] .booking-admin-table thead th {
+        background: #1e293b !important;
+        color: #f8fafc !important;
+        border-bottom: 1px solid #334155 !important;
+    }
+    .form-switch .form-check-input {
+        width: 2.5em;
+        height: 1.25em;
+        cursor: pointer;
+    }
+    .form-switch .form-check-label {
+        cursor: pointer;
+        font-size: 13px;
+        padding-top: 2px;
+    }
+    #dynamic-results { transition: opacity 0.2s ease-in-out; }
+    .is-loading { opacity: 0.4; pointer-events: none; }
+</style>
+<div class="container-fluid">
+    <div class="card border-0 shadow-lg" style="border-radius: 16px; background: var(--bg-card, #ffffff); overflow: hidden;">
+        <div class="card-header d-flex justify-content-between align-items-center py-4" style="background: linear-gradient(135deg, #1d4ed8, #2563eb); border: none;">
+            <div>
+                <h3 class="mb-1 text-white font-weight-bold" style="font-family: 'Outfit', sans-serif;">Today's Confirmed Orders</h3>
+                <p class="mb-0 text-white-50" style="font-size: 13px;">Manage active food and beverage preparations</p>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+
+            {% csrf_token %}
+
+           <form id="filter-form" method="GET">
+    <div class="row g-2 align-items-end mb-4">
+        
+        <!-- Standardized fields to col-md-2 -->
+        <div class="col-md-2">
+            <label class="form-label text-muted" style="font-size: 11px; text-transform: uppercase;">Search</label>
+            <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Name/Phone/Item...">
+        </div>
+        
+        <div class="col-md-2">
+            <label class="form-label text-muted" style="font-size: 11px; text-transform: uppercase;">Order Type</label>
+            <select name="order_type" class="form-control">
+                <option value="">All</option>
+                <option value="DineIn" {% if order_type == 'DineIn' %}selected{% endif %}>Dine In</option>
+                <option value="RoomService" {% if order_type == 'RoomService' %}selected{% endif %}>Room Service</option>
+                <option value="Takeaway" {% if order_type == 'Takeaway' %}selected{% endif %}>Takeaway</option>
+                <option value="Delivery" {% if order_type == 'Delivery' %}selected{% endif %}>Delivery</option>
+            </select>
+        </div>
+        
+        <!-- Changed from col-md-1 to col-md-2 -->
+        <!-- <div class="col-md-2">
+            <label class="form-label text-muted" style="font-size: 11px; text-transform: uppercase;">Serving</label>
+            <select name="serving_status" class="form-control">
+                <option value="">All</option>
+                <option value="Preparing" {% if serving_status == 'Preparing' %}selected{% endif %}>Prep</option>
+                <option value="Delivered" {% if serving_status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                <option value="Served" {% if serving_status == 'Served' %}selected{% endif %}>Served</option>
+            </select>
+        </div> -->
+        
+        <!-- Changed from col-md-1 to col-md-2 -->
+        <div class="col-md-2">
+            <label class="form-label text-muted" style="font-size: 11px; text-transform: uppercase;">Status</label>
+            <select name="status" class="form-control">
+                <option value="">All</option>
+                <option value="Pending" {% if status == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Confirmed" {% if status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                <option value="Completed" {% if status == 'Completed' %}selected{% endif %}>Completed</option>
+                <option value="Cancelled" {% if status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+        
+        <div class="col-md-2">
+            <label class="form-label text-muted" style="font-size: 11px; text-transform: uppercase;">User</label>
+            <select name="membership" class="form-control">
+                <option value="">All</option>
+                <option value="Registered" {% if membership == 'Registered' %}selected{% endif %}>Registered</option>
+                <option value="Guest" {% if membership == 'Guest' %}selected{% endif %}>Guest</option>
+            </select>
+        </div>
+        
+        <!-- Reset Button: Reduced width and added style for alignment -->
+        <div class="col-md-1 d-flex align-items-end">
+            <button type="button" id="reset-btn" class="btn btn-secondary w-100 px-0">
+                <i class="fa fa-refresh"></i>
+            </button>
+        </div>
+    </div>
+</form>
+
+            <div id="dynamic-results">
+                <div class="table-responsive" style="border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0);">
+                    <table class="table table-hover align-middle mb-0 booking-admin-table" style="font-size: 14px;">
+                        <thead>
+                            <tr class="text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                                <th class="py-3 px-4">Booking Info</th>
+                                <th class="py-3">Customer</th>
+                                <th class="py-3">Phone</th>
+                                <th class="py-3">Order Type</th>
+                                <th class="py-3">Items</th>
+                                <th class="py-3">Amount</th>
+                                <th class="py-3 text-center">Serving Status</th>
+                                <th class="py-3 text-center">Payment/Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in page_obj %}
+                            <tr>
+                                <td class="py-3 px-4">
+                                    <div class="font-weight-bold text-dark">{{ order.id }}</div>
+                                    <div class="text-muted" style="font-size: 11px;">{{ order.order_date|date:"d M Y, h:i A" }}</div>
+                                </td>
+                                <td class="py-3">
+                                    <div class="font-weight-semibold {% if order.is_guest %}text-dark{% else %}text-primary{% endif %}">{{ order.display_name }}</div>
+                                    <span class="badge" style="font-size: 10px; font-weight: 600; padding: 3px 6px; border-radius: 4px; {% if order.is_guest %}background: rgba(107, 114, 128, 0.1); color: #6b7280;{% else %}background: rgba(59, 130, 246, 0.1); color: #2563eb;{% endif %}">
+                                        {% if order.is_guest %}Guest{% else %}Registered{% endif %}
+                                    </span>
+                                </td>
+                                <td class="py-3">{{ order.display_phone }}</td>
+                                <td class="py-3">
+                                    <div class="font-weight-semibold text-dark">{{ order.get_order_type_display }}</div>
+                                    <div class="text-muted" style="font-size: 11px;">{{ order.items.count }} item{{ order.items.count|pluralize }}</div>
+                                </td>
+                                <td class="py-3">
+                                    <div class="d-flex flex-column" style="gap: 4px; min-width: 220px;">
+                                        {% for item in order.items.all %}
+                                            <div style="font-size: 13px;">
+                                                <span class="font-weight-semibold text-dark">{{ item.food.item_name }}</span>
+                                                <span class="text-muted">x{{ item.quantity }}</span>
+                                            </div>
+                                        {% empty %}
+                                            <span class="text-muted" style="font-size: 13px;">No items found</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td class="py-3 font-weight-bold text-dark">${{ order.total_amount }}</td>
+
+                                <td class="py-3">
+                                    <div class="form-check form-switch mb-0" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        <input class="form-check-input serving-status-toggle m-0"
+                                               style="margin-left: 0;"
+                                               type="checkbox"
+                                               role="switch"
+                                               id="switch-{{ order.id }}"
+                                               data-order-id="{{ order.id }}"
+                                               data-url="{% url 'toggle_serving_status' order.id %}"
+                                               {% if order.serving_status == 'Completed' %}checked{% endif %}>
+                                        <label class="form-check-label m-0 font-weight-semibold text-dark"
+                                               for="switch-{{ order.id }}"
+                                               id="serving-label-{{ order.id }}"
+                                               style="min-width: 65px; text-align: left;">
+                                            {{ order.serving_status|default:"Preparing" }}
+                                        </label>
+                                    </div>
+                                </td>
+
+                                <td class="py-3 text-center">
+                                    {% if order.status == 'Pending' %}
+                                        <span class="badge bg-warning text-dark" style="border-radius: 12px; padding: 5px 12px; font-weight: 500;">Pending</span>
+                                    {% elif order.status == 'Confirmed' %}
+                                        <span class="badge" style="background: #3b82f6; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">Confirmed</span>
+                                    {% elif order.status == 'Preparing' %}
+                                        <span class="badge" style="background: #f59e0b; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">Preparing</span>
+                                    {% elif order.status == 'ReadyForPickup' %}
+                                        <span class="badge" style="background: #10b981; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">Ready for Pickup</span>
+                                    {% elif order.status == 'Assigned' %}
+                                        <span class="badge" style="background: #6366f1; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">Assigned</span>
+                                    {% elif order.status == 'OutForDelivery' %}
+                                        <span class="badge" style="background: #8b5cf6; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">Out for Delivery</span>
+                                    {% elif order.status == 'Delivered' %}
+                                        <span class="badge" style="background: #059669; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">Delivered</span>
+                                    {% elif order.status == 'Completed' %}
+                                        <span class="badge" style="background: #22c55e; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">Completed</span>
+                                    {% elif order.status == 'Cancelled' %}
+                                        <span class="badge" style="background: #ef4444; border-radius: 12px; padding: 5px 12px; font-weight: 500; color: #fff;">Cancelled</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary" style="border-radius: 12px; padding: 5px 12px; font-weight: 500;">{{ order.status }}</span>
+                                    {% endif %}
+                                    {% if order.payment_status %}
+                                        <div class="mt-1">
+                                            <span class="badge" style="font-size: 10px; border-radius: 10px; padding: 3px 8px; {% if order.payment_status == 'Paid' %}background: rgba(34,197,94,0.12); color: #16a34a;{% elif order.payment_status == 'Pending' %}background: rgba(245,158,11,0.12); color: #b45309;{% elif order.payment_status == 'Failed' %}background: rgba(239,68,68,0.12); color: #dc2626;{% else %}background: rgba(107,114,128,0.12); color: #6b7280;{% endif %}">
+                                                {{ order.payment_status }}
+                                            </span>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <div class="mb-2" style="font-size: 32px;">📭</div>
+                                    No active restaurant orders found matching your search for today.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if page_obj.has_other_pages %}
+                <nav class="mt-4 d-flex justify-content-center">
+                    <ul class="pagination" id="pagination-controls">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="#" data-page="{{ page_obj.previous_page_number }}">← Prev</a></li>
+                        {% endif %}
+                        {% for num in page_obj.paginator.page_range %}
+                        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                            <a class="page-link" href="#" data-page="{{ num }}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+                        {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="#" data-page="{{ page_obj.next_page_number }}">Next →</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('filter-form');
+    const resultsContainer = document.getElementById('dynamic-results');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    let debounceTimer;
+    let currentPage = null;
+
+    // --- Serving status toggle wiring (must be re-bound after every AJAX swap) ---
+    const bindToggleSwitches = () => {
+        const toggleSwitches = resultsContainer.querySelectorAll('.serving-status-toggle');
+        toggleSwitches.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const orderId = this.getAttribute('data-order-id');
+                const postUrl = this.getAttribute('data-url');
+                const labelElement = document.getElementById(`serving-label-${orderId}`);
+                const isChecked = this.checked;
+                const newStatus = isChecked ? 'Completed' : 'Preparing';
+
+                labelElement.innerText = newStatus;
+                labelElement.style.opacity = '0.5';
+
+                fetch(postUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    labelElement.style.opacity = '1';
+                    if (!data.success) {
+                        this.checked = !isChecked;
+                        labelElement.innerText = isChecked ? 'Preparing' : 'Completed';
+                        alert('Error updating status: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    this.checked = !isChecked;
+                    labelElement.innerText = isChecked ? 'Preparing' : 'Completed';
+                    labelElement.style.opacity = '1';
+                    alert('A network error occurred while updating the status.');
+                });
+            });
+        });
+    };
+
+    // --- Pagination wiring (must be re-bound after every AJAX swap) ---
+    const bindPaginationLinks = () => {
+        const links = resultsContainer.querySelectorAll('#pagination-controls .page-link');
+        links.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                currentPage = link.dataset.page;
+                performFilter();
+            });
+        });
+    };
+
+    // --- Core AJAX filter ---
+    const performFilter = () => {
+        const params = new URLSearchParams(new FormData(filterForm));
+        if (currentPage) {
+            params.set('page', currentPage);
+        }
+        resultsContainer.classList.add('is-loading');
+
+        fetch(`${window.location.pathname}?${params.toString()}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+            return res.text();
+        })
+        .then(html => {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const newContent = doc.getElementById('dynamic-results');
+            if (newContent) {
+                resultsContainer.innerHTML = newContent.innerHTML;
+                bindToggleSwitches();
+                bindPaginationLinks();
+            }
+            window.history.replaceState(null, '', `?${params.toString()}`);
+        })
+        .catch(err => {
+            console.error('Filter request failed:', err);
+        })
+        .finally(() => {
+            resultsContainer.classList.remove('is-loading');
+        });
+    };
+
+    filterForm.addEventListener('input', (e) => {
+        currentPage = null;
+        clearTimeout(debounceTimer);
+        const delay = e.target.tagName === 'SELECT' ? 0 : 400;
+        debounceTimer = setTimeout(performFilter, delay);
+    });
+
+    // Safety net: some browsers only fire 'change' on <select>/<input type=date>, not 'input'
+    filterForm.addEventListener('change', (e) => {
+        if (e.target.tagName === 'SELECT' || e.target.type === 'date') {
+            currentPage = null;
+            clearTimeout(debounceTimer);
+            performFilter();
+        }
+    });
+
+    filterForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        currentPage = null;
+        performFilter();
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+        window.location.href = "{% url 'receptionist_restaurant_orders' %}";
+    });
+
+    bindToggleSwitches();
+    bindPaginationLinks();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,498 @@
+/* ----- Banner Home One ----- */
+.banner__area {
+    background-color: rgba(#000834, $alpha: 0.65);
+}
+
+.is__home__one {
+    &.banner__height {
+    }
+
+    &.banner__center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+}
+
+.banner__slide__content {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    padding: 180px 0;
+
+    @include mq($md) {
+        padding: 150px 0;
+    }
+
+    .h6,
+    h1,
+    p {
+        color: var(--rts-white);
+    }
+
+    h1 {
+        line-height: 90px;
+        margin-top: 20px;
+        margin-bottom: 30px;
+
+        @include mq($md) {
+            font-size: 60px;
+            line-height: 70px;
+        }
+
+        @include mq($sm) {
+            font-size: 50px;
+            line-height: 60px;
+        }
+
+        @include mq($xs) {
+            font-size: 40px;
+            line-height: 50px;
+        }
+    }
+
+    .sub__text {
+        font-size: 18px;
+        max-width: 560px;
+        margin: 0 auto;
+        margin-bottom: 40px;
+    }
+
+}
+
+.banner__slider__image {
+    @extend %position-common;
+
+    &::before {
+        @extend %position-common;
+        background-color: rgba(#1b1b1b, $alpha: 0.5);
+    }
+
+    img {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+    }
+}
+
+.subtitle__icon {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 0;
+
+    &::before {
+        position: absolute;
+        content: "";
+        left: -65px;
+        bottom: 50%;
+        @extend %t5;
+        width: 52px;
+        height: 12px;
+        background-image: url('../images/shape/left.svg');
+        background-repeat: no-repeat;
+    }
+
+    &::after {
+        position: absolute;
+        content: "";
+        right: -65px;
+        bottom: 50%;
+        @extend %t5;
+        width: 52px;
+        height: 12px;
+        background-image: url('../images/shape/right.svg');
+        background-repeat: no-repeat;
+
+    }
+}
+
+@keyframes slideUp {
+    0% {
+        transform: translateY(5%);
+        opacity: 0.2;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes zoom {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+}
+
+// slider animation settings
+.banner__slider {
+    .swiper-slide-active {
+        .banner__slider__image {
+            animation: zoom 7s;
+        }
+
+        .banner__slide__content {
+            .subtitle__icon {
+                animation-delay: 1.4s;
+                animation: fadeInUp 2s;
+            }
+
+            h1 {
+                animation-delay: 1s;
+                animation: fadeInUp 2s;
+            }
+
+            .sub__text {
+                animation-delay: 1.2s;
+                animation: fadeInUp 2s;
+            }
+
+            .theme-btn {
+                animation-delay: 1.4s;
+                animation: fadeInUp 2s;
+            }
+
+        }
+    }
+}
+
+// banner slider navigation
+.banner__slider {
+    &:hover {
+        .rts__slider__nav {
+            opacity: 1;
+
+            @include mq($sm) {
+                display: none;
+                opacity: 0;
+            }
+        }
+    }
+}
+
+.rts__slider__nav {
+    opacity: 0;
+    transition: var(--transition);
+    position: absolute;
+    width: 100%;
+    left: 60px;
+    display: flex;
+    z-index: 9999;
+    bottom: 50%;
+    justify-content: space-between;
+    transform: translate(0, -50%);
+
+    .rts__slide {}
+
+    .prev {
+        right: 120px;
+        position: absolute;
+    }
+}
+
+// home banner two
+.banner__area {
+    &.is__home__two {
+        position: relative;
+
+        .banner__slide__content {
+            padding-top: calc(155px + 220px);
+            padding-bottom: 130px;
+            z-index: 1;
+
+            @include mq($lg) {
+                padding-top: 300px;
+            }
+
+            @include mq($md) {
+                padding-top: 280px;
+            }
+
+            @include mq($sm) {
+                padding-top: 200px;
+            }
+
+            &__info {
+                padding-top: 130px;
+                display: flex;
+                max-width: 860px;
+                margin: 0 auto;
+                justify-content: space-around;
+
+                @include mq($md) {
+                    padding-top: 80px;
+                }
+
+
+                @include mq($sm) {
+                    padding-top: 40px;
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 30px;
+                    justify-content: center;
+                }
+
+                @include mq($xs) {
+                    margin-top: 0;
+                }
+
+                .item {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 15px;
+                    text-align: center;
+
+                    .h2 {
+                        color: var(--rts-white);
+                        line-height: 1;
+                        margin-bottom: 0;
+                    }
+
+                    p {
+                        font-size: 24px;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// home banner three
+.banner__area {
+    &.is__home__three {
+        background-color: var(--rts-gray);
+        margin-bottom: 70px;
+
+        @include mq($xs) {
+            margin-bottom: 0;
+        }
+
+        .banner__content {
+            &.not__slider {
+                display: flex;
+            }
+
+            .banner__slide__content {
+                &.not__slider {
+                    text-align: left;
+                    padding-top: 180px;
+                    padding-bottom: 60px;
+                    max-width: 600px;
+
+                    @include mq($sm) {
+                        padding-top: 120px;
+                    }
+
+                    h1 {
+                        color: var(--rts-heading);
+                        margin-top: 0;
+                        margin-bottom: 0;
+                    }
+                }
+            }
+
+            .banner__image {
+                position: absolute;
+                right: 0;
+                top: 0;
+            }
+        }
+    }
+}
+
+// home banner four
+.banner__area {
+    &.is__home__four {
+        .banner__slide__content {
+            &.if__not__slider {
+                text-align: left;
+                padding: 290px 0;
+
+                @include mq($lg) {
+                    padding: 170px 0 190px 0;
+                }
+
+                @include mq($md) {
+                    padding: 170px 0;
+                }
+
+                @include mq($sm) {
+                    padding: 120px 0;
+                }
+
+                h1 {
+                    margin: 0;
+                }
+            }
+        }
+    }
+}
+
+// home banner five
+.banner__area {
+    &.is__home__five {
+        clip-path: polygon(0% 100%, 0% 0%, 100% 0%, 100% 100%, 100% 100%, 89.246% 91.898%, 78.025% 86.489%, 66.575% 83.438%, 55.133% 82.41%, 43.939% 83.071%, 33.229% 85.087%, 23.243% 88.122%, 14.217% 91.842%, 6.39% 95.913%, 0% 100%);
+
+        @include mq($md) {
+            clip-path: none;
+        }
+
+        .banner__content {
+            clip-path: polygon(0% 100%, 0% 0%, 100% 0%, 100% 100%, 100% 100%, 89.246% 91.898%, 78.025% 86.489%, 66.575% 83.438%, 55.133% 82.41%, 43.939% 83.071%, 33.229% 85.087%, 23.243% 88.122%, 14.217% 91.842%, 6.39% 95.913%, 0% 100%);
+            height: 940px;
+            position: relative;
+            padding-top: 105px;
+
+            @include mq($lg) {
+                height: 800px;
+            }
+
+            @include mq($md) {
+                clip-path: none;
+                height: 100%;
+                padding-bottom: 100px;
+            }
+
+            @include mq($sm) {
+                clip-path: none;
+                height: 100%;
+            }
+
+            &::before {
+                @extend %position-common;
+                background-color: rgba(0, 8, 52, 0.4);
+            }
+        }
+
+        .banner__slide__content {
+            &.if__not__slider {
+                padding: 0;
+
+                h1 {
+                    text-align: left;
+                    margin: 0;
+
+                    @include mq($lg) {
+                        font-size: 70px;
+                    }
+
+                    @include mq($sm) {
+                        font-size: 50px;
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+// home banner six
+.banner__area {
+    &.is__home__six {
+        .banner__slide__content {
+            padding-bottom: 30px;
+            padding-top: 250px;
+
+            @include mq($lg) {
+                padding-top: 180px;
+            }
+
+            @include mq($md) {
+                padding-top: 150px;
+            }
+
+            @include mq($sm) {
+                padding-top: 100px;
+            }
+        }
+    }
+}
+
+// home banner video
+.banner__area {
+    &.is__home__video {
+        height: 800px;
+        overflow: hidden;
+        background-color: rgba(0, 0, 0, 0.4);
+        @include mq($sm){
+            height: 600px;
+        }
+        .video__section__text {
+            display: flex;
+            align-items: center;
+            height: 800px;
+            text-align: center;
+            @include mq($sm){
+                height: 400px;
+                margin-top: 150px;
+            }
+        }
+    }
+
+    .video__area {
+        position: absolute;
+        z-index: -1;
+        height: 800px;
+        left: 0;
+        width: 100%;
+        @include mq($sm){
+            height: 600px;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video__area__overlay {
+            @extend %position-common;
+            background-color: rgba(0, 0, 0, 0.1)
+        }
+    }
+    .swiper-slide{
+        .video__text__slider__title{
+           transition: var(--transition);
+           margin-top: 100px;
+           @include mq($sm){
+            font-size: 50px;
+            line-height: 60px;
+            margin-top: 0;
+            }
+            @include mq($xs){
+                font-size: 40px;
+                line-height: 50px;
+            }
+        }
+        &-active{
+            .video__text__slider__title{
+                animation: fadeInUp 2s;
+                opacity: 1;
+               
+            }
+        }
+    }
+}
+
+// dark light
+[data-theme="dark"] {
+    .banner__slide__content {
+        span {
+            color: #fff;
+        }
+
+        h1 {
+            color: #fff;
+        }
+
+        p {
+            color: #fff;
+        }
+    }
+}

@@ -1,0 +1,602 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+
+<style>
+:root {
+  --theme-bg:#f8fafc; --card-bg:#ffffff; --card-border:#e2e8f0;
+  --text-main:#0f172a; --text-sub:#64748b;
+  --primary:#4f46e5; --primary-gradient:linear-gradient(135deg,#6366f1,#4f46e5);
+  --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --info:#06b6d4;
+  --radius:16px; --shadow-sm:0 1px 3px rgba(0,0,0,0.05); --shadow-md:0 10px 25px -5px rgba(0,0,0,0.07);
+  --transition:all 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+html[data-theme="dark"] { --theme-bg:#090d16; --card-bg:#111827; --card-border:#1f2937; --text-main:#f9fafb; --text-sub:#9ca3af; }
+
+.bi-wrap { font-family:'Inter',sans-serif; background:var(--theme-bg); color:var(--text-main); min-height:100vh; padding:30px; }
+.page-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:16px; }
+.page-hdr h1 { font-size:24px; font-weight:800; margin:0; letter-spacing:-0.02em; }
+.page-hdr p { color:var(--text-sub); margin:4px 0 0; font-size:14px; }
+.btn-bi { padding:10px 20px; border-radius:10px; font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:8px; text-decoration:none; cursor:pointer; transition:var(--transition); border:1px solid var(--card-border); }
+.btn-primary { background:var(--primary-gradient); color:white; border:none; }
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(79,70,229,0.3); }
+.btn-secondary { background:var(--card-bg); color:var(--text-main); }
+
+.filter-bar { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:18px 22px; margin-bottom:28px; display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; box-shadow:var(--shadow-sm); }
+.fg { display:flex; flex-direction:column; gap:6px; flex:1; min-width:160px; }
+.fg label { font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-sub); letter-spacing:0.06em; }
+.fg select,.fg input { background:var(--theme-bg); border:1px solid var(--card-border); color:var(--text-main); padding:9px 12px; border-radius:8px; outline:none; font-size:13px; width:100%; }
+
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:18px; margin-bottom:28px; }
+.kpi-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:22px; position:relative; overflow:hidden; box-shadow:var(--shadow-sm); transition:var(--transition); }
+.kpi-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
+.kpi-card::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--kpi-accent,var(--primary)); border-radius:4px 0 0 4px; }
+.kpi-tag { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-sub); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.kpi-tag i { width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px; }
+.kpi-num { font-size:28px; font-weight:800; letter-spacing:-0.03em; line-height:1; }
+.kpi-sub { font-size:12px; color:var(--text-sub); margin-top:6px; }
+
+.sec-title { font-size:15px; font-weight:800; margin:0 0 18px; display:flex; align-items:center; gap:8px; }
+.sec-title::before { content:''; display:inline-block; width:3px; height:16px; background:var(--primary-gradient); border-radius:2px; }
+
+.charts-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(380px,1fr)); gap:22px; margin-bottom:28px; }
+@media(max-width:600px) { .charts-grid { grid-template-columns:1fr; } }
+.chart-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow-sm); }
+.chart-card h3 { font-size:14px; font-weight:700; margin:0 0 16px; }
+.chart-wrap { position:relative; height:260px; }
+
+/* Segment Grid */
+.seg-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:16px; margin-bottom:28px; }
+.seg-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow-sm); transition:var(--transition); display:flex; align-items:center; gap:12px; }
+.seg-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-md); }
+.seg-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.seg-name { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-sub); }
+.seg-val { font-size:20px; font-weight:800; }
+
+/* Ledger */
+.ledger-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow-sm); overflow-x:auto; }
+.ledger-card h3 { font-size:15px; font-weight:800; margin:0 0 18px; }
+.sz-table { width:100%; border-collapse:collapse; }
+.sz-table th,.sz-table td { padding:13px 15px; text-align:left; border-bottom:1px solid var(--card-border); font-size:13px; }
+.sz-table th { font-size:11px; font-weight:700; color:var(--text-sub); text-transform:uppercase; letter-spacing:0.05em; }
+.sz-table tbody tr:hover { background:rgba(79,70,229,0.025); }
+.avatar { width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:white; background:var(--primary-gradient); }
+.badge { padding:3px 9px; border-radius:6px; font-weight:700; font-size:11px; }
+.badge-ok { background:rgba(16,185,129,.1); color:var(--success); }
+.badge-warn { background:rgba(245,158,11,.1); color:var(--warning); }
+.badge-vip { background:rgba(245,158,11,.15); color:var(--warning); }
+
+/* Comparison Section Styling */
+.comp-header {
+  margin-top: 40px;
+  margin-bottom: 24px;
+}
+.comp-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-bottom: 28px;
+}
+.comp-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+.comp-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+.comp-card-title {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.comp-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px dashed var(--card-border);
+}
+.comp-stat-row:last-child {
+  border-bottom: none;
+}
+.comp-stat-label {
+  font-size: 13px;
+  color: var(--text-sub);
+}
+.comp-stat-value {
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.comp-stat-pct {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--theme-bg);
+  color: var(--primary);
+}
+.comp-progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--theme-bg);
+  overflow: hidden;
+  margin-top: 8px;
+  display: flex;
+}
+.comp-progress-fill {
+  height: 100%;
+}
+.comp-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-top: 6px;
+}
+.chart-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-sub);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--theme-bg);
+  border-radius: 8px;
+  padding: 20px;
+}
+</style>
+
+<div class="bi-wrap">
+
+  <!-- Header -->
+  <div class="page-hdr">
+    <div>
+      <h1><i class="fa fa-users" style="color:var(--primary);margin-right:10px;"></i>Customer Intelligence</h1>
+      <p>Guest acquisition, loyalty analytics, spend patterns and demographic insights.</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <a href="{% url 'reports_overall' %}" class="btn-bi btn-secondary">&larr; Dashboard</a>
+      <a href="{% url 'export_report_csv' 'rooms' %}" class="btn-bi btn-primary"><i class="fa fa-download"></i> Export CSV</a>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <form method="GET" action="">
+    <div class="filter-bar">
+      <div class="fg"><label>Timeframe</label>
+        <select name="time_filter">
+          <option value="7d" {% if time_filter == '7d' %}selected{% endif %}>Last 7 Days</option>
+          <option value="this_month" {% if time_filter == 'this_month' or not time_filter %}selected{% endif %}>This Month</option>
+          <option value="this_year" {% if time_filter == 'this_year' %}selected{% endif %}>This Year</option>
+        </select>
+      </div>
+      <div class="fg"><label>Start Date</label><input type="date" name="custom_start" value="{{ request.GET.custom_start }}"></div>
+      <div class="fg"><label>End Date</label><input type="date" name="custom_end" value="{{ request.GET.custom_end }}"></div>
+      <div style="display:flex;gap:8px;align-items:flex-end;">
+        <button type="submit" class="btn-bi btn-primary"><i class="fa fa-filter"></i> Apply</button>
+        <a href="{{ request.path }}" class="btn-bi btn-secondary"><i class="fa fa-times"></i> Reset</a>
+      </div>
+    </div>
+  </form>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--kpi-accent:var(--primary);">
+      <div class="kpi-tag"><i class="fa fa-users" style="background:rgba(79,70,229,.12);color:var(--primary);"></i> Total Customers</div>
+      <div class="kpi-num">{{ total_count }}</div>
+    </div>
+    <div class="kpi-card" style="--kpi-accent:var(--success);">
+      <div class="kpi-tag"><i class="fa fa-user-plus" style="background:rgba(16,185,129,.12);color:var(--success);"></i> New This Period</div>
+      <div class="kpi-num" style="color:var(--success);">{{ new_count }}</div>
+      <div class="kpi-sub">Registered in selected window</div>
+    </div>
+    <div class="kpi-card" style="--kpi-accent:var(--info);">
+      <div class="kpi-tag"><i class="fa fa-repeat" style="background:rgba(6,182,212,.12);color:var(--info);"></i> Returning Guests</div>
+      <div class="kpi-num" style="color:var(--info);">{{ returning_customers }}</div>
+    </div>
+    <div class="kpi-card" style="--kpi-accent:var(--warning);">
+      <div class="kpi-tag"><i class="fa fa-percent" style="background:rgba(245,158,11,.12);color:var(--warning);"></i> Repeat Booking Rate</div>
+      <div class="kpi-num" style="font-size:22px;">{{ repeat_booking_rate }}%</div>
+    </div>
+    <div class="kpi-card" style="--kpi-accent:var(--danger);">
+      <div class="kpi-tag"><i class="fa fa-star" style="background:rgba(245,158,11,.12);color:var(--warning);"></i> Top Segment</div>
+      <div class="kpi-num" style="font-size:15px;">{{ valuable_segment }}</div>
+      <div class="kpi-sub">Highest revenue source</div>
+    </div>
+  </div>
+
+  <!-- Comparison Section -->
+  <div class="sec-title comp-header">Registered vs Guest Customer Comparison</div>
+  
+  <div class="comp-cards">
+    <!-- Registered Customers Card -->
+    <div class="comp-card" style="border-top: 4px solid var(--primary);">
+      <div class="comp-card-title" style="color: var(--primary);">
+        <i class="fa fa-address-card"></i> Registered Customers
+      </div>
+      <div class="comp-stat-row">
+        <span class="comp-stat-label">Total Registered Customers</span>
+        <span class="comp-stat-value">{{ total_reg_customers }} <span class="comp-stat-pct">{{ reg_cust_pct }}%</span></span>
+      </div>
+      <div class="comp-stat-row">
+        <span class="comp-stat-label">Room Bookings</span>
+        <span class="comp-stat-value">{{ reg_room_bookings }} <span class="comp-stat-pct">{{ reg_room_bookings_pct }}%</span></span>
+      </div>
+      <div class="comp-stat-row">
+        <span class="comp-stat-label">Event Bookings</span>
+        <span class="comp-stat-value">{{ reg_event_bookings }} <span class="comp-stat-pct">{{ reg_event_bookings_pct }}%</span></span>
+      </div>
+      <div class="comp-stat-row">
+        <span class="comp-stat-label">Offline Bookings</span>
+        <span class="comp-stat-value">{{ reg_offline_bookings }} <span class="comp-stat-pct">{{ reg_offline_bookings_pct }}%</span></span>
+      </div>
+      <div class="comp-stat-row">
+        <span class="comp-stat-label">Revenue Generated</span>
+        <span class="comp-stat-value" style="color: var(--success);">₹{{ reg_revenue|floatformat:0 }} <span class="comp-stat-pct" style="color: var(--success);">{{ reg_revenue_pct }}%</span></span>
+      </div>
+    </div>
+
+    <!-- Guest Customers Card -->
+    <div class="comp-card" style="border-top: 4px solid var(--info);">
+      <div class="comp-card-title" style="color: var(--info);">
+        <i class="fa fa-user-secret"></i> Guest Customers
+      </div>
+      <div class="comp-stat-row">
+        <span class="comp-stat-label">Total Guest Customers</span>
+        <span class="comp-stat-value">{{ total_guest_customers }} <span class="comp-stat-pct" style="color: var(--info);">{{ gst_cust_pct }}%</span></span>
+      </div>
+      <div class="comp-stat-row">
+        <span class="comp-stat-label">Room Bookings</span>
+        <span class="comp-stat-value">{{ gst_room_bookings }} <span class="comp-stat-pct" style="color: var(--info);">{{ gst_room_bookings_pct }}%</span></span>
+      </div>
+      <div class="comp-stat-row">
+        <span class="comp-stat-label">Event Bookings</span>
+        <span class="comp-stat-value">{{ gst_event_bookings }} <span class="comp-stat-pct" style="color: var(--info);">{{ gst_event_bookings_pct }}%</span></span>
+      </div>
+      <div class="comp-stat-row">
+        <span class="comp-stat-label">Offline Bookings</span>
+        <span class="comp-stat-value">{{ gst_offline_bookings }} <span class="comp-stat-pct" style="color: var(--info);">{{ gst_offline_bookings_pct }}%</span></span>
+      </div>
+      <div class="comp-stat-row">
+        <span class="comp-stat-label">Revenue Generated</span>
+        <span class="comp-stat-value" style="color: var(--success);">₹{{ gst_revenue|floatformat:0 }} <span class="comp-stat-pct" style="color: var(--success);">{{ gst_revenue_pct }}%</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Analysis Row -->
+  <div class="charts-grid">
+    <!-- Booking Analysis -->
+    <div class="chart-card">
+      <h3><i class="fa fa-tasks" style="color:var(--primary);margin-right:6px;"></i> Booking Analysis</h3>
+      <table class="sz-table" style="margin-top: 10px;">
+        <thead>
+          <tr>
+            <th>Booking Type</th>
+            <th>Registered</th>
+            <th>Guest</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Room Bookings</strong></td>
+            <td>{{ reg_room_bookings }} <span style="color: var(--text-sub); font-size: 11px;">({{ reg_room_bookings_pct }}%)</span></td>
+            <td>{{ gst_room_bookings }} <span style="color: var(--text-sub); font-size: 11px;">({{ gst_room_bookings_pct }}%)</span></td>
+            <td><strong>{{ total_room_bookings }}</strong></td>
+          </tr>
+          <tr>
+            <td><strong>Event Bookings</strong></td>
+            <td>{{ reg_event_bookings }} <span style="color: var(--text-sub); font-size: 11px;">({{ reg_event_bookings_pct }}%)</span></td>
+            <td>{{ gst_event_bookings }} <span style="color: var(--text-sub); font-size: 11px;">({{ gst_event_bookings_pct }}%)</span></td>
+            <td><strong>{{ total_event_bookings }}</strong></td>
+          </tr>
+          <tr>
+            <td><strong>Offline Bookings</strong></td>
+            <td>{{ reg_offline_bookings }} <span style="color: var(--text-sub); font-size: 11px;">({{ reg_offline_bookings_pct }}%)</span></td>
+            <td>{{ gst_offline_bookings }} <span style="color: var(--text-sub); font-size: 11px;">({{ gst_offline_bookings_pct }}%)</span></td>
+            <td><strong>{{ total_offline_bookings }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Revenue Analysis -->
+    <div class="chart-card">
+      <h3><i class="fa fa-money" style="color:var(--success);margin-right:6px;"></i> Revenue Analysis</h3>
+      <div style="margin-top: 15px;">
+        <div class="comp-stat-row">
+          <span class="comp-stat-label">Registered Customer Revenue</span>
+          <span class="comp-stat-value">₹{{ reg_revenue|floatformat:2 }} <span class="comp-stat-pct" style="color: var(--success); background: rgba(16,185,129,.1);">{{ reg_revenue_pct }}%</span></span>
+        </div>
+        <div class="comp-stat-row">
+          <span class="comp-stat-label">Guest Customer Revenue</span>
+          <span class="comp-stat-value">₹{{ gst_revenue|floatformat:2 }} <span class="comp-stat-pct" style="color: var(--info); background: rgba(6,182,212,.1);">{{ gst_revenue_pct }}%</span></span>
+        </div>
+        <div class="comp-stat-row" style="border-top: 2px solid var(--card-border); padding-top: 15px; margin-top: 10px;">
+          <span class="comp-stat-label" style="font-weight: 800; color: var(--text-main);">Total Revenue</span>
+          <span class="comp-stat-value" style="font-size: 18px; font-weight: 800; color: var(--success);">₹{{ total_revenue_period|floatformat:2 }}</span>
+        </div>
+        
+        <div style="margin-top: 20px;">
+          <span class="comp-stat-label">Revenue Share Split</span>
+          <div class="comp-progress-bar">
+            <div class="comp-progress-fill" style="width: {{ reg_revenue_pct }}%; background: var(--primary);"></div>
+            <div class="comp-progress-fill" style="width: {{ gst_revenue_pct }}%; background: var(--info);"></div>
+          </div>
+          <div class="comp-legend">
+            <span><i class="fa fa-circle" style="color: var(--primary); margin-right: 4px;"></i> Registered ({{ reg_revenue_pct }}%)</span>
+            <span><i class="fa fa-circle" style="color: var(--info); margin-right: 4px;"></i> Guest ({{ gst_revenue_pct }}%)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison Charts Row -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3><i class="fa fa-bar-chart" style="color:var(--primary);margin-right:6px;"></i> Booking Distribution Comparison</h3>
+      <div class="chart-wrap" id="bookingCompChartWrap">
+        <canvas id="bookingCompChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3><i class="fa fa-pie-chart" style="color:var(--info);margin-right:6px;"></i> Revenue Comparison Share</h3>
+      <div class="chart-wrap" id="revenueCompChartWrap">
+        <canvas id="revenueCompChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Segments (Revenue Split) — uses segment_data from view (list of (label, value) tuples) -->
+  <div class="sec-title">Revenue by Guest Type</div>
+  <div class="seg-grid">
+    {% for lbl, val in segment_data %}
+    <div class="seg-card">
+      <div class="seg-icon" style="background:rgba(79,70,229,.12);color:var(--primary);"><i class="fa fa-user"></i></div>
+      <div>
+        <div class="seg-name">{{ lbl }}</div>
+        <div class="seg-val" style="font-size:14px;">₹{{ val|floatformat:0 }}</div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="seg-card">
+      <div class="seg-icon" style="background:rgba(79,70,229,.12);color:var(--primary);"><i class="fa fa-user"></i></div>
+      <div>
+        <div class="seg-name">All Guests</div>
+        <div class="seg-val">{{ total_count }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Charts Row 1 -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3><i class="fa fa-area-chart" style="color:var(--primary);margin-right:6px;"></i> Guest Acquisition Trend</h3>
+      <div class="chart-wrap"><canvas id="acqChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3><i class="fa fa-area-chart" style="color:var(--success);margin-right:6px;"></i> Registered vs Walk-in Revenue</h3>
+      <div class="chart-wrap"><canvas id="revCustChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3><i class="fa fa-bar-chart" style="color:var(--warning);margin-right:6px;"></i> New vs Returning Guests (Total)</h3>
+      <div class="chart-wrap"><canvas id="newRetChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3><i class="fa fa-bar-chart" style="color:var(--info);margin-right:6px;"></i> Booking Frequency Distribution</h3>
+      <div class="chart-wrap"><canvas id="natChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Peak Acquisition Info Card -->
+  <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);padding:18px 22px;margin-bottom:28px;box-shadow:var(--shadow-sm);">
+    <div class="sec-title">Acquisition Insights</div>
+    <div style="display:flex;flex-wrap:wrap;gap:24px;">
+      <div><span style="font-size:12px;color:var(--text-sub);">Peak Acquisition Month</span><br><strong style="font-size:18px;">{{ peak_acq_month }}</strong></div>
+      <div><span style="font-size:12px;color:var(--text-sub);">Repeat Booking Rate</span><br><strong style="font-size:18px;">{{ returning_pct }}%</strong></div>
+      <div><span style="font-size:12px;color:var(--text-sub);">Most Valuable Segment</span><br><strong style="font-size:18px;">{{ valuable_segment }}</strong></div>
+    </div>
+  </div>
+
+  <!-- Customer Ledger -->
+  <div class="ledger-card">
+    <h3>Customer Directory</h3>
+    <table class="sz-table">
+      <thead>
+        <tr>
+          <th>Guest</th>
+          <th>Contact</th>
+          <th>Nationality</th>
+          <th>Joined</th>
+          <th>Bookings</th>
+          <th>Total Spend</th>
+          <th>Loyalty</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in records %}
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="avatar">{{ c.name|slice:":1"|upper }}</div>
+              <span style="font-weight:600;">{{ c.name }}</span>
+            </div>
+          </td>
+          <td style="color:var(--text-sub);">{{ c.email|default:"—" }}</td>
+          <td>{{ c.nationality|default:"—" }}</td>
+          <td style="color:var(--text-sub);">{{ c.joined|date:"M d, Y"|default:"—" }}</td>
+          <td style="text-align:center;font-weight:700;">{{ c.booking_count|default:"0" }}</td>
+          <td style="font-weight:700;color:var(--success);">₹{{ c.total_spend|floatformat:0|default:"0" }}</td>
+          <td>
+            {% if c.is_loyalty %}
+            <span class="badge badge-vip"><i class="fa fa-star"></i> Member</span>
+            {% else %}
+            <span style="color:var(--text-sub);font-size:12px;">Standard</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-sub);">No customer records found for this period.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  const gc = 'rgba(100,116,139,0.08)';
+  const base = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { grid: { color: gc } }, x: { grid: { display: false } } }
+  };
+
+  const ln = (id, labels, data, col) => {
+    const c = document.getElementById(id); if (!c) return;
+    new Chart(c, {
+      type: 'line',
+      data: { labels, datasets: [{ data, borderColor: col, backgroundColor: col.replace(')', ', 0.06)').replace('rgb', 'rgba'), fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: 3 }] },
+      options: base
+    });
+  };
+  const bar = (id, labels, data, col) => {
+    const c = document.getElementById(id); if (!c) return;
+    new Chart(c, {
+      type: 'bar',
+      data: { labels, datasets: [{ data, backgroundColor: col, borderRadius: 5 }] },
+      options: base
+    });
+  };
+
+  // Acquisition trend line chart
+  ln('acqChart', {{ chart_labels|safe }}, {{ chart_values|safe }}, 'rgb(79,70,229)');
+
+  // Segment revenue bar chart — uses segment_data tuples unpacked in the view
+  const revCtx = document.getElementById('revCustChart');
+  if (revCtx) {
+    new Chart(revCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ segment_labels|safe }},
+        datasets: [{ data: {{ segment_values|safe }}, backgroundColor: ['#10b981', '#4f46e5'], borderRadius: 5 }]
+      },
+      options: base
+    });
+  }
+
+  // Booking frequency distribution
+  bar('natChart', {{ freq_labels|safe }}, {{ freq_values|safe }}, '#06b6d4');
+
+  // New vs Returning grouped bar
+  const nrCtx = document.getElementById('newRetChart');
+  if (nrCtx) {
+    new Chart(nrCtx, {
+      type: 'bar',
+      data: {
+        labels: ['New Customers', 'Returning Customers'],
+        datasets: [{
+          label: 'Count',
+          data: [{{ new_count }}, {{ returning_customers }}],
+          backgroundColor: ['#10b981', '#4f46e5'],
+          borderRadius: 5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { grid: { color: gc } }, x: { grid: { display: false } } },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  // Registered vs Guest Booking Distribution Chart
+  const totalBookingsVal = {{ reg_room_bookings }} + {{ gst_room_bookings }} + {{ reg_event_bookings }} + {{ gst_event_bookings }} + {{ reg_offline_bookings }} + {{ gst_offline_bookings }};
+  const bookingCompCtx = document.getElementById('bookingCompChart');
+  const bookingCompWrap = document.getElementById('bookingCompChartWrap');
+  if (bookingCompCtx) {
+    if (totalBookingsVal > 0) {
+      new Chart(bookingCompCtx, {
+        type: 'bar',
+        data: {
+          labels: {{ chart_comp_labels|safe }},
+          datasets: [
+            {
+              label: 'Registered Customers',
+              data: {{ chart_comp_reg_values|safe }},
+              backgroundColor: '#4f46e5',
+              borderRadius: 5
+            },
+            {
+              label: 'Guest Customers',
+              data: {{ chart_comp_guest_values|safe }},
+              backgroundColor: '#06b6d4',
+              borderRadius: 5
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { grid: { color: gc }, ticks: { beginAtZero: true } }, x: { grid: { display: false } } },
+          plugins: { legend: { display: true, position: 'bottom' } }
+        }
+      });
+    } else {
+      bookingCompWrap.innerHTML = '<div class="chart-fallback"><i class="fa fa-exclamation-circle" style="margin-right:8px;"></i>No booking data available for this timeframe</div>';
+    }
+  }
+
+  // Registered vs Guest Revenue Share Chart
+  const totalRevenueVal = {{ reg_revenue }} + {{ gst_revenue }};
+  const revenueCompCtx = document.getElementById('revenueCompChart');
+  const revenueCompWrap = document.getElementById('revenueCompChartWrap');
+  if (revenueCompCtx) {
+    if (totalRevenueVal > 0) {
+      new Chart(revenueCompCtx, {
+        type: 'doughnut',
+        data: {
+          labels: {{ chart_comp_rev_labels|safe }},
+          datasets: [{
+            data: {{ chart_comp_rev_values|safe }},
+            backgroundColor: ['#4f46e5', '#06b6d4'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: true, position: 'bottom' } },
+          cutout: '60%'
+        }
+      });
+    } else {
+      revenueCompWrap.innerHTML = '<div class="chart-fallback"><i class="fa fa-exclamation-circle" style="margin-right:8px;"></i>No revenue data available for this timeframe</div>';
+    }
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,342 @@
+{% extends 'accounts/dashboard_base.html' %}
+
+{% block title %}My Profile - StayZen{% endblock %}
+
+{% block extra_css %}
+
+    /* ==========================================================================
+       NO-SCROLL CENTERED SYSTEM (REF COLOR MATRIX: image_824cfb.png)
+       ========================================================================== */
+    
+    /* Outer wrapper locked to content frame dimensions preventing extra page scroll */
+   /* ==========================================================================
+   PERFECT CENTERED PROFILE LAYOUT
+   ========================================================================== */
+
+.profile-page-wrapper {
+    width: 100%;
+    min-height: calc(100vh - 120px);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.premium-profile-container {
+    width: 100%;
+    max-width: 520px;
+
+    margin-left: auto;
+    margin-right: auto;
+
+    background: linear-gradient(180deg, #FAEDFF 0%, #F3E8FF 100%);
+    border-radius: 32px;
+    padding: 32px 28px;
+
+    box-shadow: 0 16px 40px rgba(139, 92, 246, 0.12);
+
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    position: relative;
+    box-sizing: border-box;
+}}
+
+
+
+
+/* Force exact centering inside dashboard layout */
+.content {
+    display: flex !important;
+    justify-content: center !important;
+}
+
+.profile-page-wrapper {
+    flex: none !important;
+}
+
+    /* Top Hero Centered Avatar Structure */
+    .hero-avatar-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-bottom: 24px;
+        position: relative;
+    }
+
+    .avatar-frame-container {
+        position: relative;
+        margin-bottom: 14px;
+    }
+
+    .ui-profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: #FFFFFF;
+        padding: 5px;
+        box-shadow: 0 8px 20px rgba(139, 92, 246, 0.15);
+        object-fit: cover;
+        border: 2px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .ui-profile-avatar-fallback {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%);
+        color: #FFFFFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 38px;
+        box-shadow: 0 8px 20px rgba(139, 92, 246, 0.15);
+        border: 4px solid #FFFFFF;
+    }
+
+    /* Mini Camera Edit Overlay Icon Badge with Theme Purple Accent */
+    .avatar-camera-badge {
+        position: absolute;
+        bottom: 2px;
+        right: 6px;
+        background: #FFFFFF;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        color: #7C3AED;
+        font-size: 13px;
+        border: 1px solid #E9D5FF;
+    }
+
+    /* Identity Text Typography */
+    .ui-profile-name {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1F1A3A;
+        margin: 0 0 4px 0;
+        letter-spacing: -0.5px;
+    }
+
+    .ui-dot-separator {
+        color: #8B5CF6;
+        font-size: 16px;
+        line-height: 1;
+        margin-bottom: 2px;
+    }
+
+    .ui-profile-subtitle {
+        font-size: 12px;
+        font-weight: 700;
+        color: #8B5CF6; /* StayZen theme deep purple indicator */
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin: 0;
+    }
+
+    /* ==========================================================================
+       FLOATING WHITE DETAILS CARD
+       ========================================================================== */
+    .ui-details-floating-card {
+        background: #FFFFFF;
+        border-radius: 24px;
+        padding: 24px 20px 36px 20px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.02);
+        margin-bottom: -20px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .ui-details-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 12px 0;
+        border-bottom: 1px solid #FAFAFA;
+    }
+
+    .ui-details-row:last-of-type {
+        border-bottom: none;
+    }
+
+    .ui-details-label {
+        font-size: 13.5px;
+        color: #71717A;
+        font-weight: 500;
+        flex: 0 0 90px;
+        text-align: left;
+    }
+
+    .ui-details-value {
+        font-size: 13.5px;
+        color: #18181B;
+        font-weight: 700;
+        text-align: right;
+        word-break: break-word;
+    }
+
+    /* Central Overlapping Floating Action Button dressed in Brand Purple */
+    .ui-central-fab-btn {
+        position: relative;
+        width: 48px;
+        height: 48px;
+        background: #8B5CF6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #FFFFFF;
+        font-size: 18px;
+        text-decoration: none;
+        margin: 0 auto;
+        z-index: 3;
+        box-shadow: 0 6px 16px rgba(139, 92, 246, 0.35);
+        transition: transform 0.2s ease, background-color 0.2s ease;
+        border: 4px solid #F3E8FF;
+    }
+
+    .ui-central-fab-btn:hover {
+        transform: scale(1.05);
+        background: #7C3AED;
+    }
+
+    /* ==========================================================================
+       BOTTOM METRIC PILLS ACTIONS
+       ========================================================================== */
+    .ui-bottom-pill-actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 32px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .ui-pill-btn {
+        flex: 1;
+        background: #FFFFFF;
+        padding: 12px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #1F1A3A;
+        text-align: center;
+        text-decoration: none;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+        transition: background 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ui-pill-btn:hover {
+        background: #FDFEFE;
+    }
+
+    .ui-pill-btn-accent {
+        color: #8B5CF6;
+    }
+
+    /* Native Alerts Banner Modifiers */
+    .alert {
+        padding: 10px 14px;
+        margin-bottom: 14px;
+        border-radius: 10px;
+        font-size: 12.5px;
+        font-weight: 600;
+        text-align: center;
+    }
+    .alert-success { background-color: #E6F4EA; color: #551373; border: 1px solid #CEEAD6; }
+    .alert-error { background-color: #FCE8E6; color: #C5221F; border: 1px solid #FAD2CF; }
+
+{% endblock %} %}
+
+{% block content %}
+<!-- Global viewport wrapper enforcing vertical constraint and center layout placement -->
+<div class="profile-page-wrapper">
+
+    <!-- Compact Premium Purple Theme Container Canvas Block -->
+    <div class="premium-profile-container">
+        
+        <!-- Flash Message Handler Frame -->
+        {% if messages %}
+            <div style="margin-bottom: 12px;">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <!-- Top Identity Component -->
+        <div class="hero-avatar-wrapper">
+            <div class="avatar-frame-container">
+                {% if customer and customer.image %}
+                    <img src="{{ customer.image.url }}" alt="Profile Avatar" class="ui-profile-avatar">
+                {% else %}
+                    <div class="ui-profile-avatar-fallback">
+                        {{ request.user.first_name|slice:":1"|upper|default:"G" }}
+                    </div>
+                {% endif %}
+                <!-- Camera icon badge color adapted to purple system -->
+                <div class="avatar-camera-badge">📷</div>
+            </div>
+
+            <h2 class="ui-profile-name">{{ request.user.get_full_name|default:request.user.username }}</h2>
+           
+            
+        </div>
+
+        <!-- Inner Details Card Component -->
+        <div class="ui-details-floating-card">
+            <div class="ui-details-row">
+                <span class="ui-details-label">Email</span>
+                <span class="ui-details-value">{{ request.user.email|default:"—" }}</span>
+            </div>
+            
+            {% if customer %}
+            <div class="ui-details-row">
+                <span class="ui-details-label">Phone</span>
+                <span class="ui-details-value">{{ customer.phone|default:"—" }}</span>
+            </div>
+            <div class="ui-details-row">
+                <span class="ui-details-label">Gender</span>
+                <span class="ui-details-value">{{ customer.gender|default:"—" }}</span>
+            </div>
+            <div class="ui-details-row">
+                <span class="ui-details-label">Address</span>
+                <span class="ui-details-value">{{ customer.address|default:"—" }}</span>
+            </div>
+            <div class="ui-details-row">
+                <span class="ui-details-label">Account ID</span>
+                <span class="ui-details-value">#SZ-00{{ customer.id|default:request.user.id }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Overlapping Purple Action Button -->
+        <a href="{% url 'edit_profile' %}" class="ui-central-fab-btn" title="Edit Profile Details">
+            ✏️
+        </a>
+
+        <!-- Bottom Pill Balanced Action Array Buttons -->
+        <div class="ui-bottom-pill-actions">
+            <a href="{% url 'edit_profile' %}" class="ui-pill-btn">
+                Manage Details
+            </a>
+            <a href="{% url 'change_password' %}" class="ui-pill-btn ui-pill-btn-accent">
+                Change password
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
