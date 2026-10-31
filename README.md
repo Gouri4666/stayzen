@@ -4,12 +4,12 @@
 
 [![Django](https://img.shields.io/badge/Django-6.0%2B-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![Database](https://img.shields.io/badge/Database-MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
 [![Razorpay](https://img.shields.io/badge/Payment-Razorpay-0C2340?style=for-the-badge&logo=razorpay&logoColor=white)](https://razorpay.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
-*An enterprise-grade, full-stack resort and hospitality management platform engineered with Django, featuring automated room reservations, event/banquet booking, hourly fresh-up stays, fine dining management, dynamic role-based access control (RBAC), real-time staff operations, and automated PDF invoice generation.*
+*An enterprise-grade, full-stack resort and hospitality management platform engineered with Django and MySQL, featuring automated room reservations, event/banquet booking, hourly fresh-up stays, fine dining management, dynamic role-based access control (RBAC), real-time staff operations, and automated PDF invoice generation.*
 
 </div>
 
@@ -26,10 +26,8 @@
 - [Prerequisites](#-prerequisites)
 - [Installation & Quickstart](#-installation--quickstart)
 - [Environment Variables](#-environment-variables)
-- [Database Setup](#-database-setup)
 - [Running Tests](#-running-tests)
 - [User Roles & Permissions](#-user-roles--permissions)
-- [Screenshots & UI Showcase](#-screenshots--ui-showcase)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -39,7 +37,7 @@
 
 **StayZen** is an all-in-one hospitality management solution designed to streamline the entire resort operations lifecycle. From a seamless, responsive guest booking portal to a sophisticated staff operations dashboard and administrative command center, StayZen bridges the gap between customer luxury experience and back-office management.
 
-Whether managing suite reservations, scheduling hourly fresh-up rooms, booking wedding banquets, coordinating fine dining table reservations, or handling staff shifts and guest check-in verifications, StayZen delivers high performance, robust security, and reliable transaction processing.
+Powered by a relational **MySQL** database backend, StayZen ensures high transaction integrity, robust security, and reliable data management for suite reservations, hourly fresh-up rooms, banquet bookings, fine dining reservations, staff shifts, and check-in verifications.
 
 ---
 
@@ -107,7 +105,7 @@ graph TD
     subgraph Integrations & Services
         BookingApp -->|Card / UPI / NetBanking| Razorpay[Razorpay Payment Gateway]
         BookingApp -->|Booking Confirmations| SMTP[Email Service - SMTP]
-        BookingApp -->|ORM Queries| DB[(MySQL / SQLite Database)]
+        BookingApp -->|ORM Queries| DB[(MySQL Database - hotel_db)]
         InvGen --> Media[(Media & PDF Storage)]
     end
 ```
@@ -124,7 +122,7 @@ sequenceDiagram
     participant Web as Web Portal
     participant Core as Booking Engine
     participant Pay as Razorpay Gateway
-    participant DB as Database
+    participant DB as MySQL Database
     participant PDF as Invoice Engine
 
     Guest->>Web: Select Room, Check-in & Check-out Dates
@@ -179,7 +177,7 @@ flowchart TD
 |---|---|
 | **Backend Framework** | [Django](https://www.djangoproject.com/) 6.0+, [Django REST Framework](https://www.django-rest-framework.org/) |
 | **Programming Language** | [Python](https://www.python.org/) 3.10+ / 3.11 / 3.12 |
-| **Database** | [MySQL](https://www.mysql.com/) 8.0+ (Default Production) / [SQLite](https://www.sqlite.org/) (Development) / [PostgreSQL](https://www.postgresql.org/) compatible |
+| **Database** | [MySQL](https://www.mysql.com/) 8.0+ / [MariaDB](https://mariadb.org/) |
 | **Frontend UI** | HTML5, CSS3, JavaScript (ES6+), [Bootstrap 5](https://getbootstrap.com/), [FontAwesome](https://fontawesome.com/) |
 | **Date & Calendar Tools** | [Flatpickr](https://flatpickr.js.org/), FullCalendar, Custom Canvas & Timeline Visualizer |
 | **PDF Generation** | [ReportLab](https://www.reportlab.com/) |
@@ -243,7 +241,7 @@ StayZen/
 │   └── urls.py                     # Staff portal routes
 │
 ├── static/                         # Static assets (CSS, JavaScript, Images, Vendor libraries)
-├── media/                          # User-uploaded documents, room photos, generated invoices
+├── media/                          # Room photos, food menus, activity banners, resort assets
 └── templates/                      # Django HTML Templates
     ├── account/                    # Authentication templates
     ├── admin/                      # Admin dashboard templates
@@ -260,7 +258,7 @@ Make sure the following software is installed on your workstation or server:
 
 1. **Python**: Version `3.10` or higher (`python --version`)
 2. **Git**: (`git --version`)
-3. **Database**: [MySQL Server](https://dev.mysql.com/downloads/mysql/) (or [XAMPP](https://www.apachefriends.org/) / MariaDB) OR SQLite (included with Python)
+3. **Database**: [MySQL Server 8.0+](https://dev.mysql.com/downloads/mysql/) (or [XAMPP](https://www.apachefriends.org/) / WAMP / MariaDB)
 4. **C/C++ Build Tools** *(Optional, if compiling mysqlclient on Windows without pre-built wheels)*
 
 ---
@@ -308,17 +306,15 @@ Copy-Item .env.example .env
 # On Linux / macOS
 cp .env.example .env
 ```
-Edit `.env` with your preferred database credentials and email settings.
+Edit `.env` with your MySQL database credentials and email settings.
 
-### 5. Initialize the Database
-Make sure your MySQL server is running (e.g., via XAMPP or MySQL Service) and create the database:
+### 5. Initialize the MySQL Database
+Ensure your MySQL service is active (via XAMPP, MySQL Workbench, or Windows Service) and create the database:
 ```sql
 CREATE DATABASE hotel_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-> **Quick Development Tip**: If you don't have MySQL installed, simply set `USE_SQLITE=True` in your `.env` file to use a zero-configuration SQLite database!
-
-Apply all migrations:
+Apply all Django migrations to build the tables:
 ```bash
 python manage.py migrate
 ```
@@ -355,7 +351,6 @@ Open your browser and navigate to:
 | `SECRET_KEY` | Django cryptographic secret key | *Development Key* | `django-insecure-xyz...` |
 | `DEBUG` | Enable/Disable debug mode | `True` | `True` or `False` |
 | `ALLOWED_HOSTS` | Comma-separated allowed hostnames | `*` | `127.0.0.1,localhost` |
-| `USE_SQLITE` | Set `True` to bypass MySQL and use SQLite | `False` | `True` |
 | `DB_ENGINE` | Database backend engine | `django.db.backends.mysql` | `django.db.backends.mysql` |
 | `DB_NAME` | Database name | `hotel_db` | `hotel_db` |
 | `DB_USER` | Database user account | `root` | `root` |
@@ -375,7 +370,7 @@ Open your browser and navigate to:
 
 ## 🧪 Running Tests
 
-StayZen includes comprehensive automated unit and integration tests covering booking validation, date overlap algorithms, payment callbacks, and checkout logic:
+StayZen includes automated unit and integration tests covering booking validation, date overlap algorithms, payment callbacks, and checkout logic:
 
 ```bash
 # Run all project test suites
@@ -397,7 +392,7 @@ StayZen implements a strict three-tier role-based access model:
 1. **Guest / Customer**:
    - Register, login with either Username or Email address.
    - Explore rooms, reserve tables, place food orders, book wellness activities.
-   - Access profile dashboard, order history, downloadable PDF invoices, and loyalty point rewards.
+   - Access profile dashboard, order history, and loyalty point rewards.
 
 2. **Staff Members**:
    - Access the dedicated `/staff/` workspace.
@@ -436,4 +431,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <div align="center">
   <sub>Developed with ❤️ for hospitality excellence. Designed and maintained by <a href="https://github.com/Gouri4666">Gouri</a>.</sub>
 </div>
-
