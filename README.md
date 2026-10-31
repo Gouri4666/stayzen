@@ -7,7 +7,6 @@
 [![Database](https://img.shields.io/badge/Database-MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
 [![Razorpay](https://img.shields.io/badge/Payment-Razorpay-0C2340?style=for-the-badge&logo=razorpay&logoColor=white)](https://razorpay.com/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
 *An enterprise-grade, full-stack resort and hospitality management platform engineered with Django and MySQL, featuring automated room reservations, event/banquet booking, hourly fresh-up stays, fine dining management, dynamic role-based access control (RBAC), real-time staff operations, and automated PDF invoice generation.*
 
@@ -29,7 +28,6 @@
 - [Running Tests](#-running-tests)
 - [User Roles & Permissions](#-user-roles--permissions)
 - [Contributing](#-contributing)
-- [License](#-license)
 
 ---
 
@@ -419,12 +417,6 @@ Contributions, issues, and feature requests are welcome!
 3. Commit your changes (`git commit -m "Add some AmazingFeature"`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
